@@ -26,7 +26,7 @@ const Header = () => {
 
                     {/* Desktop Navigation */}
                     <nav className="hidden md:flex items-center space-x-8">
-                        {['home', 'shop', 'categories', 'about', 'contact'].map((page) => (
+                        {['home', 'shop', 'about', 'contact'].map((page) => (
                             <button
                                 key={page}
                                 onClick={() => setCurrentPage(page)}
@@ -153,7 +153,7 @@ const Header = () => {
                             {/* Navigation */}
                             <div className="space-y-2 mb-6">
                                 <p className="text-xs text-gray-500 uppercase px-2 mb-2">Sahifalar</p>
-                                {['home', 'shop', 'categories', 'about', 'contact'].map((page) => (
+                                {['home', 'shop', 'about', 'contact'].map((page) => (
                                     <button
                                         key={page}
                                         onClick={() => {

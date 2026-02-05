@@ -15,8 +15,14 @@ export const LanguageProvider = ({ children }) => {
         localStorage.setItem('language', lang);
     };
 
+    const toggleLanguage = () => {
+        const langs = ['uz', 'ru', 'en'];
+        const nextIndex = (langs.indexOf(language) + 1) % langs.length;
+        changeLanguage(langs[nextIndex]);
+    };
+
     return (
-        <LanguageContext.Provider value={{ language, changeLanguage, t }}>
+        <LanguageContext.Provider value={{ language, changeLanguage, toggleLanguage, t }}>
             {children}
         </LanguageContext.Provider>
     );

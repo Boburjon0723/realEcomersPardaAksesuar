@@ -39,7 +39,6 @@ function MainApp() {
       <main className="flex-1 mt-20">
         {currentPage === 'home' && <HomePage />}
         {currentPage === 'shop' && <ShopPage />}
-        {currentPage === 'categories' && <ShopPage />} {/* Reuse ShopPage for categories */}
         {currentPage === 'product' && selectedProduct && <ProductPage />}
         {currentPage === 'cart' && <CartPage />}
         {currentPage === 'checkout' && <CheckoutPage />}
