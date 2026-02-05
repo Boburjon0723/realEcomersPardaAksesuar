@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Star, Minus, Plus, ChevronRight, Heart, Share2, ShieldCheck, Truck, ArrowLeft } from 'lucide-react';
+import { Star, Minus, Plus, ChevronRight, Heart, ShieldCheck, Truck, ArrowLeft } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import ProductGallery from '../components/product/ProductGallery';
@@ -14,13 +14,7 @@ const ProductPage = () => {
     const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
     const [submitStatus, setSubmitStatus] = useState('idle'); // idle, submitting, success, error
 
-    React.useEffect(() => {
-        if (selectedProduct?.id) {
-            fetchReviews();
-        }
-    }, [selectedProduct?.id]);
-
-    const fetchReviews = async () => {
+    const fetchReviews = React.useCallback(async () => {
         const { data } = await supabase
             .from('reviews')
             .select('*, auth_users(email)') // simplified join, might need checking if user_id links correctly in real DB
@@ -29,7 +23,13 @@ const ProductPage = () => {
             .eq('status', 'approved')
             .order('created_at', { ascending: false });
         setReviews(data || []);
-    };
+    }, [selectedProduct?.id]);
+
+    React.useEffect(() => {
+        if (selectedProduct?.id) {
+            fetchReviews();
+        }
+    }, [selectedProduct?.id, fetchReviews]);
 
     const handleSubmitReview = async (e) => {
         e.preventDefault();

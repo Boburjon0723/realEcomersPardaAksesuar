@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Check, CreditCard, AlertCircle, X, Upload, Info, ArrowLeft, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Check, CreditCard, AlertCircle, X, Upload, ArrowLeft, ArrowRight, ShieldCheck } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { createOrder, uploadReceipt } from '../services/supabase/orders';
@@ -45,11 +45,26 @@ const CheckoutPage = () => {
     }, []);
 
     const validateForm = () => {
-        if (!formData.name.trim()) return setError(t('nameRequired')), false;
-        if (!formData.phone.trim()) return setError(t('phoneRequired')), false;
-        if (!formData.address.trim()) return setError(t('addressRequired')), false;
-        if (!formData.city.trim()) return setError(t('cityRequired')), false;
-        if (!receiptFile) return setError(language === 'uz' ? 'Iltimos, to\'lov chekini yuklang' : 'Please upload payment receipt'), false;
+        if (!formData.name.trim()) {
+            setError(t('nameRequired'));
+            return false;
+        }
+        if (!formData.phone.trim()) {
+            setError(t('phoneRequired'));
+            return false;
+        }
+        if (!formData.address.trim()) {
+            setError(t('addressRequired'));
+            return false;
+        }
+        if (!formData.city.trim()) {
+            setError(t('cityRequired'));
+            return false;
+        }
+        if (!receiptFile) {
+            setError(language === 'uz' ? "Iltimos, to'lov chekini yuklang" : 'Please upload payment receipt');
+            return false;
+        }
         return true;
     };
 
