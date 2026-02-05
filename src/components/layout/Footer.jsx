@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mail, Phone, MapPin, Facebook, Instagram, Send, ChevronRight, CreditCard } from 'lucide-react';
+import { Mail, Phone, MapPin, Facebook, Instagram, Send, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useApp } from '../../contexts/AppContext';
 
@@ -56,7 +56,7 @@ const Footer = () => {
                         <ul className="space-y-3">
                             {['Home', 'Shop', 'Categories', 'About Us', 'Contact'].map((link) => (
                                 <li key={link}>
-                                    <a href="#" className="flex items-center text-gray-400 hover:text-secondary transition-colors group">
+                                    <a href="/#" className="flex items-center text-gray-400 hover:text-secondary transition-colors group">
                                         <ChevronRight className="w-4 h-4 mr-2 text-gray-600 group-hover:text-secondary opacity-0 group-hover:opacity-100 transition-all" />
                                         {link}
                                     </a>
@@ -73,7 +73,7 @@ const Footer = () => {
                         <ul className="space-y-3">
                             {['Shipping Policy', 'Returns & Exchanges', 'FAQ', 'Terms & Conditions', 'Privacy Policy'].map((link) => (
                                 <li key={link}>
-                                    <a href="#" className="flex items-center text-gray-400 hover:text-secondary transition-colors group">
+                                    <a href="/#" className="flex items-center text-gray-400 hover:text-secondary transition-colors group">
                                         <ChevronRight className="w-4 h-4 mr-2 text-gray-600 group-hover:text-secondary opacity-0 group-hover:opacity-100 transition-all" />
                                         {link}
                                     </a>

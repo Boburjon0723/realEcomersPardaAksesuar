@@ -181,10 +181,11 @@ const AuthModal = () => {
 
                     <button
                         type="submit"
-                        className="w-full bg-primary hover:bg-primary-dark text-white py-4 rounded-lg transition-all shadow-lg hover:shadow-primary/30 font-bold text-lg flex items-center justify-center gap-2 group"
+                        disabled={loading}
+                        className={`w-full bg-primary hover:bg-primary-dark text-white py-4 rounded-lg transition-all shadow-lg hover:shadow-primary/30 font-bold text-lg flex items-center justify-center gap-2 group ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
                     >
-                        {isLogin ? t('login') : t('register')}
-                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                        {loading ? (isLogin ? 'Kirish...' : 'Ro\'yxatdan o\'tish...') : (isLogin ? t('login') : t('register'))}
+                        {!loading && <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
                     </button>
                 </form>
 

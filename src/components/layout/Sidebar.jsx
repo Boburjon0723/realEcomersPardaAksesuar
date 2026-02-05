@@ -6,7 +6,7 @@ import { getAllCategories } from '../../services/supabase/categories';
 
 const Sidebar = () => {
     const { selectedCategory, setSelectedCategory } = useApp();
-    const { language, t } = useLanguage();
+    const { t } = useLanguage();
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
 

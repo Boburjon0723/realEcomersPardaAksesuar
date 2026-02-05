@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingCart, User, Search, Menu, X, Globe, Heart, LogOut } from 'lucide-react';
+import { ShoppingCart, User, Search, Menu, X, Globe, LogOut } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { logoutUser } from '../../services/supabase/auth';
