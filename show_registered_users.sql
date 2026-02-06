@@ -66,7 +66,7 @@ BEGIN
     SELECT 
         au.id,
         au.email,
-        COALESCE(up.display_name, au.raw_user_meta_data->>'name', 'No name') as display_name,
+        COALESCE(up.display_name, au.raw_user_meta_data->>'display_name', au.raw_user_meta_data->>'name', 'No name') as display_name,
         COALESCE(up.phone, au.raw_user_meta_data->>'phone') as phone,
         au.created_at,
         au.last_sign_in_at,
@@ -100,7 +100,7 @@ BEGIN
     INSERT INTO user_profiles (id, display_name, phone)
     VALUES (
         NEW.id,
-        NEW.raw_user_meta_data->>'name',
+        COALESCE(NEW.raw_user_meta_data->>'display_name', NEW.raw_user_meta_data->>'name'),
         NEW.raw_user_meta_data->>'phone'
     )
     ON CONFLICT (id) DO UPDATE 

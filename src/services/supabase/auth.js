@@ -9,6 +9,7 @@ export const registerUser = async (email, password, displayName, phone) => {
             options: {
                 data: {
                     display_name: displayName,
+                    name: displayName,
                     phone: phone
                 }
             }

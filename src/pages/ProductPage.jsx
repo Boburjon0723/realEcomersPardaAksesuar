@@ -45,9 +45,8 @@ const ProductPage = () => {
 
     const handleSubmitReview = async (e) => {
         e.preventDefault();
-        const { data: { user } } = await supabase.auth.getUser();
 
-        if (!user) {
+        if (!currentUser) {
             showNotification(t('loginToReview'), 'error');
             return;
         }
@@ -56,7 +55,7 @@ const ProductPage = () => {
         const { error } = await supabase.from('reviews').insert([
             {
                 product_id: selectedProduct.id,
-                user_id: user.id,
+                user_id: currentUser.id,
                 rating: reviewForm.rating,
                 comment: reviewForm.comment,
                 status: 'approved' // Set to approved by default as requested
@@ -89,8 +88,8 @@ const ProductPage = () => {
             {/* Notification */}
             {notification.show && (
                 <div className={`fixed top-24 right-4 z-50 animate-fade-in-up flex items-center p-4 rounded-xl shadow-2xl border ${notification.type === 'success'
-                        ? 'bg-white border-green-100 text-green-800'
-                        : 'bg-white border-red-100 text-red-800'
+                    ? 'bg-white border-green-100 text-green-800'
+                    : 'bg-white border-red-100 text-red-800'
                     }`}>
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${notification.type === 'success' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
                         }`}>
