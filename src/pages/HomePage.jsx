@@ -9,7 +9,7 @@ import { supabase } from '../supabaseClient';
 import { Truck, ShieldCheck, CreditCard, ArrowRight, X } from 'lucide-react';
 
 const HomePage = () => {
-    const { searchQuery, setSearchQuery, selectedCategory, setSelectedCategory, setCurrentPage } = useApp();
+    const { searchQuery, setSearchQuery, selectedCategory, setSelectedCategory, setCurrentPage, settings } = useApp();
     const { language, t } = useLanguage();
     const [products, setProducts] = useState([]);
     const [banners, setBanners] = useState([]);
@@ -41,6 +41,13 @@ const HomePage = () => {
         fetchData();
     }, []);
 
+    // Helper for category navigation
+    const handleCategoryClick = (catName) => {
+        setSelectedCategory({ category: catName, subcategory: null });
+        setCurrentPage('shop');
+        window.scrollTo(0, 0);
+    };
+
     // Filter products
     const filteredProducts = products.filter(product => {
         const name = product.name?.[language] || '';
@@ -50,7 +57,7 @@ const HomePage = () => {
         const matchesSearch = name.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesCategory = !selectedCategory ||
             (category === selectedCategory.category &&
-                subcategory === selectedCategory.subcategory);
+                (!selectedCategory.subcategory || subcategory === selectedCategory.subcategory));
         return matchesSearch && matchesCategory;
     });
 
@@ -117,12 +124,12 @@ const HomePage = () => {
             {notification.show && (
                 <div className="fixed top-24 right-4 z-[9999] pointer-events-none">
                     <div className={`flex items-center gap-4 px-6 py-4 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border-b-4 backdrop-blur-xl pointer-events-auto transition-all duration-500 animate-in fade-in slide-in-from-right-10 ${notification.type === 'success' ? 'bg-white/95 border-green-500' :
-                            notification.type === 'info' ? 'bg-white/95 border-blue-500' :
-                                'bg-white/95 border-red-500'
+                        notification.type === 'info' ? 'bg-white/95 border-blue-500' :
+                            'bg-white/95 border-red-500'
                         }`}>
                         <div className={`p-3 rounded-xl ${notification.type === 'success' ? 'bg-green-100 text-green-600' :
-                                notification.type === 'info' ? 'bg-blue-100 text-blue-600' :
-                                    'bg-red-100 text-red-600'
+                            notification.type === 'info' ? 'bg-blue-100 text-blue-600' :
+                                'bg-red-100 text-red-600'
                             }`}>
                             <ShieldCheck size={24} className={notification.type === 'success' ? 'animate-bounce' : ''} />
                         </div>
@@ -142,41 +149,48 @@ const HomePage = () => {
 
             {/* Hero Section */}
             {!selectedCategory && !searchQuery ? (
-                <div className="relative bg-gray-100 min-h-[600px] flex items-center mb-16 overflow-hidden">
+                <div className="relative bg-gray-100 min-h-[500px] md:min-h-[600px] flex items-center mb-16 overflow-hidden">
                     {/* Background Image with Overlay */}
                     <div className="absolute inset-0 z-0">
-                        {banners.length > 0 && banners[0].image_url ? (
-                            <img src={banners[0].image_url} alt="Hero" className="w-full h-full object-cover" />
-                        ) : (
+                        <picture>
+                            {/* Mobile Hero */}
+                            <source
+                                media="(max-width: 768px)"
+                                srcSet={settings?.hero_mobile_url || settings?.hero_desktop_url || banners[0]?.image_url || "https://images.unsplash.com/photo-1513694203232-719a280e022f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"}
+                            />
+                            {/* Desktop Hero */}
                             <img
-                                src="https://images.unsplash.com/photo-1513694203232-719a280e022f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80"
-                                alt="Curtains"
+                                src={settings?.hero_desktop_url || banners[0]?.image_url || "https://images.unsplash.com/photo-1513694203232-719a280e022f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80"}
+                                alt="Hero"
                                 className="w-full h-full object-cover"
                             />
-                        )}
-                        <div className="absolute inset-0 bg-black/40"></div>
+                        </picture>
+                        <div className="absolute inset-0 bg-black/30"></div>
                     </div>
 
                     <div className="container mx-auto px-4 md:px-6 relative z-10 text-white">
                         <div className="max-w-2xl animate-fade-in">
-                            <span className="inline-block py-1 px-3 border border-white/30 rounded-full text-sm font-medium mb-6 backdrop-blur-sm">
+                            <span className="inline-block py-1.5 px-3.5 bg-white/10 border border-white/20 rounded-full text-sm font-medium mb-6 backdrop-blur-md">
                                 {t('premiumQuality')}
                             </span>
-                            <h1 className="text-4xl md:text-6xl font-display font-bold leading-tight mb-6">
-                                {banners.length > 0 ? banners[0].title : t('heroTitle')}
+                            <h1 className="text-4xl md:text-6xl font-display font-bold leading-tight mb-6 text-shadow-lg">
+                                {settings?.banner_text || banners[0]?.title || t('heroTitle')}
                             </h1>
-                            <p className="text-lg md:text-xl text-white/90 mb-8 leading-relaxed">
-                                {banners.length > 0 ? banners[0].subtitle : t('heroSubtitle')}
+                            <p className="text-lg md:text-xl text-white/90 mb-8 leading-relaxed max-w-xl text-shadow">
+                                {banners[0]?.subtitle || t('heroSubtitle')}
                             </p>
-                            <div className="flex gap-4">
+                            <div className="flex flex-wrap gap-4">
                                 <button
                                     onClick={() => setCurrentPage('shop')}
-                                    className="px-8 py-4 bg-primary hover:bg-primary-dark text-white rounded-lg font-semibold transition-all shadow-lg hover:shadow-primary/30 flex items-center"
+                                    className="px-8 py-4 bg-primary hover:bg-primary-dark text-white rounded-xl font-bold transition-all shadow-xl hover:shadow-primary/30 flex items-center group"
                                 >
                                     {t('shopNow')}
-                                    <ArrowRight className="ml-2 w-5 h-5" />
+                                    <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                 </button>
-                                <button className="px-8 py-4 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white border border-white/30 rounded-lg font-semibold transition-all">
+                                <button
+                                    onClick={() => setCurrentPage('shop')}
+                                    className="px-8 py-4 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/20 rounded-xl font-bold transition-all"
+                                >
                                     {t('viewCatalog')}
                                 </button>
                             </div>
@@ -190,7 +204,7 @@ const HomePage = () => {
                 {/* Benefits Section */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20 border-b border-gray-100 pb-12">
                     <div className="flex items-center space-x-4 p-6 bg-gray-50 rounded-xl hover:shadow-md transition-shadow">
-                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-primary shadow-sm">
+                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-primary shadow-sm border border-gray-100">
                             <Truck className="w-6 h-6" />
                         </div>
                         <div>
@@ -199,7 +213,7 @@ const HomePage = () => {
                         </div>
                     </div>
                     <div className="flex items-center space-x-4 p-6 bg-gray-50 rounded-xl hover:shadow-md transition-shadow">
-                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-primary shadow-sm">
+                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-primary shadow-sm border border-gray-100">
                             <ShieldCheck className="w-6 h-6" />
                         </div>
                         <div>
@@ -208,7 +222,7 @@ const HomePage = () => {
                         </div>
                     </div>
                     <div className="flex items-center space-x-4 p-6 bg-gray-50 rounded-xl hover:shadow-md transition-shadow">
-                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-primary shadow-sm">
+                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-primary shadow-sm border border-gray-100">
                             <CreditCard className="w-6 h-6" />
                         </div>
                         <div>
@@ -221,28 +235,38 @@ const HomePage = () => {
                 {/* Shop by Category */}
                 {!selectedCategory && !searchQuery && (
                     <section className="mb-20">
-                        <div className="flex justify-between items-end mb-8">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-4">
                             <div>
-                                <span className="text-secondary font-medium tracking-wider uppercase text-sm">{t('categories')}</span>
-                                <h2 className="text-3xl font-display font-bold text-gray-900 mt-2">{t('shopByCategory')}</h2>
+                                <span className="text-primary font-bold tracking-[0.2em] uppercase text-xs mb-2 block">{t('categories')}</span>
+                                <h2 className="text-3xl md:text-4xl font-display font-bold text-gray-900 tracking-tight">{t('shopByCategory')}</h2>
                             </div>
-                            <button className="text-gray-500 hover:text-primary font-medium flex items-center text-sm">
-                                {t('viewAll')} <ArrowRight className="w-4 h-4 ml-1" />
+                            <button
+                                onClick={() => setCurrentPage('shop')}
+                                className="text-gray-900 hover:text-primary font-bold flex items-center text-sm group transition-colors"
+                            >
+                                {t('viewAll')} <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                             </button>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             {categories.map((cat, idx) => (
-                                <div key={idx} className="group relative h-80 rounded-xl overflow-hidden cursor-pointer shadow-md">
+                                <div
+                                    key={idx}
+                                    onClick={() => handleCategoryClick(cat.name)}
+                                    className="group relative h-80 rounded-2xl overflow-hidden cursor-pointer shadow-xl hover:shadow-2xl transition-all duration-500"
+                                >
                                     <img
                                         src={cat.image}
                                         alt={cat.name}
-                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                        className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                                    <div className="absolute bottom-6 left-6 text-white text-shadow-sm">
-                                        <h3 className="text-2xl font-bold mb-1 drop-shadow-md text-white">{cat.name}</h3>
-                                        <p className="text-sm text-white font-medium drop-shadow-sm">{cat.count} {t('items')}</p>
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent transition-opacity group-hover:opacity-80"></div>
+                                    <div className="absolute bottom-6 left-6 text-white">
+                                        <h3 className="text-2xl font-bold mb-1 tracking-tight">{cat.name}</h3>
+                                        <p className="text-sm text-white/80 font-medium">{cat.count} {t('items')}</p>
+                                    </div>
+                                    <div className="absolute top-6 right-6 w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
+                                        <ArrowRight size={20} className="text-white" />
                                     </div>
                                 </div>
                             ))}
