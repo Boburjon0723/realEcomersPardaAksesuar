@@ -15,11 +15,11 @@ const Header = () => {
             <div className="container mx-auto px-4 md:px-6">
                 <div className="flex items-center justify-between h-16 md:h-20">
                     {/* Logo */}
-                    <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setCurrentPage('home')}>
-                        <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-md">
-                            T
+                    <div className="flex items-center space-x-4 cursor-pointer" onClick={() => setCurrentPage('home')}>
+                        <div className="w-14 h-14 flex items-center justify-center filter drop-shadow-md hover:scale-110 transition-transform duration-300">
+                            <img src="/logo.svg" alt="TechGear Logo" className="w-full h-full object-contain" />
                         </div>
-                        <span className="text-xl md:text-2xl font-display font-bold text-gray-900 tracking-wide">
+                        <span className="text-2xl md:text-3xl font-display font-bold text-gray-900 tracking-wide">
                             TechGear
                         </span>
                     </div>

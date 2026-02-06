@@ -14,15 +14,15 @@ const Footer = () => {
 
                     {/* Brand Column */}
                     <div>
-                        <div className="flex items-center space-x-3 mb-6">
-                            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white font-bold text-xl">
+                        <div className="flex items-center space-x-4 mb-6">
+                            <div className="w-14 h-14 flex items-center justify-center">
                                 {settings.logo_url ? (
-                                    <img src={settings.logo_url} alt={settings.site_name} className="w-full h-full object-cover rounded-lg" />
+                                    <img src={settings.logo_url} alt={settings.site_name} className="w-full h-full object-contain" />
                                 ) : (
-                                    <span>{settings.site_name?.[0] || 'T'}</span>
+                                    <img src="/logo.svg" alt="TechGear Logo" className="w-full h-full object-contain" />
                                 )}
                             </div>
-                            <span className="text-2xl font-display font-bold text-white tracking-wide">
+                            <span className="text-3xl font-display font-bold text-white tracking-wide">
                                 {settings.site_name || 'TechGear'}
                             </span>
                         </div>
