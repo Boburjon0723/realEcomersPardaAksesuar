@@ -5,17 +5,20 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { logoutUser } from '../../services/supabase/auth';
 
 const Header = () => {
-    const { cart, currentUser, setShowAuth, setCurrentPage, setCurrentUser } = useApp();
+    const { cart, currentUser, setShowAuth, setCurrentPage, setCurrentUser, setSelectedCategory, setSearchQuery } = useApp();
     const { language, toggleLanguage, t } = useLanguage();
     const [mobileMenu, setMobileMenu] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
 
     return (
         <header className="sticky top-0 bg-white shadow-sm z-50 border-b border-gray-100">
             <div className="container mx-auto px-4 md:px-6">
                 <div className="flex items-center justify-between h-16 md:h-20">
                     {/* Logo */}
-                    <div className="flex items-center space-x-4 cursor-pointer" onClick={() => setCurrentPage('home')}>
+                    <div className="flex items-center space-x-4 cursor-pointer" onClick={() => {
+                        setCurrentPage('home');
+                        setSelectedCategory(null);
+                        setSearchQuery('');
+                    }}>
                         <div className="w-14 h-14 flex items-center justify-center filter drop-shadow-md hover:scale-110 transition-transform duration-300">
                             <img src="/logo.svg" alt="TechGear Logo" className="w-full h-full object-contain" />
                         </div>
@@ -29,7 +32,13 @@ const Header = () => {
                         {['home', 'shop', 'about', 'contact'].map((page) => (
                             <button
                                 key={page}
-                                onClick={() => setCurrentPage(page)}
+                                onClick={() => {
+                                    setCurrentPage(page);
+                                    if (page === 'home') {
+                                        setSelectedCategory(null);
+                                        setSearchQuery('');
+                                    }
+                                }}
                                 className="text-gray-700 hover:text-primary font-medium transition-colors capitalize"
                             >
                                 {t(page) || page}
@@ -158,6 +167,10 @@ const Header = () => {
                                         key={page}
                                         onClick={() => {
                                             setCurrentPage(page);
+                                            if (page === 'home') {
+                                                setSelectedCategory(null);
+                                                setSearchQuery('');
+                                            }
                                             setMobileMenu(false);
                                         }}
                                         className="w-full text-left px-4 py-3 hover:bg-gray-100 rounded-lg capitalize"

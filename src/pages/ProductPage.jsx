@@ -17,8 +17,7 @@ const ProductPage = () => {
     const fetchReviews = React.useCallback(async () => {
         const { data } = await supabase
             .from('reviews')
-            .select('*, auth_users(email)') // simplified join, might need checking if user_id links correctly in real DB
-            // If auth_users is not available, we might just show "User".
+            .select('*, auth_users(email)')
             .eq('product_id', selectedProduct.id)
             .eq('status', 'approved')
             .order('created_at', { ascending: false });
@@ -31,6 +30,13 @@ const ProductPage = () => {
         }
     }, [selectedProduct?.id, fetchReviews]);
 
+    // Dynamic Rating Calculation
+    const averageRating = reviews.length > 0
+        ? (reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviews.length).toFixed(1)
+        : selectedProduct.rating || 0;
+
+    const reviewsCount = reviews.length > 0 ? reviews.length : selectedProduct.reviews || 0;
+
     const handleSubmitReview = async (e) => {
         e.preventDefault();
         const { data: { user } } = await supabase.auth.getUser();
@@ -40,13 +46,14 @@ const ProductPage = () => {
             return;
         }
 
+        setSubmitStatus('submitting');
         const { error } = await supabase.from('reviews').insert([
             {
                 product_id: selectedProduct.id,
                 user_id: user.id,
                 rating: reviewForm.rating,
                 comment: reviewForm.comment,
-                status: 'pending'
+                status: 'approved' // Set to approved by default as requested
             }
         ]);
 
@@ -57,6 +64,7 @@ const ProductPage = () => {
         } else {
             setSubmitStatus('success');
             setReviewForm({ rating: 5, comment: '' });
+            fetchReviews(); // Refresh reviews immediately
             setTimeout(() => setSubmitStatus('idle'), 5000);
         }
     };
@@ -108,7 +116,7 @@ const ProductPage = () => {
                                     {[...Array(5)].map((_, i) => (
                                         <Star
                                             key={i}
-                                            className={`w-4 h-4 ${i < Math.floor(selectedProduct.rating)
+                                            className={`w-4 h-4 ${i < Math.floor(averageRating)
                                                 ? 'fill-yellow-400 text-yellow-400'
                                                 : 'text-gray-300'
                                                 }`}
@@ -116,7 +124,7 @@ const ProductPage = () => {
                                     ))}
                                 </div>
                                 <span className="ml-2 text-sm text-gray-500 font-medium">
-                                    ({selectedProduct.reviews} {t('reviews')})
+                                    {averageRating} ({reviewsCount} {t('reviews')})
                                 </span>
                             </div>
 
