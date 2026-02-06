@@ -21,6 +21,7 @@ DROP TABLE IF EXISTS user_profiles CASCADE;
 CREATE TABLE user_profiles (
     id UUID PRIMARY KEY,
     display_name TEXT,
+    email TEXT,
     phone TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     last_login TIMESTAMP WITH TIME ZONE
@@ -66,8 +67,15 @@ BEGIN
     SELECT 
         au.id,
         au.email,
-        COALESCE(up.display_name, au.raw_user_meta_data->>'display_name', au.raw_user_meta_data->>'name', 'No name') as display_name,
-        COALESCE(up.phone, au.raw_user_meta_data->>'phone') as phone,
+        COALESCE(
+            up.display_name, 
+            au.raw_user_meta_data->>'display_name', 
+            au.raw_user_meta_data->>'name', 
+            au.email, 
+            au.phone,
+            'Foydalanuvchi'
+        ) as display_name,
+        COALESCE(up.phone, au.raw_user_meta_data->>'phone', au.phone) as phone,
         au.created_at,
         au.last_sign_in_at,
         COUNT(DISTINCT o.id) as total_orders,
@@ -76,10 +84,11 @@ BEGIN
     LEFT JOIN user_profiles up ON au.id = up.id
     LEFT JOIN orders o ON (
         o.customer_email = au.email OR 
-        o.customer_phone = COALESCE(up.phone, au.raw_user_meta_data->>'phone')
+        o.customer_phone = au.phone OR
+        o.customer_phone = up.phone
     )
     WHERE au.deleted_at IS NULL
-    GROUP BY au.id, au.email, up.display_name, up.phone, au.raw_user_meta_data, au.created_at, au.last_sign_in_at
+    GROUP BY au.id, au.email, up.display_name, up.phone, au.phone, au.raw_user_meta_data, au.created_at, au.last_sign_in_at
     ORDER BY au.created_at DESC;
 END;
 $$ LANGUAGE plpgsql;
@@ -97,15 +106,17 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-    INSERT INTO user_profiles (id, display_name, phone)
+    INSERT INTO user_profiles (id, display_name, email, phone)
     VALUES (
         NEW.id,
         COALESCE(NEW.raw_user_meta_data->>'display_name', NEW.raw_user_meta_data->>'name'),
-        NEW.raw_user_meta_data->>'phone'
+        NEW.email,
+        COALESCE(NEW.raw_user_meta_data->>'phone', NEW.phone)
     )
     ON CONFLICT (id) DO UPDATE 
     SET 
         display_name = COALESCE(EXCLUDED.display_name, user_profiles.display_name),
+        email = COALESCE(EXCLUDED.email, user_profiles.email),
         phone = COALESCE(EXCLUDED.phone, user_profiles.phone);
     RETURN NEW;
 END;
@@ -145,14 +156,19 @@ CREATE TRIGGER on_auth_user_login
 -- 6. Populate existing users (if any)
 -- ============================================
 
-INSERT INTO user_profiles (id, display_name, phone)
+INSERT INTO user_profiles (id, display_name, email, phone)
 SELECT 
     id,
-    raw_user_meta_data->>'name',
-    raw_user_meta_data->>'phone'
+    COALESCE(raw_user_meta_data->>'display_name', raw_user_meta_data->>'name'),
+    email,
+    COALESCE(raw_user_meta_data->>'phone', phone)
 FROM auth.users
 WHERE deleted_at IS NULL
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE
+SET 
+    display_name = EXCLUDED.display_name,
+    email = EXCLUDED.email,
+    phone = EXCLUDED.phone;
 
 -- ============================================
 -- Success message
