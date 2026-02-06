@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Star, Minus, Plus, ChevronRight, Heart, ShieldCheck, Truck, ArrowLeft } from 'lucide-react';
+import { Star, Minus, Plus, ChevronRight, Heart, ShieldCheck, Truck, ArrowLeft, CheckCircle, X } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import ProductGallery from '../components/product/ProductGallery';
@@ -13,6 +13,12 @@ const ProductPage = () => {
     const [reviews, setReviews] = useState([]);
     const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
     const [submitStatus, setSubmitStatus] = useState('idle'); // idle, submitting, success, error
+    const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
+
+    const showNotification = (message, type = 'success') => {
+        setNotification({ show: true, message, type });
+        setTimeout(() => setNotification({ show: false, message: '', type: 'success' }), 5000);
+    };
 
     const fetchReviews = React.useCallback(async () => {
         const { data } = await supabase
@@ -42,7 +48,7 @@ const ProductPage = () => {
         const { data: { user } } = await supabase.auth.getUser();
 
         if (!user) {
-            alert(t('loginToReview') || 'Please login to leave a review');
+            showNotification(t('loginToReview'), 'error');
             return;
         }
 
@@ -60,11 +66,12 @@ const ProductPage = () => {
         if (error) {
             console.error('Error submitting review:', error);
             setSubmitStatus('error');
-            setTimeout(() => setSubmitStatus('idle'), 3000);
+            showNotification(t('error') || 'Xatolik yuz berdi', 'error');
         } else {
             setSubmitStatus('success');
             setReviewForm({ rating: 5, comment: '' });
             fetchReviews(); // Refresh reviews immediately
+            showNotification(t('reviewSubmitted'));
             setTimeout(() => setSubmitStatus('idle'), 5000);
         }
     };
@@ -78,7 +85,29 @@ const ProductPage = () => {
     const favorite = isFavorite(selectedProduct.id);
 
     return (
-        <div className="container mx-auto px-4 md:px-6 py-8">
+        <div className="container mx-auto px-4 md:px-6 py-8 relative">
+            {/* Notification */}
+            {notification.show && (
+                <div className={`fixed top-24 right-4 z-50 animate-fade-in-up flex items-center p-4 rounded-xl shadow-2xl border ${notification.type === 'success'
+                        ? 'bg-white border-green-100 text-green-800'
+                        : 'bg-white border-red-100 text-red-800'
+                    }`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${notification.type === 'success' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                        }`}>
+                        {notification.type === 'success' ? <CheckCircle className="w-6 h-6" /> : <X className="w-6 h-6" />}
+                    </div>
+                    <div>
+                        <p className="font-bold text-sm">{notification.type === 'success' ? t('orderSuccess') || 'Muvaffaqiyatli!' : t('error') || 'Xatolik'}</p>
+                        <p className="text-xs opacity-80">{notification.message}</p>
+                    </div>
+                    <button
+                        onClick={() => setNotification({ ...notification, show: false })}
+                        className="ml-6 p-1 hover:bg-gray-100 rounded-full transition-colors"
+                    >
+                        <X size={16} />
+                    </button>
+                </div>
+            )}
             {/* Back Button */}
             <button
                 onClick={() => setCurrentPage('shop')}

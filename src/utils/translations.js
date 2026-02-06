@@ -138,7 +138,9 @@ export const translations = {
         contactUs: "Bog'lanish",
         bonusProgram: "Bonus Dasturi",
         subscribeSuccess: "Muvaffaqiyatli obuna bo'ldingiz!",
-        alreadySubscribed: "Siz allaqachon a'zo bo'lgansiz!"
+        alreadySubscribed: "Siz allaqachon a'zo bo'lgansiz!",
+        loginToReview: "Sharh qoldirish uchun tizimga kiring",
+        reviewSubmitted: "Sharhingiz qabul qilindi! Moderator tasdiqlagandan so'ng chiqadi."
     },
 
     ru: {
@@ -280,7 +282,9 @@ export const translations = {
         contactUs: "Связаться",
         bonusProgram: "Бонусная Программа",
         subscribeSuccess: "Вы успешно подписались!",
-        alreadySubscribed: "Вы уже подписаны!"
+        alreadySubscribed: "Вы уже подписаны!",
+        loginToReview: "Пожалуйста, войдите, чтобы оставить отзыв",
+        reviewSubmitted: "Ваш отзыв принят! Он появится после подтверждения модератором."
     },
 
     en: {
@@ -422,6 +426,8 @@ export const translations = {
         contactUs: "Contact Us",
         bonusProgram: "Bonus Program",
         subscribeSuccess: "Successfully subscribed!",
-        alreadySubscribed: "You are already subscribed!"
+        alreadySubscribed: "You are already subscribed!",
+        loginToReview: "Please login to leave a review",
+        reviewSubmitted: "Your review has been submitted! It will appear after moderator approval."
     }
 };
