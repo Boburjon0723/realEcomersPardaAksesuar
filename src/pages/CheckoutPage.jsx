@@ -96,8 +96,7 @@ const CheckoutPage = () => {
                     quantity: item.quantity,
                     image: item.images[0],
                     color: item.color,
-                    size: item.size,
-                    image: item.images[0]
+                    size: item.size
                 })),
                 totalPrice: getTotalPrice(),
                 status: 'new',
