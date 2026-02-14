@@ -5,7 +5,8 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { logoutUser } from '../../services/supabase/auth';
 
 const Header = () => {
-    const { cart, currentUser, setShowAuth, setCurrentPage, setCurrentUser, setSelectedCategory, setSearchQuery } = useApp();
+    const { cart, currentUser, searchQuery, setSearchQuery, setShowAuth, setCurrentPage, setCurrentUser, setSelectedCategory, settings } = useApp();
+
     const { language, toggleLanguage, t } = useLanguage();
     const [mobileMenu, setMobileMenu] = useState(false);
 
@@ -20,12 +21,14 @@ const Header = () => {
                         setSearchQuery('');
                     }}>
                         <div className="w-14 h-14 flex items-center justify-center filter drop-shadow-md hover:scale-110 transition-transform duration-300">
-                            <img src="/logo.svg" alt="TechGear Logo" className="w-full h-full object-contain" />
+                            <img src={settings.logo_url || "/favicon.svg"} alt={`${settings.site_name || 'Nuur Home'} Logo`} className="w-full h-full object-contain" />
                         </div>
-                        <span className="text-2xl md:text-3xl font-display font-bold text-gray-900 tracking-wide">
-                            TechGear
+                        <span className="text-xs md:text-xl font-serif text-gray-800 tracking-widest uppercase truncate max-w-[150px] md:max-w-none">
+                            {settings.site_name || 'Nuur Home'}
                         </span>
+
                     </div>
+
 
                     {/* Desktop Navigation */}
                     <nav className="hidden md:flex items-center space-x-8">

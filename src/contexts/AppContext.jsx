@@ -14,8 +14,8 @@ export const AppProvider = ({ children }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [settings, setSettings] = useState({
-        site_name: 'TechGear',
-        logo_url: '',
+        site_name: 'Nuur Home',
+        logo_url: '/favicon.svg',
         phone: '',
         address: '',
         work_hours: '',

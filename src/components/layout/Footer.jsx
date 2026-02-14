@@ -19,11 +19,11 @@ const Footer = () => {
                                 {settings.logo_url ? (
                                     <img src={settings.logo_url} alt={settings.site_name} className="w-full h-full object-contain" />
                                 ) : (
-                                    <img src="/logo.svg" alt="TechGear Logo" className="w-full h-full object-contain" />
+                                    <img src="/favicon.svg" alt="Nuur Home Logo" className="w-full h-full object-contain" />
                                 )}
                             </div>
-                            <span className="text-3xl font-display font-bold text-white tracking-wide">
-                                {settings.site_name || 'TechGear'}
+                            <span className="text-xl md:text-2xl font-display font-bold text-white tracking-tight break-words max-w-[200px]">
+                                {settings.site_name || 'Nuur Home'}
                             </span>
                         </div>
                         <p className="text-gray-400 leading-relaxed mb-6">
@@ -54,14 +54,20 @@ const Footer = () => {
                             {t('quickLinks') || 'Quick Links'}
                         </h4>
                         <ul className="space-y-3">
-                            {['Home', 'Shop', 'About Us', 'Contact'].map((link) => (
-                                <li key={link}>
-                                    <a href="/#" className="flex items-center text-gray-400 hover:text-secondary transition-colors group">
-                                        <ChevronRight className="w-4 h-4 mr-2 text-gray-600 group-hover:text-secondary opacity-0 group-hover:opacity-100 transition-all" />
-                                        {link}
-                                    </a>
-                                </li>
-                            ))}
+                            {['Home', 'Shop', 'About Us', 'Contact'].map((link) => {
+                                const label = link === 'About Us' ? (t('about') || 'About Us') :
+                                    link === 'Home' ? (t('home') || 'Home') :
+                                        link === 'Shop' ? (t('shop') || 'Shop') :
+                                            link === 'Contact' ? (t('contact') || 'Contact') : link;
+                                return (
+                                    <li key={link}>
+                                        <a href="/#" className="flex items-center text-gray-400 hover:text-secondary transition-colors group">
+                                            <ChevronRight className="w-4 h-4 mr-2 text-gray-600 group-hover:text-secondary opacity-0 group-hover:opacity-100 transition-all" />
+                                            {label}
+                                        </a>
+                                    </li>
+                                );
+                            })}
                         </ul>
                     </div>
 
@@ -106,7 +112,7 @@ const Footer = () => {
 
                 <div className="border-t border-gray-800 pt-8 mt-8 flex flex-col md:flex-row justify-between items-center">
                     <p className="text-gray-500 text-sm mb-4 md:mb-0">
-                        &copy; {new Date().getFullYear()} {settings.site_name || 'TechGear'}. All Rights Reserved.
+                        &copy; {new Date().getFullYear()} {settings.site_name || 'Nuur Home'}. All Rights Reserved.
                     </p>
                     <div className="flex items-center space-x-2 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all">
                         {/* Payment Method Placeholders */}

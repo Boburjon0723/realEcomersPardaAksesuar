@@ -30,7 +30,9 @@ module.exports = {
             fontFamily: {
                 sans: ['Inter', 'sans-serif'],
                 display: ['Outfit', 'sans-serif'],
+                serif: ['Playfair Display', 'serif'],
             }
+
         },
     },
     plugins: [],

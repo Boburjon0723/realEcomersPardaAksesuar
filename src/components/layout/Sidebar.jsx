@@ -65,13 +65,6 @@ const Sidebar = () => {
                 ))}
             </div>
 
-            {/* Price Filter (Placeholder) */}
-            <div className="mt-8 pt-8 border-t border-gray-200">
-                <h3 className="font-display font-bold text-lg mb-4">Price Range</h3>
-                <div className="bg-white p-4 rounded border border-gray-200 text-center text-gray-500 text-sm">
-                    Price filter coming soon
-                </div>
-            </div>
         </aside>
     );
 };

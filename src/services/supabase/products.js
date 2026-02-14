@@ -17,26 +17,28 @@ const mapProductFromDB = (product) => {
     }
     // If saving in CRM uses 'original_price', we should check that too if needed, but standardizing on sale_price/price is better.
 
+    // Handle potential array or object from Supabase join
+    const categoryName = Array.isArray(product.categories)
+        ? product.categories[0]?.name
+        : product.categories?.name;
+
     return {
         ...product,
         id: product.id,
         name: wrapLang(product.name),
         description: wrapLang(product.description),
         price: Number(priceValue || 0),
-        purchasePrice: Number(product.purchase_price || 0),
-        stock: Number(product.stock || 0),
-        minStock: Number(product.min_stock || 0),
-        category: wrapLang(product.categories?.name || product.category || ''),
         categoryId: product.category_id,
+        category: wrapLang(categoryName || product.category || ''),
         // Fix: prioritize 'images' array if it exists and has items, otherwise fall back to 'image_url'
         images: (Array.isArray(product.images) && product.images.length > 0)
             ? product.images
             : (product.image_url ? [product.image_url] : []),
         color: product.color || '',
-        is_active: product.is_active,
-        createdAt: product.created_at,
-        rating: product.rating || 5,
-        reviews: product.reviews || 0
+        size: product.size || '', // Kod
+        rating: product.rating || 0,
+        reviews: product.reviews || 0,
+        features: product.features || {},
     };
 };
 
@@ -185,9 +187,6 @@ export const addProduct = async (productData, imageFiles = []) => {
             name: typeof productData.name === 'object' ? (productData.name.uz || productData.name.en || '') : productData.name,
             description: typeof productData.description === 'object' ? (productData.description.uz || productData.description.en || '') : productData.description,
             sale_price: Number(productData.price),
-            purchase_price: Number(productData.purchasePrice || 0),
-            stock: Number(productData.stock),
-            min_stock: Number(productData.minStock || 0),
             category_id: productData.categoryId,
             color: productData.color || '',
             image_url: imageUrls[0] || (Array.isArray(productData.images) ? productData.images[0] : ''),
@@ -232,9 +231,6 @@ export const updateProduct = async (productId, productData, newImageFiles = []) 
             name: typeof productData.name === 'object' ? (productData.name.uz || productData.name.en || '') : productData.name,
             description: typeof productData.description === 'object' ? (productData.description.uz || productData.description.en || '') : productData.description,
             sale_price: Number(productData.price),
-            purchase_price: Number(productData.purchasePrice || 0),
-            stock: Number(productData.stock),
-            min_stock: Number(productData.minStock || 0),
             category_id: productData.categoryId,
             color: productData.color || '',
             image_url: imageUrls[0] || '',

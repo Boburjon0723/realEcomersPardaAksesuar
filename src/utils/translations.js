@@ -44,7 +44,7 @@ export const translations = {
         support247Desc: "Kuniga 24 soat aloqadamiz",
         bonusProgramDesc: "Har bir xarid uchun bonuslar",
 
-        shopByCategory: "Kategoriyalar Boticha",
+        shopByCategory: "Kategoriyalar bo'yicha",
         bestSellers: "Eng Ko'p Sotilganlar",
         joinCommunity: "Dizaynerlar safiga qo'shiling",
         subscribeDesc: "Eksklyuziv takliflar va yangi dizaynlar haqida birinchi bo'lib bilish uchun obuna bo'ling.",
@@ -67,6 +67,7 @@ export const translations = {
         inStock: "Omborda mavjud",
         outOfStock: "Sotuvda yo'q",
         sku: "Kod",
+        color: "Rangi",
         quantity: "Miqdor",
         relatedProducts: "O'xshash Mahsulotlar",
 
@@ -211,6 +212,7 @@ export const translations = {
         inStock: "В наличии",
         outOfStock: "Нет в наличии",
         sku: "Артикул",
+        color: "Цвет",
         quantity: "Количество",
         relatedProducts: "Похожие Товары",
 
@@ -355,6 +357,7 @@ export const translations = {
         inStock: "In Stock",
         outOfStock: "Out of Stock",
         sku: "SKU",
+        color: "Color",
         quantity: "Quantity",
         relatedProducts: "Related Products",
 

@@ -48,19 +48,27 @@ const CartPage = () => {
                                 </div>
 
                                 <div className="flex-1 flex flex-col justify-between">
-                                    <div>
-                                        <div className="flex justify-between items-start mb-2">
+                                    <div className="space-y-1">
+                                        <div className="flex justify-between items-start">
                                             <h3 className="font-bold text-lg text-gray-900 line-clamp-2">
                                                 {item.name?.[language] || ''}
                                             </h3>
                                             <button
                                                 onClick={() => removeFromCart(item.id)}
-                                                className="text-gray-400 hover:text-red-500 p-1"
+                                                className="text-gray-400 hover:text-red-500 p-1 transition-colors"
                                             >
                                                 <Trash2 className="w-5 h-5" />
                                             </button>
                                         </div>
-                                        <p className="text-sm text-gray-500 mb-2">{item.category?.[language]}</p>
+                                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                                            <span className="text-gray-500">{item.category?.[language]}</span>
+                                            {item.size && (
+                                                <span className="text-primary font-medium">{t('sku') || 'Kod'}: {item.size}</span>
+                                            )}
+                                            {item.color && (
+                                                <span className="text-gray-600 font-medium">{t('color') || 'Rang'}: {item.color}</span>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <div className="flex flex-wrap items-end justify-between gap-4">
@@ -112,15 +120,10 @@ const CartPage = () => {
                     <div className="bg-white rounded-xl shadow-lg p-6 md:p-8 sticky top-24 border border-gray-100">
                         <h3 className="font-display font-bold text-xl mb-6 text-gray-900 border-b border-gray-100 pb-4">{t('orderSummary') || 'Order Summary'}</h3>
 
-                        <div className="space-y-4 mb-6">
+                        <div className="space-y-4 mb-6 pt-2">
                             <div className="flex justify-between text-gray-600">
-                                <span>{t('subtotal') || 'Subtotal'}</span>
-                                <span>{t('subtotal') || 'Subtotal'}</span>
+                                <span>{t('subtotal') || 'Jami summa'}</span>
                                 <span className="font-medium">${getTotalPrice().toLocaleString()}</span>
-                            </div>
-                            <div className="flex justify-between text-gray-600">
-                                <span>{t('shipping') || 'Shipping'}</span>
-                                <span className="text-green-600 font-medium">{t('free') || 'Free'}</span>
                             </div>
                         </div>
 

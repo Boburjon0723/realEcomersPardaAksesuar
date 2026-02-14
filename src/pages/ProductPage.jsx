@@ -6,7 +6,7 @@ import ProductGallery from '../components/product/ProductGallery';
 import { supabase } from '../supabaseClient';
 
 const ProductPage = () => {
-    const { selectedProduct, addToCart, setCurrentPage, toggleFavorite, isFavorite } = useApp();
+    const { selectedProduct, currentUser, addToCart, setCurrentPage, toggleFavorite, isFavorite } = useApp();
     const { language, t } = useLanguage();
     const [quantity, setQuantity] = useState(1);
     const [activeTab, setActiveTab] = useState('description');
@@ -137,7 +137,7 @@ const ProductPage = () => {
                             {selectedProduct.name?.[language] || ''}
                         </h1>
 
-                        <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-6 mb-6">
                             {/* Rating */}
                             <div className="flex items-center">
                                 <div className="flex items-center">
@@ -156,12 +156,20 @@ const ProductPage = () => {
                                 </span>
                             </div>
 
-                            {/* Stock Status */}
-                            <div className={`text-sm font-bold px-3 py-1 rounded-full ${selectedProduct.stock > 0
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-red-100 text-red-700'
-                                }`}>
-                                {selectedProduct.stock > 0 ? t('inStock') : t('outOfStock')}
+                            {/* Code and Color Display */}
+                            <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-widest text-secondary">
+                                {selectedProduct.size && (
+                                    <div className="flex items-center gap-1">
+                                        <span className="opacity-60">{t('sku')}:</span>
+                                        <span>{selectedProduct.size}</span>
+                                    </div>
+                                )}
+                                {selectedProduct.color && (
+                                    <div className="flex items-center gap-1 border-l border-gray-200 pl-4">
+                                        <span className="opacity-60">{t('color')}:</span>
+                                        <span>{selectedProduct.color}</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -202,7 +210,7 @@ const ProductPage = () => {
                                     </button>
                                     <span className="w-12 text-center font-bold text-lg">{quantity}</span>
                                     <button
-                                        onClick={() => setQuantity(Math.min(selectedProduct.stock, quantity + 1))}
+                                        onClick={() => setQuantity(quantity + 1)}
                                         className="w-12 h-full flex items-center justify-center hover:bg-gray-50 text-gray-600 transition"
                                     >
                                         <Plus className="w-4 h-4" />
@@ -210,7 +218,6 @@ const ProductPage = () => {
                                 </div>
                                 <button
                                     onClick={() => addToCart(selectedProduct, quantity)}
-                                    disabled={selectedProduct.stock === 0}
                                     className="flex-1 bg-primary hover:bg-primary-dark text-white h-12 rounded-lg font-bold transition-all shadow-lg hover:shadow-primary/30 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none"
                                 >
                                     {t('addToCart')}

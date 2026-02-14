@@ -4,10 +4,10 @@ import { useLanguage } from '../contexts/LanguageContext';
 import ProductGrid from '../components/product/ProductGrid';
 import Sidebar from '../components/layout/Sidebar'; // Reusing existing Sidebar logic but wrapping it
 import { getAllProducts } from '../services/supabase/products';
-import { Filter, X } from 'lucide-react';
+import { Filter, X, Search } from 'lucide-react';
 
 const ShopPage = () => {
-    const { searchQuery, selectedCategory, setSelectedCategory } = useApp();
+    const { searchQuery, setSearchQuery, selectedCategory, setSelectedCategory } = useApp();
     const { language, t } = useLanguage();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -28,10 +28,12 @@ const ShopPage = () => {
     // Filter products
     const filteredProducts = products.filter(product => {
         const name = product.name?.[language] || '';
+        const code = product.size || '';
         const category = product.category?.[language] || '';
         const subcategory = product.subcategory?.[language] || '';
 
-        const matchesSearch = name.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSearch = name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            code.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesCategory = !selectedCategory ||
             (category === selectedCategory.category &&
                 (!selectedCategory.subcategory || subcategory === selectedCategory.subcategory));
@@ -46,15 +48,28 @@ const ShopPage = () => {
                     {selectedCategory ? `${selectedCategory.category} - ${selectedCategory.subcategory}` : (t('shopAll') || 'Shop All Products')}
                 </h1>
 
-                <div className="flex items-center gap-4">
-                    <span className="text-gray-500">{filteredProducts.length} results</span>
-                    <button
-                        className="md:hidden flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg font-medium"
-                        onClick={() => setShowMobileFilters(true)}
-                    >
-                        <Filter className="w-5 h-5" /> Filters
-                    </button>
-                    {/* Sorting could go here */}
+                <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+                    {/* Search Bar */}
+                    <div className="relative w-full sm:w-64">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder={t('search') || "Search..."}
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm text-sm"
+                        />
+                    </div>
+
+                    <div className="flex items-center gap-4 w-full sm:w-auto justify-end">
+                        <span className="text-gray-500 text-sm whitespace-nowrap">{filteredProducts.length} results</span>
+                        <button
+                            className="md:hidden flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl font-medium text-sm shadow-sm"
+                            onClick={() => setShowMobileFilters(true)}
+                        >
+                            <Filter className="w-4 h-4" /> Filters
+                        </button>
+                    </div>
                 </div>
             </div>
 

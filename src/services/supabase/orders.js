@@ -38,7 +38,10 @@ export const createOrder = async (orderData) => {
             product_name: typeof item.name === 'object' ? item.name.uz : item.name,
             quantity: item.quantity,
             price: item.price,
-            subtotal: Number(item.price) * Number(item.quantity)
+            subtotal: Number(item.price) * Number(item.quantity),
+            color: item.color || null,
+            size: item.size || null,
+            image_url: item.image || null
         }));
 
         const { error: itemsError } = await supabase

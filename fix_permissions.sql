@@ -56,3 +56,4 @@ DROP POLICY IF EXISTS "Enable delete access for all users" ON reviews;
 CREATE POLICY "Enable delete access for all users" 
 ON reviews FOR DELETE 
 USING (true);
+
