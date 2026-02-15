@@ -8,6 +8,12 @@ import { getAllCategories } from '../services/supabase/categories';
 import { supabase } from '../supabaseClient';
 import { Truck, ShieldCheck, CreditCard, ArrowRight, X } from 'lucide-react';
 
+const carouselImages = [
+    '/images/hero/hero1.jpg',
+    '/images/hero/hero2.jpg',
+    '/images/hero/hero3.jpg'
+];
+
 const HomePage = () => {
     const { searchQuery, setSearchQuery, selectedCategory, setSelectedCategory, setCurrentPage, settings } = useApp();
     const { language, t } = useLanguage();
@@ -16,12 +22,6 @@ const HomePage = () => {
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentHeroSlide, setCurrentHeroSlide] = useState(0);
-
-    const carouselImages = [
-        '/images/hero/hero1.jpg',
-        '/images/hero/hero2.jpg',
-        '/images/hero/hero3.jpg'
-    ];
 
     useEffect(() => {
         // Carousel Timer
@@ -53,7 +53,7 @@ const HomePage = () => {
         fetchData();
 
         return () => clearInterval(heroTimer);
-    }, []);
+    }, [searchQuery, selectedCategory, language, t, setSelectedCategory, setCurrentPage]);
 
     // Helper for category navigation
     const handleCategoryClick = (catName) => {

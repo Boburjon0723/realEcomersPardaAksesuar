@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Star, Minus, Plus, ChevronRight, Heart, ShieldCheck, Truck, ArrowLeft, CheckCircle, X, ShoppingCart } from 'lucide-react';
+import { Star, Minus, Plus, Heart, ShieldCheck, Truck, ArrowLeft, CheckCircle, X, ShoppingCart } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import ProductGallery from '../components/product/ProductGallery';
@@ -46,7 +46,7 @@ const ProductPage = () => {
             setBulkQuantities(initialBulk);
             setShowBulkOrder(false);
         }
-    }, [selectedProduct?.id, fetchReviews]);
+    }, [selectedProduct?.id, selectedProduct?.color, selectedProduct?.colors, fetchReviews]);
 
     // Dynamic Rating Calculation
     const averageRating = reviews.length > 0

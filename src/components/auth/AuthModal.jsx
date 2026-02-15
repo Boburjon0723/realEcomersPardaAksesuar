@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Mail, Lock, User as UserIcon, ArrowRight, Phone } from 'lucide-react';
+import { X, Lock, User as UserIcon, ArrowRight, Phone } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { loginUser, registerUser } from '../../services/supabase/auth';
