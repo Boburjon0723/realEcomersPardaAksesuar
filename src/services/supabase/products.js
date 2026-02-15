@@ -7,15 +7,11 @@ const STORAGE_BUCKET = 'products';
 const mapProductFromDB = (product) => {
     if (!product) return null;
 
-    // If fields are plain text, wrap them in the expected language object for frontend compatibility
-    const wrapLang = (val) => (typeof val === 'object' && val !== null) ? val : { uz: val || '', ru: val || '', en: val || '' };
-
     // Fallback for price: try sale_price first, then price, then 0. Ensure it's a number.
     let priceValue = product.sale_price;
     if (priceValue === undefined || priceValue === null) {
         priceValue = product.price;
     }
-    // If saving in CRM uses 'original_price', we should check that too if needed, but standardizing on sale_price/price is better.
 
     // Handle potential array or object from Supabase join
     const categoryName = Array.isArray(product.categories)
@@ -25,11 +21,11 @@ const mapProductFromDB = (product) => {
     return {
         ...product,
         id: product.id,
-        name: wrapLang(product.name),
-        description: wrapLang(product.description),
+        name: product.name || '',
+        description: product.description || '',
         price: Number(priceValue || 0),
         categoryId: product.category_id,
-        category: wrapLang(categoryName || product.category || ''),
+        category: categoryName || product.category || '',
         // Fix: prioritize 'images' array if it exists and has items, otherwise fall back to 'image_url'
         images: (Array.isArray(product.images) && product.images.length > 0)
             ? product.images

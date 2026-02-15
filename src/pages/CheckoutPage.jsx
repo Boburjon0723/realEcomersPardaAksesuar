@@ -17,7 +17,6 @@ const CheckoutPage = () => {
     const [formData, setFormData] = useState({
         name: currentUser?.name || '',
         phone: currentUser?.phone || '', // Taking phone from user if available
-        email: currentUser?.email || '',
         address: '',
         city: '',
         notes: ''
@@ -95,7 +94,7 @@ const CheckoutPage = () => {
                     price: item.price,
                     quantity: item.quantity,
                     image: item.images[0],
-                    color: item.color,
+                    color: item.selectedColor || item.color,
                     size: item.size
                 })),
                 totalPrice: getTotalPrice(),
@@ -216,15 +215,6 @@ const CheckoutPage = () => {
                                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                                         className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                                         placeholder="+998"
-                                    />
-                                </div>
-                                <div className="md:col-span-2">
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">{t('email')}</label>
-                                    <input
-                                        type="email"
-                                        value={formData.email}
-                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                                     />
                                 </div>
                             </div>
@@ -380,7 +370,14 @@ const CheckoutPage = () => {
                                     />
                                     <div className="flex-1">
                                         <div className="text-sm font-bold text-gray-900 line-clamp-1">{item.name[language]}</div>
-                                        <div className="text-xs text-gray-500">${item.price?.toLocaleString()} x {item.quantity}</div>
+                                        <div className="text-xs text-gray-500">
+                                            ${item.price?.toLocaleString()} x {item.quantity}
+                                            {(item.selectedColor || item.color) && (
+                                                <span className="ml-2 px-1.5 py-0.5 bg-gray-100 rounded text-secondary font-bold uppercase tracking-tighter">
+                                                    {item.selectedColor || item.color}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             ))}
@@ -406,8 +403,8 @@ const CheckoutPage = () => {
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 

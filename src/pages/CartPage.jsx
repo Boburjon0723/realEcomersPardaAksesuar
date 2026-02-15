@@ -38,11 +38,11 @@ const CartPage = () => {
                         const discount = Math.round((1 - itemPrice / item.price) * 100);
 
                         return (
-                            <div key={item.id} className="group bg-white rounded-xl p-4 md:p-6 flex gap-6 border border-gray-100 hover:border-gray-200 transition-colors shadow-sm">
+                            <div key={item.cartItemId} className="group bg-white rounded-xl p-4 md:p-6 flex gap-6 border border-gray-100 hover:border-gray-200 transition-colors shadow-sm">
                                 <div className="w-24 h-24 md:w-32 md:h-32 flex-shrink-0 bg-gray-50 rounded-lg overflow-hidden">
                                     <img
                                         src={item.images?.[0] || ''}
-                                        alt={item.name?.[language] || ''}
+                                        alt={item[`name_${language}`] || item.name || ''}
                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                     />
                                 </div>
@@ -51,38 +51,51 @@ const CartPage = () => {
                                     <div className="space-y-1">
                                         <div className="flex justify-between items-start">
                                             <h3 className="font-bold text-lg text-gray-900 line-clamp-2">
-                                                {item.name?.[language] || ''}
+                                                {item[`name_${language}`] || item.name || ''}
                                             </h3>
                                             <button
-                                                onClick={() => removeFromCart(item.id)}
+                                                onClick={() => removeFromCart(item.cartItemId)}
                                                 className="text-gray-400 hover:text-red-500 p-1 transition-colors"
                                             >
                                                 <Trash2 className="w-5 h-5" />
                                             </button>
                                         </div>
                                         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
-                                            <span className="text-gray-500">{item.category?.[language]}</span>
+                                            <span className="text-gray-500">{item.categories?.[`name_${language}`] || item.categories?.name || ''}</span>
                                             {item.size && (
                                                 <span className="text-primary font-medium">{t('sku') || 'Kod'}: {item.size}</span>
                                             )}
-                                            {item.color && (
-                                                <span className="text-gray-600 font-medium">{t('color') || 'Rang'}: {item.color}</span>
+                                            {(item.selectedColor || item.color) && (
+                                                <span className="text-gray-600 font-medium">
+                                                    {t('color') || 'Rang'}: <span className="text-secondary uppercase">{item.selectedColor || item.color}</span>
+                                                </span>
                                             )}
                                         </div>
                                     </div>
 
                                     <div className="flex flex-wrap items-end justify-between gap-4">
-                                        <div className="flex items-center border border-gray-200 rounded-lg bg-gray-50">
+                                        <div className="flex items-center border border-gray-200 rounded-lg bg-gray-50 overflow-hidden">
                                             <button
-                                                onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                                className="p-2 hover:bg-white text-gray-600 rounded-l-lg transition-colors"
+                                                onClick={() => updateQuantity(item.cartItemId, item.quantity - 1)}
+                                                className="p-2 hover:bg-white text-gray-600 rounded-l-lg transition-colors border-r border-gray-200"
                                             >
                                                 <Minus className="w-4 h-4" />
                                             </button>
-                                            <span className="w-10 text-center font-bold text-gray-900">{item.quantity}</span>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                value={item.quantity}
+                                                onChange={(e) => {
+                                                    const val = parseInt(e.target.value);
+                                                    if (!isNaN(val)) {
+                                                        updateQuantity(item.cartItemId, val);
+                                                    }
+                                                }}
+                                                className="w-12 text-center font-bold text-gray-900 bg-transparent outline-none"
+                                            />
                                             <button
-                                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                className="p-2 hover:bg-white text-gray-600 rounded-r-lg transition-colors"
+                                                onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)}
+                                                className="p-2 hover:bg-white text-gray-600 rounded-r-lg transition-colors border-l border-gray-200"
                                             >
                                                 <Plus className="w-4 h-4" />
                                             </button>

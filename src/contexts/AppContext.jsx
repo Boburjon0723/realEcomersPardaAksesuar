@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { getSettings } from '../services/supabase/settings';
+import { supabase } from '../supabaseClient';
 
 const AppContext = createContext();
 
@@ -27,12 +28,53 @@ export const AppProvider = ({ children }) => {
     // LocalStorage dan yuklash va Settings yuklash
     useEffect(() => {
         const savedCart = localStorage.getItem('cart');
-        const savedUser = localStorage.getItem('user');
         const savedFavorites = localStorage.getItem('favorites');
 
         if (savedCart) setCart(JSON.parse(savedCart));
-        if (savedUser) setCurrentUser(JSON.parse(savedUser));
         if (savedFavorites) setFavorites(JSON.parse(savedFavorites));
+
+        // Get initial Supabase session
+        const getInitialSession = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                // Construct a user object that mimics what the UI expects
+                const user = {
+                    id: session.user.id,
+                    email: session.user.email,
+                    name: session.user.user_metadata?.name || session.user.user_metadata?.display_name || session.user.email?.split('@')[0],
+                    phone: session.user.user_metadata?.phone || '',
+                    ...session.user.user_metadata
+                };
+                setCurrentUser(user);
+                localStorage.setItem('user', JSON.stringify(user));
+            } else {
+                // If no session but we have something in localStorage, keep it for UI 
+                // but real auth actions might still fail. 
+                // Better to clear if no real session exists.
+                // const savedUser = localStorage.getItem('user');
+                // if (savedUser) setCurrentUser(JSON.parse(savedUser));
+            }
+        };
+
+        getInitialSession();
+
+        // Listen for Supabase auth changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (session?.user) {
+                const user = {
+                    id: session.user.id,
+                    email: session.user.email,
+                    name: session.user.user_metadata?.name || session.user.user_metadata?.display_name || session.user.email?.split('@')[0],
+                    phone: session.user.user_metadata?.phone || '',
+                    ...session.user.user_metadata
+                };
+                setCurrentUser(user);
+                localStorage.setItem('user', JSON.stringify(user));
+            } else if (event === 'SIGNED_OUT') {
+                setCurrentUser(null);
+                localStorage.removeItem('user');
+            }
+        });
 
         const fetchSettings = async () => {
             const result = await getSettings();
@@ -41,6 +83,8 @@ export const AppProvider = ({ children }) => {
             }
         };
         fetchSettings();
+
+        return () => subscription.unsubscribe();
     }, []);
 
     // LocalStorage ga saqlash
@@ -53,29 +97,32 @@ export const AppProvider = ({ children }) => {
     }, [favorites]);
 
     // Cart functions
-    const addToCart = (product, quantity = 1) => {
+    const addToCart = (product, quantity = 1, selectedColor = null) => {
         setCart(prev => {
-            const existing = prev.find(item => item.id === product.id);
+            const colorToUse = selectedColor || product.color || (product.colors && product.colors[0]);
+            const cartItemId = `${product.id}-${colorToUse || 'default'}`;
+
+            const existing = prev.find(item => item.cartItemId === cartItemId);
             if (existing) {
                 return prev.map(item =>
-                    item.id === product.id
+                    item.cartItemId === cartItemId
                         ? { ...item, quantity: item.quantity + quantity }
                         : item
                 );
             }
-            return [...prev, { ...product, quantity }];
+            return [...prev, { ...product, quantity, selectedColor: colorToUse, cartItemId }];
         });
     };
 
-    const removeFromCart = (productId) => {
-        setCart(prev => prev.filter(item => item.id !== productId));
+    const removeFromCart = (cartItemId) => {
+        setCart(prev => prev.filter(item => item.cartItemId !== cartItemId));
     };
 
-    const updateQuantity = (productId, quantity) => {
+    const updateQuantity = (cartItemId, quantity) => {
         if (quantity < 1) return;
         setCart(prev =>
             prev.map(item =>
-                item.id === productId ? { ...item, quantity } : item
+                item.cartItemId === cartItemId ? { ...item, quantity } : item
             )
         );
     };

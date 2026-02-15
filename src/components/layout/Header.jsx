@@ -88,7 +88,7 @@ const Header = () => {
                                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                                     <div className="p-3 border-b border-gray-100">
                                         <p className="text-sm font-bold text-gray-900 truncate">{currentUser.name}</p>
-                                        <p className="text-xs text-gray-500 truncate">{currentUser.email}</p>
+                                        <p className="text-xs text-secondary font-bold truncate">{currentUser.phone}</p>
                                     </div>
                                     <div className="p-2">
                                         <button
@@ -187,7 +187,7 @@ const Header = () => {
                             {currentUser ? (
                                 <div className="bg-gray-100 rounded-lg p-4 mb-4">
                                     <p className="font-bold mb-1">{currentUser.name}</p>
-                                    <p className="text-sm text-gray-600 mb-3">{currentUser.email}</p>
+                                    <p className="text-sm text-secondary font-bold mb-3">{currentUser.phone}</p>
                                     <button
                                         onClick={() => {
                                             logoutUser();

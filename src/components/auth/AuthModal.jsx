@@ -4,41 +4,93 @@ import { useApp } from '../../contexts/AppContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { loginUser, registerUser } from '../../services/supabase/auth';
 
+const countries = [
+    { id: 'uzbekistan', code: '+998', name: 'uzbekistan' },
+    { id: 'kazakhstan', code: '+7', name: 'kazakhstan' },
+    { id: 'kyrgyzstan', code: '+996', name: 'kyrgyzstan' },
+    { id: 'tajikistan', code: '+992', name: 'tajikistan' },
+    { id: 'turkmenistan', code: '+993', name: 'turkmenistan' },
+    { id: 'turkey', code: '+90', name: 'turkey' },
+    { id: 'uae', code: '+971', name: 'uae' },
+    { id: 'saudi_arabia', code: '+966', name: 'saudi_arabia' },
+    { id: 'qatar', code: '+974', name: 'qatar' },
+    { id: 'kuwait', code: '+965', name: 'kuwait' },
+    { id: 'oman', code: '+968', name: 'oman' },
+    { id: 'azerbaijan', code: '+994', name: 'azerbaijan' },
+    { id: 'russia', code: '+7', name: 'russia' },
+    { id: 'china', code: '+86', name: 'china' },
+    { id: 'afghanistan', code: '+93', name: 'afghanistan' },
+    { id: 'armenia', code: '+374', name: 'armenia' },
+    { id: 'belarus', code: '+375', name: 'belarus' },
+    { id: 'georgia', code: '+995', name: 'georgia' },
+    { id: 'india', code: '+91', name: 'india' },
+    { id: 'iran', code: '+98', name: 'iran' },
+    { id: 'iraq', code: '+964', name: 'iraq' },
+    { id: 'israel', code: '+972', name: 'israel' },
+    { id: 'jordan', code: '+962', name: 'jordan' },
+    { id: 'lebanon', code: '+961', name: 'lebanon' },
+    { id: 'mongolia', code: '+976', name: 'mongolia' },
+    { id: 'pakistan', code: '+92', name: 'pakistan' },
+    { id: 'palestine', code: '+970', name: 'palestine' },
+    { id: 'syria', code: '+963', name: 'syria' },
+    { id: 'yemen', code: '+967', name: 'yemen' },
+    { id: 'south_korea', code: '+82', name: 'south_korea' },
+    { id: 'japan', code: '+81', name: 'japan' },
+    { id: 'vietnam', code: '+84', name: 'vietnam' },
+    { id: 'thailand', code: '+66', name: 'thailand' },
+    { id: 'malaysia', code: '+60', name: 'malaysia' },
+    { id: 'singapore', code: '+65', name: 'singapore' },
+    { id: 'indonesia', code: '+62', name: 'indonesia' },
+    { id: 'uk', code: '+44', name: 'uk' },
+    { id: 'germany', code: '+49', name: 'germany' },
+    { id: 'france', code: '+33', name: 'france' },
+    { id: 'italy', code: '+39', name: 'italy' },
+    { id: 'spain', code: '+34', name: 'spain' },
+    { id: 'netherlands', code: '+31', name: 'netherlands' },
+    { id: 'switzerland', code: '+41', name: 'switzerland' },
+    { id: 'poland', code: '+48', name: 'poland' },
+    { id: 'ukraine', code: '+380', name: 'ukraine' },
+    { id: 'bangladesh', code: '+880', name: 'bangladesh' },
+    { id: 'philippines', code: '+63', name: 'philippines' },
+];
+
 const AuthModal = () => {
-    const { setShowAuth, isLogin, setIsLogin, setCurrentUser } = useApp();
+    const { setShowAuth, setCurrentUser } = useApp();
     const { t } = useLanguage();
+    const [isLogin, setIsLogin] = useState(true);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
     const [formData, setFormData] = useState({
         name: '',
-        email: '',
         phone: '',
+        phoneCode: '+998',
+        country: 'uzbekistan',
         password: '',
         confirmPassword: ''
     });
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
-        setLoading(true);
 
         if (!isLogin && formData.password !== formData.confirmPassword) {
             setError(t('passwordMismatch'));
-            setLoading(false);
             return;
         }
 
+        setLoading(true);
         try {
+            const fullPhone = formData.phoneCode + formData.phone.replace(/\D/g, '');
             let result;
             if (isLogin) {
-                result = await loginUser(formData.email, formData.password);
+                result = await loginUser(fullPhone, formData.password);
             } else {
-                result = await registerUser(formData.email, formData.password, formData.name, formData.phone);
+                result = await registerUser(formData.password, formData.name, fullPhone, formData.country);
             }
 
             if (result.success) {
                 // Determine user object to save (use returned user or construct one)
-                const user = result.user || { email: formData.email, name: formData.name };
+                const user = result.user || { name: formData.name, phone: formData.phone };
                 // Add extra fields if needed for local state immediately
                 if (!isLogin) {
                     user.name = formData.name;
@@ -99,12 +151,33 @@ const AuthModal = () => {
                         </div>
                     )}
 
-                    {!isLogin && (
-                        <div>
-                            <label className="block text-sm font-bold mb-2 text-gray-700">
-                                {t('phone') || 'Telefon raqam'}
-                            </label>
-                            <div className="relative group">
+                    <div>
+                        <label className="block text-sm font-bold mb-2 text-gray-700">
+                            {t('phone') || 'Telefon raqam'}
+                        </label>
+                        <div className="flex gap-2">
+                            <div className="relative min-w-[100px]">
+                                <select
+                                    value={formData.phoneCode}
+                                    onChange={(e) => {
+                                        const country = countries.find(c => c.code === e.target.value);
+                                        setFormData({
+                                            ...formData,
+                                            phoneCode: e.target.value,
+                                            country: country ? country.id : formData.country
+                                        });
+                                    }}
+                                    className="w-full pl-4 pr-8 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none font-medium appearance-none"
+                                >
+                                    {countries.map(c => (
+                                        <option key={c.id} value={c.code}>{c.code}</option>
+                                    ))}
+                                </select>
+                                <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                                    <ArrowRight className="w-3 h-3 text-gray-400 rotate-90" />
+                                </div>
+                            </div>
+                            <div className="relative flex-1 group">
                                 <Phone className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors w-5 h-5" />
                                 <input
                                     type="tel"
@@ -112,28 +185,42 @@ const AuthModal = () => {
                                     value={formData.phone}
                                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                                     className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none font-medium"
-                                    placeholder="+998 90 123 45 67"
+                                    placeholder="90 123 45 67"
                                 />
                             </div>
                         </div>
-                    )}
-
-                    <div>
-                        <label className="block text-sm font-bold mb-2 text-gray-700">
-                            {t('email')}
-                        </label>
-                        <div className="relative group">
-                            <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors w-5 h-5" />
-                            <input
-                                type="email"
-                                required
-                                value={formData.email}
-                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none font-medium"
-                                placeholder="email@example.com"
-                            />
-                        </div>
                     </div>
+
+                    {!isLogin && (
+                        <div>
+                            <label className="block text-sm font-bold mb-2 text-gray-700">
+                                {t('country')}
+                            </label>
+                            <div className="relative group">
+                                <Phone className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors w-5 h-5" />
+                                <select
+                                    required
+                                    value={formData.country}
+                                    onChange={(e) => {
+                                        const country = countries.find(c => c.id === e.target.value);
+                                        setFormData({
+                                            ...formData,
+                                            country: e.target.value,
+                                            phoneCode: country ? country.code : formData.phoneCode
+                                        });
+                                    }}
+                                    className="w-full pl-12 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none font-medium appearance-none"
+                                >
+                                    {countries.map(c => (
+                                        <option key={c.id} value={c.id}>{t(c.name)}</option>
+                                    ))}
+                                </select>
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                    <ArrowRight className="w-4 h-4 text-gray-400 rotate-90" />
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     <div>
                         <div className="flex justify-between mb-2">

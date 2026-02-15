@@ -4,10 +4,18 @@ import { translations } from '../utils/translations';
 const LanguageContext = createContext();
 
 export const LanguageProvider = ({ children }) => {
-    const [language, setLanguage] = useState('uz');
+    // Default to 'ru' if no saved preference
+    const [language, setLanguage] = React.useState('ru');
+
+    React.useEffect(() => {
+        const savedLang = localStorage.getItem('language');
+        if (savedLang) {
+            setLanguage(savedLang);
+        }
+    }, []);
 
     const t = (key) => {
-        return translations[language][key] || key;
+        return translations[language]?.[key] || key;
     };
 
     const changeLanguage = (lang) => {

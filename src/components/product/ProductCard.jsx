@@ -42,7 +42,7 @@ const ProductCard = ({ product }) => {
             <div className="relative aspect-[4/5] overflow-hidden cursor-pointer bg-gray-50" onClick={handleProductClick}>
                 <img
                     src={product.images[currentImageIndex]}
-                    alt={product.name[language]}
+                    alt={product[`name_${language}`] || product.name}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
 
@@ -97,7 +97,7 @@ const ProductCard = ({ product }) => {
             <div className="p-4">
                 <div className="flex justify-between items-start mb-1 text-xs font-bold uppercase tracking-wider">
                     <div className="text-gray-400">
-                        {product.category?.[language] || 'Category'}
+                        {product.categories?.[`name_${language}`] || product.categories?.name || 'Category'}
                     </div>
                     {product.size && (
                         <div className="text-primary/70 bg-primary/5 px-2 py-0.5 rounded text-[10px]">
@@ -109,7 +109,7 @@ const ProductCard = ({ product }) => {
                     className="font-display font-bold text-xl text-gray-900 mb-2 truncate cursor-pointer hover:text-primary transition-colors leading-tight"
                     onClick={handleProductClick}
                 >
-                    {product.name[language]}
+                    {product[`name_${language}`] || product.name}
                 </h3>
 
                 <div className="flex items-end justify-between">

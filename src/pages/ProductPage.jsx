@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Star, Minus, Plus, ChevronRight, Heart, ShieldCheck, Truck, ArrowLeft, CheckCircle, X } from 'lucide-react';
+import { Star, Minus, Plus, ChevronRight, Heart, ShieldCheck, Truck, ArrowLeft, CheckCircle, X, ShoppingCart } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import ProductGallery from '../components/product/ProductGallery';
@@ -14,6 +14,9 @@ const ProductPage = () => {
     const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
     const [submitStatus, setSubmitStatus] = useState('idle'); // idle, submitting, success, error
     const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
+    const [selectedColor, setSelectedColor] = useState(null);
+    const [bulkQuantities, setBulkQuantities] = useState({});
+    const [showBulkOrder, setShowBulkOrder] = useState(false);
 
     const showNotification = (message, type = 'success') => {
         setNotification({ show: true, message, type });
@@ -33,6 +36,15 @@ const ProductPage = () => {
     React.useEffect(() => {
         if (selectedProduct?.id) {
             fetchReviews();
+            // Reset selected color and bulk quantities when product changes
+            setSelectedColor(selectedProduct.colors?.[0] || selectedProduct.color || null);
+
+            const initialBulk = {};
+            if (selectedProduct.colors?.length > 0) {
+                selectedProduct.colors.forEach(c => initialBulk[c] = 0);
+            }
+            setBulkQuantities(initialBulk);
+            setShowBulkOrder(false);
         }
     }, [selectedProduct?.id, fetchReviews]);
 
@@ -63,7 +75,7 @@ const ProductPage = () => {
         ]);
 
         if (error) {
-            console.error('Error submitting review:', error);
+            console.error('Supabase Review Insert Error:', error);
             setSubmitStatus('error');
             showNotification(t('error') || 'Xatolik yuz berdi', 'error');
         } else {
@@ -121,20 +133,18 @@ const ProductPage = () => {
                     {/* Gallery */}
                     <ProductGallery
                         images={selectedProduct.images}
-                        productName={selectedProduct.name?.[language] || ''}
+                        productName={selectedProduct[`name_${language}`] || selectedProduct.name || ''}
                     />
 
                     {/* Product Info */}
                     <div>
                         {/* Breadcrumb */}
                         <div className="flex items-center text-sm text-gray-500 mb-4 font-medium uppercase tracking-wider">
-                            <span>{selectedProduct.category?.[language] || ''}</span>
-                            <ChevronRight className="w-4 h-4 mx-2 text-gray-300" />
-                            <span>{selectedProduct.subcategory?.[language] || ''}</span>
+                            <span>{selectedProduct.categories?.[`name_${language}`] || selectedProduct.categories?.name || ''}</span>
                         </div>
 
                         <h1 className="text-3xl md:text-4xl font-display font-bold mb-4 text-gray-900 leading-tight">
-                            {selectedProduct.name?.[language] || ''}
+                            {selectedProduct[`name_${language}`] || selectedProduct.name || ''}
                         </h1>
 
                         <div className="flex items-center gap-6 mb-6">
@@ -156,22 +166,45 @@ const ProductPage = () => {
                                 </span>
                             </div>
 
-                            {/* Code and Color Display */}
+                            {/* Code Display */}
                             <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-widest text-secondary">
                                 {selectedProduct.size && (
                                     <div className="flex items-center gap-1">
-                                        <span className="opacity-60">{t('sku')}:</span>
+                                        <span className="opacity-60">{t('sku') || 'Kod'}:</span>
                                         <span>{selectedProduct.size}</span>
-                                    </div>
-                                )}
-                                {selectedProduct.color && (
-                                    <div className="flex items-center gap-1 border-l border-gray-200 pl-4">
-                                        <span className="opacity-60">{t('color')}:</span>
-                                        <span>{selectedProduct.color}</span>
                                     </div>
                                 )}
                             </div>
                         </div>
+
+                        {/* Color Selection */}
+                        {(selectedProduct.colors?.length > 0 || selectedProduct.color) && (
+                            <div className="mb-6">
+                                <label className="block text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">
+                                    {t('color') || 'Rang'}: <span className="text-secondary ml-1">{selectedColor || selectedProduct.color}</span>
+                                </label>
+                                <div className="flex flex-wrap gap-3">
+                                    {selectedProduct.colors?.length > 0 ? (
+                                        selectedProduct.colors.map((color, idx) => (
+                                            <button
+                                                key={idx}
+                                                onClick={() => setSelectedColor(color)}
+                                                className={`px-4 py-2 rounded-xl border-2 transition-all font-bold text-xs ${selectedColor === color
+                                                    ? 'border-primary bg-primary/5 text-primary shadow-sm'
+                                                    : 'border-gray-100 bg-white text-gray-500 hover:border-primary/50'
+                                                    }`}
+                                            >
+                                                {color}
+                                            </button>
+                                        ))
+                                    ) : (
+                                        <div className="px-4 py-2 rounded-xl border-2 border-primary bg-primary/5 text-primary font-bold text-xs">
+                                            {selectedProduct.color}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Price */}
                         <div className="mb-8 p-6 bg-gray-50 rounded-xl border border-gray-100">
@@ -192,43 +225,130 @@ const ProductPage = () => {
                             )}
                         </div>
 
-                        {/* Short Description */}
-                        <p className="text-gray-600 mb-8 leading-relaxed text-lg">
-                            {selectedProduct.description?.[language] || ''}
-                        </p>
+
+                        {/* Bulk Order Toggle */}
+                        {selectedProduct.colors?.length > 1 && (
+                            <button
+                                onClick={() => setShowBulkOrder(!showBulkOrder)}
+                                className="mb-8 flex items-center gap-2 text-primary font-bold hover:underline"
+                            >
+                                {showBulkOrder ? t('backToSingle') : `+ ${t('bulkOrder')}`}
+                            </button>
+                        )}
 
                         {/* Actions */}
                         <div className="flex flex-col gap-4 mb-8">
-                            {/* Quantity & Cart */}
-                            <div className="flex gap-4">
-                                <div className="flex items-center border border-gray-200 rounded-lg bg-white h-12">
+                            {showBulkOrder && selectedProduct.colors?.length > 1 ? (
+                                <div className="space-y-4 bg-gray-50 p-6 rounded-2xl border border-gray-100 shadow-inner">
+                                    <h3 className="font-bold text-gray-900 border-b border-gray-200 pb-2 mb-4">{t('colorQuantity')}</h3>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {selectedProduct.colors.map((color, idx) => (
+                                            <div key={idx} className="flex items-center justify-between bg-white p-3 rounded-xl border border-gray-100 italic">
+                                                <span className="font-bold text-sm">{color}</span>
+                                                <div className="flex items-center border border-gray-200 rounded-lg h-10 overflow-hidden shadow-sm">
+                                                    <button
+                                                        onClick={() => setBulkQuantities(prev => ({ ...prev, [color]: Math.max(0, (prev[color] || 0) - 1) }))}
+                                                        className="w-10 h-full flex items-center justify-center hover:bg-gray-50 text-gray-600 transition border-r border-gray-100"
+                                                    >
+                                                        <Minus className="w-3 h-3" />
+                                                    </button>
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        value={bulkQuantities[color] || 0}
+                                                        onChange={(e) => {
+                                                            const val = parseInt(e.target.value);
+                                                            if (!isNaN(val)) setBulkQuantities(prev => ({ ...prev, [color]: val }));
+                                                            else if (e.target.value === '') setBulkQuantities(prev => ({ ...prev, [color]: '' }));
+                                                        }}
+                                                        className="w-10 text-center font-bold text-sm outline-none bg-transparent"
+                                                    />
+                                                    <button
+                                                        onClick={() => setBulkQuantities(prev => ({ ...prev, [color]: (parseInt(prev[color]) || 0) + 1 }))}
+                                                        className="w-10 h-full flex items-center justify-center hover:bg-gray-50 text-gray-600 transition border-l border-gray-100"
+                                                    >
+                                                        <Plus className="w-3 h-3" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
                                     <button
-                                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                        className="w-12 h-full flex items-center justify-center hover:bg-gray-50 text-gray-600 transition"
+                                        onClick={() => {
+                                            let addedCount = 0;
+                                            Object.entries(bulkQuantities).forEach(([color, qty]) => {
+                                                if (qty > 0) {
+                                                    addToCart(selectedProduct, parseInt(qty), color);
+                                                    addedCount++;
+                                                }
+                                            });
+                                            if (addedCount > 0) {
+                                                showNotification(`${addedCount} ${t('itemsAddedToCart')}`);
+                                            } else {
+                                                showNotification(t('selectAtLeastOneColor'), "error");
+                                            }
+                                        }}
+                                        className="w-full bg-secondary hover:bg-secondary-dark text-white h-14 rounded-xl font-bold transition-all shadow-lg hover:shadow-secondary/30 mt-4 flex items-center justify-center gap-2"
                                     >
-                                        <Minus className="w-4 h-4" />
-                                    </button>
-                                    <span className="w-12 text-center font-bold text-lg">{quantity}</span>
-                                    <button
-                                        onClick={() => setQuantity(quantity + 1)}
-                                        className="w-12 h-full flex items-center justify-center hover:bg-gray-50 text-gray-600 transition"
-                                    >
-                                        <Plus className="w-4 h-4" />
+                                        <ShoppingCart className="w-5 h-5" />
+                                        {t('addSelectedToCart')}
                                     </button>
                                 </div>
-                                <button
-                                    onClick={() => addToCart(selectedProduct, quantity)}
-                                    className="flex-1 bg-primary hover:bg-primary-dark text-white h-12 rounded-lg font-bold transition-all shadow-lg hover:shadow-primary/30 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none"
-                                >
-                                    {t('addToCart')}
-                                </button>
-                                <button
-                                    onClick={() => toggleFavorite(selectedProduct.id)}
-                                    className={`w-12 h-12 flex items-center justify-center border rounded-lg transition-colors ${favorite ? 'border-red-200 bg-red-50 text-red-500' : 'border-gray-200 hover:border-primary hover:text-primary'}`}
-                                >
-                                    <Heart className={`w-5 h-5 ${favorite ? 'fill-current' : ''}`} />
-                                </button>
-                            </div>
+                            ) : (
+                                <div className="flex flex-col gap-4">
+                                    <div className="flex gap-4">
+                                        <div className="flex items-center border border-gray-200 rounded-lg bg-white h-12 overflow-hidden shadow-sm">
+                                            <button
+                                                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                                                className="w-12 h-full flex items-center justify-center hover:bg-gray-50 text-gray-600 transition border-r border-gray-100"
+                                            >
+                                                <Minus className="w-4 h-4" />
+                                            </button>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                value={quantity}
+                                                onChange={(e) => {
+                                                    const val = parseInt(e.target.value);
+                                                    if (!isNaN(val)) {
+                                                        setQuantity(val);
+                                                    } else if (e.target.value === '') {
+                                                        setQuantity('');
+                                                    }
+                                                }}
+                                                onBlur={() => {
+                                                    if (quantity === '' || quantity < 1) {
+                                                        setQuantity(1);
+                                                    }
+                                                }}
+                                                className="w-16 text-center font-bold text-lg outline-none bg-transparent"
+                                            />
+                                            <button
+                                                onClick={() => setQuantity(quantity === '' ? 1 : parseInt(quantity) + 1)}
+                                                className="w-12 h-full flex items-center justify-center hover:bg-gray-50 text-gray-600 transition border-l border-gray-100"
+                                            >
+                                                <Plus className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                addToCart(selectedProduct, quantity === '' ? 1 : parseInt(quantity), selectedColor);
+                                                showNotification(t('itemAdded') || 'Mahsulot savatga qo\'shildi!');
+                                            }}
+                                            className="flex-1 bg-primary hover:bg-primary-dark text-white h-12 rounded-lg font-bold transition-all shadow-lg hover:shadow-primary/30 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2"
+                                        >
+                                            <ShoppingCart className="w-5 h-5" />
+                                            {t('addToCart')}
+                                        </button>
+                                        <button
+                                            onClick={() => toggleFavorite(selectedProduct.id)}
+                                            className={`w-12 h-12 flex items-center justify-center border rounded-lg transition-colors ${favorite ? 'border-red-200 bg-red-50 text-red-500' : 'border-gray-200 hover:border-primary hover:text-primary'}`}
+                                        >
+                                            <Heart className={`w-5 h-5 ${favorite ? 'fill-current' : ''}`} />
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Features List */}
@@ -266,11 +386,7 @@ const ProductPage = () => {
                     <div className="min-h-[200px]">
                         {activeTab === 'description' && (
                             <div className="prose max-w-none text-gray-600 leading-relaxed">
-                                <p>{selectedProduct.description?.[language] || ''}</p>
-                                <p className="mt-4">
-                                    Enhance your interior decor with our premium quality curtain accessories.
-                                    Designed solely for durability and style, this product seamlessly blends functionality with modern aesthetics.
-                                </p>
+                                <p>{selectedProduct[`description_${language}`] || selectedProduct.description || ''}</p>
                             </div>
                         )}
 
@@ -334,10 +450,10 @@ const ProductPage = () => {
 
                                 {/* Review Form */}
                                 <div className="border-t border-gray-100 pt-8">
-                                    <h3 className="text-xl font-bold mb-6">Sharh qoldirish</h3>
+                                    <h3 className="text-xl font-bold mb-6">{t('leaveReview')}</h3>
                                     <form onSubmit={handleSubmitReview} className="space-y-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Bahoyingiz</label>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">{t('yourRating')}</label>
                                             <div className="flex gap-2">
                                                 {[1, 2, 3, 4, 5].map((star) => (
                                                     <button
@@ -352,13 +468,13 @@ const ProductPage = () => {
                                             </div>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Sharhingiz</label>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">{t('yourReview')}</label>
                                             <textarea
                                                 rows="4"
                                                 value={reviewForm.comment}
                                                 onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
                                                 className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-primary focus:border-transparent"
-                                                placeholder="Mahsulot haqida fikringiz..."
+                                                placeholder={t('reviewPlaceholder')}
                                                 required
                                             ></textarea>
                                         </div>
@@ -367,7 +483,7 @@ const ProductPage = () => {
                                             disabled={submitStatus === 'submitting'}
                                             className="bg-primary text-white px-8 py-3 rounded-lg font-bold hover:bg-primary-dark transition shadow-lg hover:shadow-primary/30 disabled:opacity-70 disabled:cursor-not-allowed"
                                         >
-                                            {submitStatus === 'submitting' ? 'Yuborilmoqda...' : 'Yuborish'}
+                                            {submitStatus === 'submitting' ? t('submitting') : t('submit')}
                                         </button>
 
                                         {submitStatus === 'success' && (
@@ -377,7 +493,7 @@ const ProductPage = () => {
                                         )}
                                         {submitStatus === 'error' && (
                                             <div className="p-4 bg-red-50 text-red-700 rounded-lg border border-red-200 mt-4">
-                                                Xatolik yuz berdi. Iltimos qaytadan urinib ko'ring.
+                                                {t('errorMsg') || 'Xatolik yuz berdi. Iltimos qaytadan urinib ko\'ring.'}
                                             </div>
                                         )}
                                     </form>

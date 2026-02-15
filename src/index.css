@@ -399,6 +399,17 @@ select:focus {
   box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
 }
 
+/* Hide Spinners for Number Inputs */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
 /* Card Enhancements */
 .card-premium {
   background: white;

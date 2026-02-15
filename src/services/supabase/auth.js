@@ -1,8 +1,17 @@
 import { supabase } from '../../supabaseClient';
 
+// Helper to create virtual email from phone
+const createVirtualEmail = (phone) => {
+    // Remove all non-numeric characters
+    const cleanPhone = phone.replace(/\D/g, '');
+    // Standardize: Add 'u' prefix and use .com to pass strict validators
+    return `u${cleanPhone}@nuurhome.com`;
+};
+
 // Register new user
-export const registerUser = async (email, password, displayName, phone) => {
+export const registerUser = async (password, displayName, phone, country) => {
     try {
+        const email = createVirtualEmail(phone);
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
@@ -10,7 +19,8 @@ export const registerUser = async (email, password, displayName, phone) => {
                 data: {
                     display_name: displayName,
                     name: displayName,
-                    phone: phone
+                    phone: phone,
+                    country: country
                 }
             }
         });
@@ -22,23 +32,21 @@ export const registerUser = async (email, password, displayName, phone) => {
                 .from('customers')
                 .insert([
                     {
-                        id: data.user.id, // Trying to link with auth ID
+                        id: data.user.id,
                         name: displayName,
-                        email: email,
                         phone: phone,
+                        country: country,
                         created_at: new Date()
                     }
                 ]);
 
-            // Agar id constraint bo'lsa yoki customers jadvali auth.users ga bog'lanmagan bo'lsa,
-            // shunchaki id ni tashlab yuboramiz (serial bo'lishi mumkin)
             if (customerError) {
                 console.warn('Customer creation failed with ID, trying without ID', customerError);
                 await supabase.from('customers').insert([
                     {
                         name: displayName,
-                        email: email,
-                        phone: phone
+                        phone: phone,
+                        country: country
                     }
                 ]);
             }
@@ -52,8 +60,9 @@ export const registerUser = async (email, password, displayName, phone) => {
 };
 
 // Login user
-export const loginUser = async (email, password) => {
+export const loginUser = async (phone, password) => {
     try {
+        const email = createVirtualEmail(phone);
         const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password

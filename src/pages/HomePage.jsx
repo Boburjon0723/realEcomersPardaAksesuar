@@ -15,8 +15,20 @@ const HomePage = () => {
     const [banners, setBanners] = useState([]);
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [currentHeroSlide, setCurrentHeroSlide] = useState(0);
+
+    const carouselImages = [
+        '/images/hero/hero1.jpg',
+        '/images/hero/hero2.jpg',
+        '/images/hero/hero3.jpg'
+    ];
 
     useEffect(() => {
+        // Carousel Timer
+        const heroTimer = setInterval(() => {
+            setCurrentHeroSlide(prev => (prev + 1) % carouselImages.length);
+        }, 5000);
+
         const fetchData = async () => {
             setLoading(true);
             const [productsResult, bannersResult, categoriesResult] = await Promise.all([
@@ -39,6 +51,8 @@ const HomePage = () => {
             setLoading(false);
         };
         fetchData();
+
+        return () => clearInterval(heroTimer);
     }, []);
 
     // Helper for category navigation
@@ -149,35 +163,43 @@ const HomePage = () => {
 
             {/* Hero Section */}
             {!selectedCategory && !searchQuery ? (
-                <div className="relative bg-gray-100 min-h-[500px] md:min-h-[600px] flex items-center mb-16 overflow-hidden">
-                    {/* Background Image with Overlay */}
+                <div className="relative bg-[#f6f4f2] h-[450px] md:h-[650px] flex items-center mb-16 overflow-hidden">
+                    {/* Carousel Background */}
                     <div className="absolute inset-0 z-0">
-                        <picture>
-                            {/* Mobile Hero */}
-                            <source
-                                media="(max-width: 768px)"
-                                srcSet={settings?.hero_mobile_url || settings?.hero_desktop_url || banners[0]?.image_url || "https://images.unsplash.com/photo-1513694203232-719a280e022f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"}
-                            />
-                            {/* Desktop Hero */}
-                            <img
-                                src={settings?.hero_desktop_url || banners[0]?.image_url || "https://images.unsplash.com/photo-1513694203232-719a280e022f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80"}
-                                alt="Hero"
-                                className="w-full h-full object-cover"
-                            />
-                        </picture>
-                        <div className="absolute inset-0 bg-black/30"></div>
+                        {carouselImages.map((src, index) => (
+                            <div
+                                key={index}
+                                className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentHeroSlide ? 'opacity-100' : 'opacity-0'}`}
+                            >
+                                <img
+                                    src={src}
+                                    alt={`Hero ${index + 1}`}
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                        ))}
+                        <div className="absolute inset-0 bg-black/5"></div>
                     </div>
 
-                    <div className="container mx-auto px-4 md:px-6 relative z-10 text-white">
+                    <div className="container mx-auto px-4 md:px-6 relative z-10 text-gray-900">
                         <div className="max-w-2xl animate-fade-in">
-                            <span className="inline-block py-1.5 px-3.5 bg-white/10 border border-white/20 rounded-full text-sm font-medium mb-6 backdrop-blur-md">
+                            {/* Slide Indicators */}
+                            <div className="flex gap-2 mb-8">
+                                {carouselImages.map((_, index) => (
+                                    <div
+                                        key={index}
+                                        className={`h-1.5 rounded-full transition-all duration-300 ${index === currentHeroSlide ? 'w-10 bg-primary' : 'w-4 bg-gray-300'}`}
+                                    />
+                                ))}
+                            </div>
+                            <span className="inline-block py-1.5 px-3.5 bg-primary/10 border border-primary/20 rounded-full text-sm font-bold mb-6 text-primary">
                                 {t('premiumQuality')}
                             </span>
-                            <h1 className="text-4xl md:text-6xl font-display font-bold leading-tight mb-6 text-shadow-lg">
-                                {settings?.banner_text || banners[0]?.title || t('heroTitle')}
+                            <h1 className="text-4xl md:text-6xl font-display font-bold leading-tight mb-6 text-gray-900">
+                                {settings?.[`banner_text_${language}`] || settings?.banner_text || banners[0]?.[`title_${language}`] || banners[0]?.title || t('heroTitle')}
                             </h1>
-                            <p className="text-lg md:text-xl text-white/90 mb-8 leading-relaxed max-w-xl text-shadow">
-                                {banners[0]?.subtitle || t('heroSubtitle')}
+                            <p className="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed max-w-xl">
+                                {banners[0]?.[`subtitle_${language}`] || banners[0]?.subtitle || t('heroSubtitle')}
                             </p>
                             <div className="flex flex-wrap gap-4">
                                 <button
@@ -189,7 +211,7 @@ const HomePage = () => {
                                 </button>
                                 <button
                                     onClick={() => setCurrentPage('shop')}
-                                    className="px-8 py-4 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/20 rounded-xl font-bold transition-all"
+                                    className="px-8 py-4 bg-white/50 hover:bg-white/80 backdrop-blur-md text-gray-900 border border-gray-200 rounded-xl font-bold transition-all shadow-sm"
                                 >
                                     {t('viewCatalog')}
                                 </button>
@@ -263,7 +285,7 @@ const HomePage = () => {
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent transition-opacity group-hover:opacity-80"></div>
                                     <div className="absolute bottom-6 left-6 z-10">
                                         <div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/20 shadow-lg transition-transform group-hover:scale-105">
-                                            <h3 className="text-lg font-bold text-gray-900 tracking-tight">{cat.name}</h3>
+                                            <h3 className="text-lg font-bold text-gray-900 tracking-tight">{cat[`name_${language}`] || cat.name}</h3>
                                             <p className="text-xs text-gray-500 font-semibold">{cat.count} {t('items')}</p>
                                         </div>
                                     </div>
@@ -280,7 +302,7 @@ const HomePage = () => {
                 {(selectedCategory || searchQuery) && (
                     <div className="mb-8 flex items-center justify-between">
                         <h2 className="text-2xl font-bold text-gray-900">
-                            {searchQuery ? `${t('search')}: "${searchQuery}"` : selectedCategory.category}
+                            {searchQuery ? `${t('search')}: "${searchQuery}"` : (categories.find(c => c.name === selectedCategory.category)?.[`name_${language}`] || selectedCategory.category)}
                         </h2>
                         {selectedCategory && (
                             <button

@@ -6,7 +6,7 @@ import { getAllCategories } from '../../services/supabase/categories';
 
 const Sidebar = () => {
     const { selectedCategory, setSelectedCategory } = useApp();
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -50,19 +50,22 @@ const Sidebar = () => {
                     {t('allCategories') || 'All Categories'}
                 </button>
 
-                {categories.map((category) => (
-                    <button
-                        key={category.id}
-                        onClick={() => handleCategoryClick(category.name)}
-                        className={`block w-full text-left px-4 py-2 rounded-lg text-sm transition-colors flex items-center justify-between ${selectedCategory?.category === category.name
-                            ? 'bg-white border-l-4 border-primary text-primary font-bold shadow-sm'
-                            : 'text-gray-600 hover:bg-gray-100 hover:text-primary'
-                            }`}
-                    >
-                        <span>{category.name}</span>
-                        {selectedCategory?.category === category.name && <ChevronRight className="w-4 h-4" />}
-                    </button>
-                ))}
+                {categories.map((category) => {
+                    const displayName = category[`name_${language}`] || category.name;
+                    return (
+                        <button
+                            key={category.id}
+                            onClick={() => handleCategoryClick(category.name)}
+                            className={`block w-full text-left px-4 py-2 rounded-lg text-sm transition-colors flex items-center justify-between ${selectedCategory?.category === category.name
+                                ? 'bg-white border-l-4 border-primary text-primary font-bold shadow-sm'
+                                : 'text-gray-600 hover:bg-gray-100 hover:text-primary'
+                                }`}
+                        >
+                            <span>{displayName}</span>
+                            {selectedCategory?.category === category.name && <ChevronRight className="w-4 h-4" />}
+                        </button>
+                    );
+                })}
             </div>
 
         </aside>

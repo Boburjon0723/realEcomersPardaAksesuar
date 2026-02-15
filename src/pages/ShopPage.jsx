@@ -4,39 +4,54 @@ import { useLanguage } from '../contexts/LanguageContext';
 import ProductGrid from '../components/product/ProductGrid';
 import Sidebar from '../components/layout/Sidebar'; // Reusing existing Sidebar logic but wrapping it
 import { getAllProducts } from '../services/supabase/products';
+import { getAllCategories } from '../services/supabase/categories';
 import { Filter, X, Search } from 'lucide-react';
 
 const ShopPage = () => {
     const { searchQuery, setSearchQuery, selectedCategory, setSelectedCategory } = useApp();
     const { language, t } = useLanguage();
     const [products, setProducts] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showMobileFilters, setShowMobileFilters] = useState(false);
 
     useEffect(() => {
-        const fetchProducts = async () => {
+        const fetchData = async () => {
             setLoading(true);
-            const result = await getAllProducts(true);
-            if (result.success) {
-                setProducts(result.products);
-            }
+            const [productsResult, categoriesResult] = await Promise.all([
+                getAllProducts(true),
+                getAllCategories()
+            ]);
+
+            if (productsResult.success) setProducts(productsResult.products);
+            if (categoriesResult.success) setCategories(categoriesResult.categories);
+
             setLoading(false);
         };
-        fetchProducts();
+        fetchData();
     }, []);
 
     // Filter products
     const filteredProducts = products.filter(product => {
-        const name = product.name?.[language] || '';
-        const code = product.size || '';
-        const category = product.category?.[language] || '';
-        const subcategory = product.subcategory?.[language] || '';
+        const searchTerms = searchQuery.toLowerCase().split(' ').filter(word => word.length > 0);
 
-        const matchesSearch = name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            code.toLowerCase().includes(searchQuery.toLowerCase());
+        const localizedName = product[`name_${language}`]?.toLowerCase() || product.name?.toLowerCase() || '';
+        const code = product.size?.toLowerCase() || '';
+        const colors = product.colors || [];
+        const categoryName = product.categories?.name?.toLowerCase() || '';
+
+        const matchesSearch = searchTerms.length === 0 || searchTerms.every(term => {
+            const inName = localizedName.includes(term);
+            const inCode = code.includes(term);
+            const inColors = colors.some(c => c.toLowerCase().includes(term));
+            const inCategory = categoryName.includes(term);
+
+            return inName || inCode || inColors || inCategory;
+        });
+
         const matchesCategory = !selectedCategory ||
-            (category === selectedCategory.category &&
-                (!selectedCategory.subcategory || subcategory === selectedCategory.subcategory));
+            (product.categories?.name === selectedCategory.category);
+
         return matchesSearch && matchesCategory;
     });
 
@@ -45,7 +60,9 @@ const ShopPage = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-center mb-8">
                 <h1 className="text-3xl font-display font-bold text-gray-900 mb-4 md:mb-0">
-                    {selectedCategory ? `${selectedCategory.category} - ${selectedCategory.subcategory}` : (t('shopAll') || 'Shop All Products')}
+                    {selectedCategory ? (
+                        categories.find(c => c.name === selectedCategory.category)?.[`name_${language}`] || selectedCategory.category
+                    ) : (t('shopAll') || 'Shop All Products')}
                 </h1>
 
                 <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
@@ -98,9 +115,9 @@ const ShopPage = () => {
                 <div className="flex-1">
                     {selectedCategory && (
                         <div className="mb-6 flex items-center">
-                            <span className="text-gray-600 mr-2">Active Filter:</span>
+                            <span className="text-gray-600 mr-2">{t('activeFilter') || 'Active Filter'}:</span>
                             <span className="inline-flex items-center px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
-                                {selectedCategory.subcategory}
+                                {categories.find(c => c.name === selectedCategory.category)?.[`name_${language}`] || selectedCategory.category}
                                 <button
                                     onClick={() => setSelectedCategory(null)}
                                     className="ml-2 hover:bg-primary/20 rounded-full p-0.5"
