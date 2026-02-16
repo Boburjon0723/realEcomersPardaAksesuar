@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Calendar, Clock, ChevronRight, ArrowLeft, ShoppingBag, ExternalLink } from 'lucide-react';
+import { Package, Calendar, ArrowLeft, ShoppingBag, ExternalLink } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { getUserOrders } from '../services/supabase/orders';
@@ -9,7 +9,6 @@ const MyOrdersPage = () => {
     const { t } = useLanguage();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
 
     useEffect(() => {
         if (!currentUser) {
@@ -23,7 +22,7 @@ const MyOrdersPage = () => {
             if (result.success) {
                 setOrders(result.orders);
             } else {
-                setError(result.error);
+                console.error(result.error);
             }
             setLoading(false);
         };
@@ -159,7 +158,7 @@ const MyOrdersPage = () => {
                                     </div>
                                     {order.receipt_url && (
                                         <a
-                                            href={order.receipt_url}
+                                            href={order.receipt_url || '#'}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="flex items-center text-xs font-bold text-secondary hover:text-primary transition-colors bg-gray-50 px-4 py-2 rounded-lg"

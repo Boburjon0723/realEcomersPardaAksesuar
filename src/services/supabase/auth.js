@@ -1,13 +1,5 @@
 import { supabase } from '../../supabaseClient';
 
-// Helper to create virtual email from phone
-const createVirtualEmail = (phone) => {
-    // Remove all non-numeric characters
-    const cleanPhone = phone.replace(/\D/g, '');
-    // Standardize: Add 'u' prefix and use .com to pass strict validators
-    return `u${cleanPhone}@nuurhome.com`;
-};
-
 // Register new user
 export const registerUser = async (password, displayName, phone, country, email) => {
     try {
