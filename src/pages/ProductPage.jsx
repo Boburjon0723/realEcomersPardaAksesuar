@@ -18,6 +18,11 @@ const ProductPage = () => {
     const [bulkQuantities, setBulkQuantities] = useState({});
     const [showBulkOrder, setShowBulkOrder] = useState(false);
 
+    const showNotification = (message, type = 'success') => {
+        setNotification({ show: true, message, type });
+        setTimeout(() => setNotification({ show: false, message: '', type: 'success' }), 5000);
+    };
+
     const fetchReviews = React.useCallback(async () => {
         const { data } = await supabase
             .from('reviews')
