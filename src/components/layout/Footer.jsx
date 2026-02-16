@@ -88,10 +88,13 @@ const Footer = () => {
                         <ul className="space-y-3">
                             {['shipping', 'returns', 'faq', 'terms', 'privacy'].map((key) => (
                                 <li key={key}>
-                                    <a href="#" className="flex items-center text-gray-400 hover:text-secondary transition-colors group">
-                                        <ChevronRight className="w-4 h-4 mr-2 text-gray-600 group-hover:text-secondary opacity-0 group-hover:opacity-100 transition-all" />
+                                    <button
+                                        onClick={() => setCurrentPage('contact')}
+                                        className="flex items-center text-gray-400 hover:text-secondary transition-colors group w-full text-left"
+                                    >
+                                        <ChevronRight className="w-4 h-4 mr-2 text-gray-600 group-hover:text-secondary opacity-0 group-hover:opacity-100 transition-all font-bold" />
                                         {t(key)}
-                                    </a>
+                                    </button>
                                 </li>
                             ))}
                         </ul>
