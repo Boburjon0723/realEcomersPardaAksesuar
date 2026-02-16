@@ -75,6 +75,9 @@ export const translations = {
         philippines: "Filippin",
         enterName: "Ismingizni kiriting",
         passwordMismatch: "Parollar mos kelmadi",
+        loginError: "Kirishda xatolik yuz berdi",
+        verifyError: "Hisobingiz tasdiqlanmagan. Iltimos, administratorga bog'laning.",
+        invalidCredentials: "Telefon raqam yoki parol noto'g'ri",
 
         // --- Home Page ---
         premiumQuality: "Premium Sifat",
@@ -98,6 +101,18 @@ export const translations = {
         shopByCategory: "Kategoriyalar bo'yicha",
         bestSellers: "Eng Ko'p Sotilganlar",
         joinCommunity: "Dizaynerlar safiga qo'shiling",
+
+        // --- Footer ---
+        footerDescription: "Uyingiz interyerini bizning premium parda aksessuarlarimiz bilan boyiting. Zamonaviy uylar uchun sifatli va didli mahsulotlar.",
+        quickLinks: "Tezkor Havolalar",
+        customerService: "Mijozlar Xizmati",
+        // contactUs: "Bog'lanish", // duplicate
+        // shipping: "Yetkazib berish", // duplicate
+        returns: "Qaytarish va Almashish",
+        faq: "Ko'p so'raladigan savollar",
+        terms: "Foydalanish shartlari",
+        privacy: "Maxfiylik siyosati",
+        allRightsReserved: "Barcha huquqlar himoyalangan.",
         subscribeDesc: "Eksklyuziv takliflar va yangi dizaynlar haqida birinchi bo'lib bilish uchun obuna bo'ling.",
         subscribe: "Obuna Bo'lish",
 
@@ -143,7 +158,30 @@ export const translations = {
         city: "Shahar",
         selectCity: "Shaharni tanlang",
         address: "Manzil",
+        address: "Manzil",
         notes: "Izoh (ixtiyoriy)",
+        tashkent: "Toshkent",
+        samarkand: "Samarqand",
+        bukhara: "Buxoro",
+        andijan: "Andijon",
+        namangan: "Namangan",
+        fergana: "Farg'ona",
+        nukus: "Nukus",
+        karshi: "Qarshi",
+        astana: "Ostona",
+        almaty: "Almati",
+        shymkent: "Chimkent",
+        bishkek: "Bishkek",
+        osh: "O'sh",
+        dushanbe: "Dushanbe",
+        khujand: "Xujand",
+        ashgabat: "Ashxobod",
+        istanbul: "Istanbul",
+        ankara: "Anqara",
+        dubai: "Dubay",
+        abu_dhabi: "Abu Dabi",
+        moscow: "Moskva",
+        saint_petersburg: "Sankt-Peterburg",
         uploadReceipt: "To'lov chekini yuklash",
         maxFileSize: "Fayl hajmi 5MB dan oshmasligi kerak",
         confirmOrder: "Buyurtmani Tasdiqlash",
@@ -207,7 +245,16 @@ export const translations = {
         submit: "Yuborish",
         submitting: "Yuborilmoqda...",
         noReviews: "Hozircha sharhlar yo'q",
-        noFeatures: "Xususiyatlar mavjud emas"
+        noFeatures: "Xususiyatlar mavjud emas",
+        myOrders: "Mening buyurtmalarim",
+        orderHistory: "Buyurtmalar tarixi",
+        orderId: "Buyurtma ID",
+        date: "Sana",
+        status: "Holati",
+        noOrders: "Hozircha buyurtmalar mavjud emas",
+        viewDetails: "Batafsil ko'rish",
+        orderItems: "Buyurtma tarkibi",
+        trackOrder: "Buyurtmani kuzatish"
     },
 
     ru: {
@@ -286,6 +333,9 @@ export const translations = {
         philippines: "Филиппины",
         enterName: "Введите ваше имя",
         passwordMismatch: "Пароли не совпадают",
+        loginError: "Ошибка при входе",
+        verifyError: "Ваш аккаунт не подтвержден. Пожалуйста, свяжитесь с администратором.",
+        invalidCredentials: "Неверный номер телефона или пароль",
 
         // --- Home Page ---
         premiumQuality: "Премиум Качество",
@@ -308,7 +358,19 @@ export const translations = {
 
         shopByCategory: "По Категориям",
         bestSellers: "Хиты Продаж",
-        joinCommunity: "Присоединяйтесь к нам",
+        joinCommunity: "Присоединяйтесь к дизайнерам",
+
+        // --- Footer ---
+        footerDescription: "Улучшите интерьер вашего дома с нашими премиальными аксессуарами для штор. Качество и стиль для современных домов.",
+        quickLinks: "Быстрые ссылки",
+        customerService: "Служба поддержки",
+        // contactUs: "Контакты", // duplicate
+        // shipping: "Доставка", // duplicate
+        returns: "Возврат и Обмен",
+        faq: "Часто задаваемые вопросы",
+        terms: "Условия использования",
+        privacy: "Политика конфиденциальности",
+        allRightsReserved: "Все права защищены.",
         subscribeDesc: "Подпишитесь, чтобы первыми узнавать об эксклюзивных предложениях и новых дизайнах.",
         subscribe: "Подписаться",
 
@@ -354,7 +416,30 @@ export const translations = {
         city: "Город",
         selectCity: "Выберите город",
         address: "Адрес",
+        address: "Адрес",
         notes: "Примечание (необязательно)",
+        tashkent: "Ташкент",
+        samarkand: "Самарканд",
+        bukhara: "Бухара",
+        andijan: "Андижан",
+        namangan: "Наманган",
+        fergana: "Фергана",
+        nukus: "Нукус",
+        karshi: "Карши",
+        astana: "Астана",
+        almaty: "Алматы",
+        shymkent: "Шымкент",
+        bishkek: "Бишкек",
+        osh: "Ош",
+        dushanbe: "Душанбе",
+        khujand: "Худжанд",
+        ashgabat: "Ашхабад",
+        istanbul: "Стамбул",
+        ankara: "Анкара",
+        dubai: "Дубай",
+        abu_dhabi: "Абу-Даби",
+        moscow: "Москва",
+        saint_petersburg: "Санкт-Петербург",
         uploadReceipt: "Загрузить чек оплаты",
         maxFileSize: "Размер файла не более 5МБ",
         confirmOrder: "Подтвердить Заказ",
@@ -418,7 +503,16 @@ export const translations = {
         submit: "Отправить",
         submitting: "Отправка...",
         noReviews: "Отзывов пока нет",
-        noFeatures: "Характеристики отсутствуют"
+        noFeatures: "Характеристики отсутствуют",
+        myOrders: "Мои заказы",
+        orderHistory: "История заказов",
+        orderId: "ID заказа",
+        date: "Дата",
+        status: "Статус",
+        noOrders: "Заказов пока нет",
+        viewDetails: "Подробнее",
+        orderItems: "Состав заказа",
+        trackOrder: "Отследить заказ"
     },
 
     en: {
@@ -497,6 +591,9 @@ export const translations = {
         philippines: "Philippines",
         enterName: "Enter your name",
         passwordMismatch: "Passwords do not match",
+        loginError: "Login error",
+        verifyError: "Your account is not verified. Please contact administrator.",
+        invalidCredentials: "Invalid phone number or password",
 
         // --- Home Page ---
         premiumQuality: "Premium Quality",
@@ -519,7 +616,19 @@ export const translations = {
 
         shopByCategory: "Shop by Category",
         bestSellers: "Best Sellers",
-        joinCommunity: "Join our community",
+        joinCommunity: "Join the designers",
+
+        // --- Footer ---
+        footerDescription: "Elevate your interior with our premium curtain accessories. Quality craftsmanship for modern homes.",
+        quickLinks: "Quick Links",
+        customerService: "Customer Service",
+        // contactUs: "Contact Us", // duplicate
+        // shipping: "Shipping Policy", // duplicate
+        returns: "Returns & Exchanges",
+        faq: "FAQ",
+        terms: "Terms & Conditions",
+        privacy: "Privacy Policy",
+        allRightsReserved: "All Rights Reserved.",
         subscribeDesc: "Subscribe to be the first to know about exclusive offers and new designs.",
         subscribe: "Subscribe",
 
@@ -565,7 +674,30 @@ export const translations = {
         city: "City",
         selectCity: "Select City",
         address: "Address",
+        address: "Address",
         notes: "Notes (optional)",
+        tashkent: "Tashkent",
+        samarkand: "Samarkand",
+        bukhara: "Bukhara",
+        andijan: "Andijan",
+        namangan: "Namangan",
+        fergana: "Fergana",
+        nukus: "Nukus",
+        karshi: "Karshi",
+        astana: "Astana",
+        almaty: "Almaty",
+        shymkent: "Shymkent",
+        bishkek: "Bishkek",
+        osh: "Osh",
+        dushanbe: "Dushanbe",
+        khujand: "Khujand",
+        ashgabat: "Ashgabat",
+        istanbul: "Istanbul",
+        ankara: "Ankara",
+        dubai: "Dubai",
+        abu_dhabi: "Abu Dhabi",
+        moscow: "Moscow",
+        saint_petersburg: "Saint Petersburg",
         uploadReceipt: "Upload Payment Receipt",
         maxFileSize: "File size must not exceed 5MB",
         confirmOrder: "Confirm Order",
@@ -629,6 +761,15 @@ export const translations = {
         submit: "Submit",
         submitting: "Submitting...",
         noReviews: "No reviews yet",
-        noFeatures: "No features available"
+        noFeatures: "No features available",
+        myOrders: "My Orders",
+        orderHistory: "Order History",
+        orderId: "Order ID",
+        date: "Date",
+        status: "Status",
+        noOrders: "No orders found",
+        viewDetails: "View Details",
+        orderItems: "Order Items",
+        trackOrder: "Track Order"
     }
 };

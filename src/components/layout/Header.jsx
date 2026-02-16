@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingCart, User, Search, Menu, X, Globe, LogOut } from 'lucide-react';
+import { ShoppingCart, User, Search, Menu, X, Globe, LogOut, Package } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { logoutUser } from '../../services/supabase/auth';
@@ -91,6 +91,13 @@ const Header = () => {
                                         <p className="text-xs text-secondary font-bold truncate">{currentUser.phone}</p>
                                     </div>
                                     <div className="p-2">
+                                        <button
+                                            onClick={() => setCurrentPage('orders')}
+                                            className="w-full flex items-center space-x-2 px-3 py-2 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                                        >
+                                            <Package className="w-4 h-4" />
+                                            <span className="text-sm font-medium">{t('myOrders') || 'Mening buyurtmalarim'}</span>
+                                        </button>
                                         <button
                                             onClick={async () => {
                                                 await logoutUser();
@@ -188,6 +195,15 @@ const Header = () => {
                                 <div className="bg-gray-100 rounded-lg p-4 mb-4">
                                     <p className="font-bold mb-1">{currentUser.name}</p>
                                     <p className="text-sm text-secondary font-bold mb-3">{currentUser.phone}</p>
+                                    <button
+                                        onClick={() => {
+                                            setCurrentPage('orders');
+                                            setMobileMenu(false);
+                                        }}
+                                        className="w-full py-2 bg-white border border-gray-200 text-gray-800 rounded-lg text-sm mb-2 font-bold"
+                                    >
+                                        {t('myOrders') || 'Mening buyurtmalarim'}
+                                    </button>
                                     <button
                                         onClick={() => {
                                             logoutUser();

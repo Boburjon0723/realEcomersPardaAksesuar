@@ -8,6 +8,30 @@ const RECEIPTS_BUCKET = 'receipts';
 export const createOrder = async (orderData) => {
     console.log('Creating order with data:', orderData);
     try {
+        const userId = orderData.userId !== 'guest' ? orderData.userId : null;
+
+        // Ensure customer exists in public.customers if logged in
+        if (userId) {
+            const { data: existingCustomer, error: fetchError } = await supabase
+                .from('customers')
+                .select('id')
+                .eq('id', userId)
+                .maybeSingle();
+
+            if (!existingCustomer && !fetchError) {
+                // If user is logged in but doesn't have a record in customers table, create it
+                await supabase.from('customers').insert([
+                    {
+                        id: userId,
+                        name: orderData.customerInfo.name,
+                        phone: orderData.customerInfo.phone,
+                        email: orderData.customerInfo.email || null,
+                        address: orderData.customerInfo.address || ''
+                    }
+                ]);
+            }
+        }
+
         // 1. Insert into orders table
         const orderRecord = {
             customer_name: orderData.customerInfo.name,
@@ -20,7 +44,7 @@ export const createOrder = async (orderData) => {
             payment_method_detail: orderData.paymentMethodDetail || null,
             receipt_url: orderData.receiptUrl || null,
             source: 'website',
-            user_id: orderData.userId !== 'guest' ? orderData.userId : null // Add user_id if not guest
+            customer_id: userId // Link to customer table
         };
 
         const { data: order, error: orderError } = await supabase
@@ -30,6 +54,7 @@ export const createOrder = async (orderData) => {
             .single();
 
         if (orderError) throw orderError;
+        // ... (remaining code unchanged)
 
         // 2. Insert items into order_items table
         const orderItems = orderData.products.map(item => ({
@@ -89,6 +114,41 @@ export const getAllOrders = async () => {
 
         return { success: true, orders: formattedData };
     } catch (error) {
+        return { success: false, error: error.message };
+    }
+};
+
+// Get orders for a specific user
+export const getUserOrders = async (userId) => {
+    try {
+        const { data, error } = await supabase
+            .from(ORDERS_TABLE)
+            .select(`
+                *,
+                items: ${ORDER_ITEMS_TABLE}(*)
+            `)
+            .eq('customer_id', userId)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        // Map to expected format
+        const formattedData = data.map(order => ({
+            ...order,
+            customerName: order.customer_name,
+            totalAmount: Number(order.total),
+            createdAt: order.created_at,
+            products: order.items?.map(item => ({
+                ...item,
+                name: item.product_name,
+                price: Number(item.price),
+                image: item.image_url
+            })) || []
+        }));
+
+        return { success: true, orders: formattedData };
+    } catch (error) {
+        console.error('Error fetching user orders:', error);
         return { success: false, error: error.message };
     }
 };

@@ -9,9 +9,8 @@ const createVirtualEmail = (phone) => {
 };
 
 // Register new user
-export const registerUser = async (password, displayName, phone, country) => {
+export const registerUser = async (password, displayName, phone, country, email) => {
     try {
-        const email = createVirtualEmail(phone);
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
@@ -20,7 +19,8 @@ export const registerUser = async (password, displayName, phone, country) => {
                     display_name: displayName,
                     name: displayName,
                     phone: phone,
-                    country: country
+                    country: country,
+                    email: email
                 }
             }
         });
@@ -35,6 +35,7 @@ export const registerUser = async (password, displayName, phone, country) => {
                         id: data.user.id,
                         name: displayName,
                         phone: phone,
+                        email: email,
                         country: country,
                         created_at: new Date()
                     }
@@ -46,6 +47,7 @@ export const registerUser = async (password, displayName, phone, country) => {
                     {
                         name: displayName,
                         phone: phone,
+                        email: email,
                         country: country
                     }
                 ]);
@@ -60,9 +62,8 @@ export const registerUser = async (password, displayName, phone, country) => {
 };
 
 // Login user
-export const loginUser = async (phone, password) => {
+export const loginUser = async (email, password) => {
     try {
-        const email = createVirtualEmail(phone);
         const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password

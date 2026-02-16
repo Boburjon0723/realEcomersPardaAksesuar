@@ -20,6 +20,7 @@ import CheckoutPage from './pages/CheckoutPage';
 import AboutPage from './pages/AboutPage';
 import ServicesPage from './pages/ServicesPage';
 import ContactPage from './pages/ContactPage';
+import MyOrdersPage from './pages/MyOrdersPage';
 
 // Components
 import AuthModal from './components/auth/AuthModal';
@@ -45,6 +46,7 @@ function MainApp() {
         {currentPage === 'about' && <AboutPage />}
         {currentPage === 'services' && <ServicesPage />}
         {currentPage === 'contact' && <ContactPage />}
+        {currentPage === 'orders' && <MyOrdersPage />}
       </main>
 
       <FloatingContacts />

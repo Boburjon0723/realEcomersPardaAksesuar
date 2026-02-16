@@ -62,6 +62,7 @@ const AuthModal = () => {
     const [error, setError] = useState('');
     const [formData, setFormData] = useState({
         name: '',
+        email: '',
         phone: '',
         phoneCode: '+998',
         country: 'uzbekistan',
@@ -83,25 +84,32 @@ const AuthModal = () => {
             const fullPhone = formData.phoneCode + formData.phone.replace(/\D/g, '');
             let result;
             if (isLogin) {
-                result = await loginUser(fullPhone, formData.password);
+                result = await loginUser(formData.email, formData.password);
             } else {
-                result = await registerUser(formData.password, formData.name, fullPhone, formData.country);
+                result = await registerUser(formData.password, formData.name, fullPhone, formData.country, formData.email);
             }
 
             if (result.success) {
                 // Determine user object to save (use returned user or construct one)
-                const user = result.user || { name: formData.name, phone: formData.phone };
+                const user = result.user || { name: formData.name, phone: formData.phone, email: formData.email };
                 // Add extra fields if needed for local state immediately
                 if (!isLogin) {
                     user.name = formData.name;
                     user.phone = formData.phone;
+                    user.email = formData.email;
                 }
 
                 setCurrentUser(user);
                 localStorage.setItem('user', JSON.stringify(user));
                 setShowAuth(false);
             } else {
-                setError(result.error);
+                if (result.error.includes('Email not confirmed')) {
+                    setError(t('verifyError'));
+                } else if (result.error.includes('Invalid login credentials')) {
+                    setError(t('invalidCredentials'));
+                } else {
+                    setError(result.error);
+                }
             }
         } catch (err) {
             setError('An error occurred. Please try again.');
@@ -153,43 +161,62 @@ const AuthModal = () => {
 
                     <div>
                         <label className="block text-sm font-bold mb-2 text-gray-700">
-                            {t('phone') || 'Telefon raqam'}
+                            {t('email') || 'Email'}
                         </label>
-                        <div className="flex gap-2">
-                            <div className="relative min-w-[100px]">
-                                <select
-                                    value={formData.phoneCode}
-                                    onChange={(e) => {
-                                        const country = countries.find(c => c.code === e.target.value);
-                                        setFormData({
-                                            ...formData,
-                                            phoneCode: e.target.value,
-                                            country: country ? country.id : formData.country
-                                        });
-                                    }}
-                                    className="w-full pl-4 pr-8 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none font-medium appearance-none"
-                                >
-                                    {countries.map(c => (
-                                        <option key={c.id} value={c.code}>{c.code}</option>
-                                    ))}
-                                </select>
-                                <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
-                                    <ArrowRight className="w-3 h-3 text-gray-400 rotate-90" />
-                                </div>
-                            </div>
-                            <div className="relative flex-1 group">
-                                <Phone className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors w-5 h-5" />
-                                <input
-                                    type="tel"
-                                    required
-                                    value={formData.phone}
-                                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                    className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none font-medium"
-                                    placeholder="90 123 45 67"
-                                />
-                            </div>
+                        <div className="relative group">
+                            <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors">@</span>
+                            <input
+                                type="email"
+                                required
+                                value={formData.email}
+                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none font-medium"
+                                placeholder="example@mail.com"
+                            />
                         </div>
                     </div>
+
+                    {!isLogin && (
+                        <div>
+                            <label className="block text-sm font-bold mb-2 text-gray-700">
+                                {t('phone') || 'Telefon raqam'}
+                            </label>
+                            <div className="flex gap-2">
+                                <div className="relative min-w-[100px]">
+                                    <select
+                                        value={formData.phoneCode}
+                                        onChange={(e) => {
+                                            const country = countries.find(c => c.code === e.target.value);
+                                            setFormData({
+                                                ...formData,
+                                                phoneCode: e.target.value,
+                                                country: country ? country.id : formData.country
+                                            });
+                                        }}
+                                        className="w-full pl-4 pr-8 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none font-medium appearance-none"
+                                    >
+                                        {countries.map(c => (
+                                            <option key={c.id} value={c.code}>{c.code}</option>
+                                        ))}
+                                    </select>
+                                    <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                                        <ArrowRight className="w-3 h-3 text-gray-400 rotate-90" />
+                                    </div>
+                                </div>
+                                <div className="relative flex-1 group">
+                                    <Phone className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors w-5 h-5" />
+                                    <input
+                                        type="tel"
+                                        required
+                                        value={formData.phone}
+                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                        className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none font-medium"
+                                        placeholder="90 123 45 67"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {!isLogin && (
                         <div>

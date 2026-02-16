@@ -87,7 +87,11 @@ const CheckoutPage = () => {
         try {
             const orderData = {
                 userId: currentUser?.id || 'guest',
-                customerInfo: { ...formData, address: `${formData.city}, ${formData.address}` },
+                customerInfo: {
+                    ...formData,
+                    email: currentUser?.email || '',
+                    address: `${formData.city}, ${formData.address}`
+                },
                 products: cart.map(item => ({
                     id: item.id,
                     name: item.name,
@@ -160,6 +164,22 @@ const CheckoutPage = () => {
             </div>
         );
     }
+
+    const countryCities = {
+        uzbekistan: ['tashkent', 'samarkand', 'bukhara', 'andijan', 'namangan', 'fergana', 'nukus', 'karshi'],
+        kazakhstan: ['astana', 'almaty', 'shymkent'],
+        kyrgyzstan: ['bishkek', 'osh'],
+        tajikistan: ['dushanbe', 'khujand'],
+        turkmenistan: ['ashgabat'],
+        turkey: ['istanbul', 'ankara'],
+        uae: ['dubai', 'abu_dhabi'],
+        russia: ['moscow', 'saint_petersburg']
+    };
+
+    const getAvailableCities = () => {
+        const country = currentUser?.country?.toLowerCase() || 'uzbekistan';
+        return countryCities[country] || countryCities.uzbekistan;
+    };
 
     return (
         <div className="container mx-auto px-4 md:px-6 py-8">
@@ -236,10 +256,9 @@ const CheckoutPage = () => {
                                         className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                                     >
                                         <option value="">{t('selectCity')}</option>
-                                        <option value="Tashkent">Tashkent</option>
-                                        <option value="Samarkand">Samarkand</option>
-                                        <option value="Bukhara">Bukhara</option>
-                                        {/* Add other cities */}
+                                        {getAvailableCities().map(cityKey => (
+                                            <option key={cityKey} value={cityKey}>{t(cityKey)}</option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div>
