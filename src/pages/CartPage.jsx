@@ -5,7 +5,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 
 const CartPage = () => {
     const { cart, removeFromCart, updateQuantity, calculatePrice, getTotalPrice, setCurrentPage } = useApp();
-    const { language, t } = useLanguage();
+    const { language, t, translateColor } = useLanguage();
 
     if (cart.length === 0) {
         return (
@@ -67,7 +67,7 @@ const CartPage = () => {
                                             )}
                                             {(item.selectedColor || item.color) && (
                                                 <span className="text-gray-600 font-medium">
-                                                    {t('color') || 'Rang'}: <span className="text-secondary uppercase">{item.selectedColor || item.color}</span>
+                                                    {t('color') || 'Rang'}: <span className="text-secondary uppercase">{translateColor(item.selectedColor || item.color)}</span>
                                                 </span>
                                             )}
                                         </div>

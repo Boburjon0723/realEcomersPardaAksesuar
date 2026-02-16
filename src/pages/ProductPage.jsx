@@ -7,7 +7,7 @@ import { supabase } from '../supabaseClient';
 
 const ProductPage = () => {
     const { selectedProduct, currentUser, addToCart, setCurrentPage, toggleFavorite, isFavorite } = useApp();
-    const { language, t } = useLanguage();
+    const { language, t, translateColor } = useLanguage();
     const [quantity, setQuantity] = useState(1);
     const [activeTab, setActiveTab] = useState('description');
     const [reviews, setReviews] = useState([]);
@@ -17,11 +17,6 @@ const ProductPage = () => {
     const [selectedColor, setSelectedColor] = useState(null);
     const [bulkQuantities, setBulkQuantities] = useState({});
     const [showBulkOrder, setShowBulkOrder] = useState(false);
-
-    const showNotification = (message, type = 'success') => {
-        setNotification({ show: true, message, type });
-        setTimeout(() => setNotification({ show: false, message: '', type: 'success' }), 5000);
-    };
 
     const fetchReviews = React.useCallback(async () => {
         const { data } = await supabase
@@ -181,7 +176,7 @@ const ProductPage = () => {
                         {(selectedProduct.colors?.length > 0 || selectedProduct.color) && (
                             <div className="mb-6">
                                 <label className="block text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">
-                                    {t('color') || 'Rang'}: <span className="text-secondary ml-1">{selectedColor || selectedProduct.color}</span>
+                                    {t('color') || 'Rang'}: <span className="text-secondary ml-1">{translateColor(selectedColor || selectedProduct.color)}</span>
                                 </label>
                                 <div className="flex flex-wrap gap-3">
                                     {selectedProduct.colors?.length > 0 ? (
@@ -194,12 +189,12 @@ const ProductPage = () => {
                                                     : 'border-gray-100 bg-white text-gray-500 hover:border-primary/50'
                                                     }`}
                                             >
-                                                {color}
+                                                {translateColor(color)}
                                             </button>
                                         ))
                                     ) : (
                                         <div className="px-4 py-2 rounded-xl border-2 border-primary bg-primary/5 text-primary font-bold text-xs">
-                                            {selectedProduct.color}
+                                            {translateColor(selectedProduct.color)}
                                         </div>
                                     )}
                                 </div>
@@ -244,7 +239,7 @@ const ProductPage = () => {
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         {selectedProduct.colors.map((color, idx) => (
                                             <div key={idx} className="flex items-center justify-between bg-white p-3 rounded-xl border border-gray-100 italic">
-                                                <span className="font-bold text-sm">{color}</span>
+                                                <span className="font-bold text-sm">{translateColor(color)}</span>
                                                 <div className="flex items-center border border-gray-200 rounded-lg h-10 overflow-hidden shadow-sm">
                                                     <button
                                                         onClick={() => setBulkQuantities(prev => ({ ...prev, [color]: Math.max(0, (prev[color] || 0) - 1) }))}

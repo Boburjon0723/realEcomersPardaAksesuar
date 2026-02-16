@@ -6,7 +6,7 @@ import { getUserOrders } from '../services/supabase/orders';
 
 const MyOrdersPage = () => {
     const { currentUser, setCurrentPage, language } = useApp();
-    const { t } = useLanguage();
+    const { t, translateColor } = useLanguage();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -137,7 +137,7 @@ const MyOrdersPage = () => {
                                                             ${item.price.toLocaleString()} x {item.quantity}
                                                             {item.color && (
                                                                 <span className="ml-2 px-1.5 py-0.5 bg-gray-100 rounded text-secondary font-bold uppercase text-[10px]">
-                                                                    {item.color}
+                                                                    {translateColor(item.color)}
                                                                 </span>
                                                             )}
                                                         </div>

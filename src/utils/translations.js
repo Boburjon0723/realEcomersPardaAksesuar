@@ -253,7 +253,25 @@ export const translations = {
         noOrders: "Hozircha buyurtmalar mavjud emas",
         viewDetails: "Batafsil ko'rish",
         orderItems: "Buyurtma tarkibi",
-        trackOrder: "Buyurtmani kuzatish"
+        trackOrder: "Buyurtmani kuzatish",
+
+        // Colors
+        antratsit: "Antratsit",
+        bej: "Bej",
+        binafsha: "Binafsha",
+        bodom: "Bodom",
+        bordo: "Bordo",
+        oq: "Oq",
+        qora: "Qora",
+        kulrang: "Kulrang",
+        jigarrang: "Jigarrang",
+        yashil: "Yashil",
+        kok: "Ko'k",
+        qizil: "Qizil",
+        sariq: "Sariq",
+        pushti: "Pushti",
+        tillarang: "Tillarang",
+        kumushrang: "Kumushrang"
     },
 
     ru: {
@@ -510,7 +528,25 @@ export const translations = {
         noOrders: "Заказов пока нет",
         viewDetails: "Подробнее",
         orderItems: "Состав заказа",
-        trackOrder: "Отследить заказ"
+        trackOrder: "Отследить заказ",
+
+        // Colors
+        antratsit: "Антрацит",
+        bej: "Бежевый",
+        binafsha: "Фиолетовый",
+        bodom: "Миндальный",
+        bordo: "Бордовый",
+        oq: "Белый",
+        qora: "Черный",
+        kulrang: "Серый",
+        jigarrang: "Коричневый",
+        yashil: "Зеленый",
+        kok: "Синий",
+        qizil: "Красный",
+        sariq: "Желтый",
+        pushti: "Розовый",
+        tillarang: "Золотистый",
+        kumushrang: "Серебристый"
     },
 
     en: {
@@ -767,6 +803,24 @@ export const translations = {
         noOrders: "No orders found",
         viewDetails: "View Details",
         orderItems: "Order Items",
-        trackOrder: "Track Order"
+        trackOrder: "Track Order",
+
+        // Colors
+        antratsit: "Anthracite",
+        bej: "Beige",
+        binafsha: "Purple",
+        bodom: "Almond",
+        bordo: "Bordeaux",
+        oq: "White",
+        qora: "Black",
+        kulrang: "Grey",
+        jigarrang: "Brown",
+        yashil: "Green",
+        kok: "Blue",
+        qizil: "Red",
+        sariq: "Yellow",
+        pushti: "Pink",
+        tillarang: "Gold",
+        kumushrang: "Silver"
     }
 };

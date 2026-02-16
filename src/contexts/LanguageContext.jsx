@@ -29,8 +29,16 @@ export const LanguageProvider = ({ children }) => {
         changeLanguage(langs[nextIndex]);
     };
 
+    const translateColor = (color) => {
+        if (!color) return '';
+        // Normalize: lowercase, remove apostrophes, remove spaces
+        const key = color.toLowerCase().replace(/'/g, '').replace(/\s+/g, '');
+        const translated = t(key);
+        return translated === key ? color : translated;
+    };
+
     return (
-        <LanguageContext.Provider value={{ language, changeLanguage, toggleLanguage, t }}>
+        <LanguageContext.Provider value={{ language, changeLanguage, toggleLanguage, t, translateColor }}>
             {children}
         </LanguageContext.Provider>
     );

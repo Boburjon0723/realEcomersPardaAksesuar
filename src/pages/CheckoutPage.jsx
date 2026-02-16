@@ -7,7 +7,7 @@ import { getSettings } from '../services/supabase/settings';
 
 const CheckoutPage = () => {
     const { cart, getTotalPrice, clearCart, setCurrentPage, currentUser, setShowAuth } = useApp();
-    const { language, t } = useLanguage();
+    const { language, t, translateColor } = useLanguage();
     const [paymentMethod, setPaymentMethod] = useState('humo');
     const [orderSuccess, setOrderSuccess] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -393,7 +393,7 @@ const CheckoutPage = () => {
                                             ${item.price?.toLocaleString()} x {item.quantity}
                                             {(item.selectedColor || item.color) && (
                                                 <span className="ml-2 px-1.5 py-0.5 bg-gray-100 rounded text-secondary font-bold uppercase tracking-tighter">
-                                                    {item.selectedColor || item.color}
+                                                    {translateColor(item.selectedColor || item.color)}
                                                 </span>
                                             )}
                                         </div>
