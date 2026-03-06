@@ -10,14 +10,6 @@ const ThreeSixtyViewer = ({ images, productName }) => {
     // Filter out potential null or empty strings
     const validImages = images?.filter(img => img && typeof img === 'string') || [];
 
-    if (validImages.length < 2) {
-        return (
-            <div className="w-full h-full flex items-center justify-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                <p className="text-gray-400 text-sm">360° ko'rinish uchun kamida 5-10 ta rasm yuklang</p>
-            </div>
-        );
-    }
-
     const handleStart = (e) => {
         setIsDragging(true);
         setStartX(e.pageX || e.touches[0].pageX);
@@ -57,6 +49,14 @@ const ThreeSixtyViewer = ({ images, productName }) => {
             window.removeEventListener('touchend', handleGlobalUp);
         };
     }, []);
+
+    if (validImages.length < 2) {
+        return (
+            <div className="w-full h-full flex items-center justify-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                <p className="text-gray-400 text-sm">360° ko'rinish uchun kamida 5-10 ta rasm yuklang</p>
+            </div>
+        );
+    }
 
     return (
         <div
