@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Star, Minus, Plus, Heart, ShieldCheck, Truck, ArrowLeft, CheckCircle, X, ShoppingCart } from 'lucide-react';
+import { Star, Minus, Plus, Heart, ShieldCheck, Truck, ArrowLeft, CheckCircle, X, ShoppingCart, RotateCw } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import ProductGallery from '../components/product/ProductGallery';
-import { getAllColors } from '../services/supabase/products';
+import ThreeSixtyViewer from '../components/product/ThreeSixtyViewer';
+import { getAllProducts, getAllColors } from '../services/supabase/products';
 import { supabase } from '../supabaseClient';
 import { Box } from 'lucide-react';
 
@@ -190,21 +191,47 @@ const ProductPage = () => {
                                     <X size={20} />
                                 </button>
                             </div>
+                        ) : viewMode === '360' && selectedProduct.images?.length >= 5 ? (
+                            <div className="w-full h-[400px] md:h-[600px] rounded-2xl bg-gray-50 border border-gray-100 overflow-hidden relative">
+                                <ThreeSixtyViewer
+                                    images={selectedProduct.images}
+                                    productName={selectedProduct[`name_${language}`] || selectedProduct.name || ''}
+                                />
+                                <button
+                                    onClick={() => setViewMode('image')}
+                                    className="absolute top-4 right-4 bg-white/80 backdrop-blur-md p-2 rounded-full shadow-lg hover:bg-white transition-all text-gray-600 z-10"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
                         ) : (
                             <>
                                 <ProductGallery
                                     images={selectedProduct.images}
                                     productName={selectedProduct[`name_${language}`] || selectedProduct.name || ''}
+                                    selectedColor={selectedColor}
+                                    hexColor={colorMap[selectedColor]}
                                 />
-                                {selectedProduct.model_3d_url && (
-                                    <button
-                                        onClick={() => setViewMode('3d')}
-                                        className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-md px-6 py-3 rounded-xl shadow-xl hover:bg-white transition-all text-primary font-bold flex items-center gap-2 border border-primary/20 hover:scale-105 active:scale-95"
-                                    >
-                                        <Box className="w-5 h-5" />
-                                        3D KO'RISH
-                                    </button>
-                                )}
+                                <div className="absolute bottom-4 right-4 flex flex-col gap-2">
+                                    {selectedProduct.model_3d_url && (
+                                        <button
+                                            onClick={() => setViewMode('3d')}
+                                            className="bg-white/90 backdrop-blur-md px-6 py-3 rounded-xl shadow-xl hover:bg-white transition-all text-primary font-bold flex items-center gap-2 border border-primary/20 hover:scale-105 active:scale-95"
+                                        >
+                                            <Box className="w-5 h-5" />
+                                            3D KO'RISH
+                                        </button>
+                                    )}
+                                    {selectedProduct.images?.length >= 5 && (
+                                        <button
+                                            onClick={() => setViewMode('360')}
+                                            className="bg-white/90 backdrop-blur-md px-6 py-3 rounded-xl shadow-xl hover:bg-white transition-all text-secondary font-bold flex items-center gap-2 border border-secondary/20 hover:scale-105 active:scale-95"
+                                        >
+                                            <RotateCw className="w-5 h-5 animate-spin-slow" />
+                                            360° AYLANISH
+                                        </button>
+                                    )}
+                                </div>
                             </>
                         )}
                     </div>

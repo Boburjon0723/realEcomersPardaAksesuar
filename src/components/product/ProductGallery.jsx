@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const ProductGallery = ({ images = [], productName }) => {
+const ProductGallery = ({ images = [], productName, selectedColor, hexColor }) => {
     const [mainImage, setMainImage] = useState(images.length > 0 ? images[0] : 'https://via.placeholder.com/600x400?text=No+Image');
 
     React.useEffect(() => {
@@ -35,12 +35,35 @@ const ProductGallery = ({ images = [], productName }) => {
             </div>
 
             {/* Main Image */}
-            <div className="flex-1 rounded-xl overflow-hidden bg-gray-50 relative aspect-[4/5] md:aspect-auto md:h-[600px]">
+            <div className="flex-1 rounded-xl overflow-hidden bg-gray-50 relative aspect-[4/5] md:aspect-auto md:h-[600px] group/gallery">
                 <img
                     src={mainImage}
                     alt={productName}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-all duration-500"
+                    style={{
+                        filter: hexColor ? 'grayscale(100%) brightness(1.2)' : 'none'
+                    }}
                 />
+                {/* Color Overlay Layer */}
+                {hexColor && (
+                    <div
+                        className="absolute inset-0 transition-opacity duration-500 pointer-events-none"
+                        style={{
+                            backgroundColor: hexColor,
+                            mixBlendMode: 'multiply',
+                            opacity: 0.7
+                        }}
+                    />
+                )}
+                {/* Label for dynamic color */}
+                {hexColor && (
+                    <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-lg shadow-md border border-gray-100 animate-fade-in flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full border border-black/10" style={{ backgroundColor: hexColor }} />
+                        <span className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">
+                            Dinamik Rang: {selectedColor}
+                        </span>
+                    </div>
+                )}
             </div>
         </div>
     );
