@@ -4,7 +4,7 @@ import { useApp } from '../contexts/AppContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import ProductGallery from '../components/product/ProductGallery';
 import ThreeSixtyViewer from '../components/product/ThreeSixtyViewer';
-import { getAllProducts, getAllColors } from '../services/supabase/products';
+import { getAllColors } from '../services/supabase/products';
 import { supabase } from '../supabaseClient';
 import { Box } from 'lucide-react';
 
