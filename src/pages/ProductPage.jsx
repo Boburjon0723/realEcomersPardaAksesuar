@@ -3,7 +3,7 @@ import { Star, Minus, Plus, Heart, ShieldCheck, Truck, ArrowLeft, CheckCircle, X
 import { useApp } from '../contexts/AppContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import ProductGallery from '../components/product/ProductGallery';
-import { getAllProducts, getAllColors } from '../services/supabase/products';
+import { getAllColors } from '../services/supabase/products';
 import { supabase } from '../supabaseClient';
 import { Box } from 'lucide-react';
 
