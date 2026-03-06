@@ -3,7 +3,9 @@ import { Star, Minus, Plus, Heart, ShieldCheck, Truck, ArrowLeft, CheckCircle, X
 import { useApp } from '../contexts/AppContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import ProductGallery from '../components/product/ProductGallery';
+import { getAllProducts, getAllColors } from '../services/supabase/products';
 import { supabase } from '../supabaseClient';
+import { Box } from 'lucide-react';
 
 const ProductPage = () => {
     const { selectedProduct, currentUser, addToCart, setCurrentPage, toggleFavorite, isFavorite } = useApp();
@@ -17,6 +19,8 @@ const ProductPage = () => {
     const [selectedColor, setSelectedColor] = useState(null);
     const [bulkQuantities, setBulkQuantities] = useState({});
     const [showBulkOrder, setShowBulkOrder] = useState(false);
+    const [viewMode, setViewMode] = useState(selectedProduct?.model_3d_url ? '3d' : 'image');
+    const [colorMap, setColorMap] = useState({});
 
     const showNotification = (message, type = 'success') => {
         setNotification({ show: true, message, type });
@@ -34,6 +38,16 @@ const ProductPage = () => {
     }, [selectedProduct?.id]);
 
     React.useEffect(() => {
+        const fetchColors = async () => {
+            const result = await getAllColors();
+            if (result.success) {
+                const map = {};
+                result.colors.forEach(c => map[c.name] = c.hex_code);
+                setColorMap(map);
+            }
+        };
+        fetchColors();
+
         if (selectedProduct?.id) {
             fetchReviews();
             // Reset selected color and bulk quantities when product changes
@@ -45,8 +59,29 @@ const ProductPage = () => {
             }
             setBulkQuantities(initialBulk);
             setShowBulkOrder(false);
+            if (selectedProduct.model_3d_url) setViewMode('3d');
+            else setViewMode('image');
         }
-    }, [selectedProduct?.id, selectedProduct?.color, selectedProduct?.colors, fetchReviews]);
+    }, [selectedProduct?.id, selectedProduct?.color, selectedProduct?.colors, selectedProduct?.model_3d_url, fetchReviews]);
+
+    // Update 3D model color when selectedColor changes
+    React.useEffect(() => {
+        if (viewMode === '3d' && selectedColor && colorMap[selectedColor]) {
+            const modelViewer = document.querySelector('model-viewer');
+            if (modelViewer && modelViewer.model) {
+                const hexColor = colorMap[selectedColor];
+                // Convert hex to model-viewer color (RGB normalized 0-1)
+                const r = parseInt(hexColor.slice(1, 3), 16) / 255;
+                const g = parseInt(hexColor.slice(3, 5), 16) / 255;
+                const b = parseInt(hexColor.slice(5, 7), 16) / 255;
+                const color = [r, g, b, 1.0];
+
+                modelViewer.model.materials.forEach(material => {
+                    material.pbrMetallicRoughness.setBaseColorFactor(color);
+                });
+            }
+        }
+    }, [selectedColor, viewMode, colorMap]);
 
     // Dynamic Rating Calculation
     const averageRating = reviews.length > 0
@@ -130,11 +165,49 @@ const ProductPage = () => {
 
             <div className="bg-white rounded-2xl p-6 md:p-10 shadow-sm border border-gray-100">
                 <div className="grid lg:grid-cols-2 gap-12 mb-16">
-                    {/* Gallery */}
-                    <ProductGallery
-                        images={selectedProduct.images}
-                        productName={selectedProduct[`name_${language}`] || selectedProduct.name || ''}
-                    />
+                    {/* Gallery or 3D Viewer */}
+                    <div className="relative group">
+                        {viewMode === '3d' && selectedProduct.model_3d_url ? (
+                            <div className="w-full h-[400px] md:h-[600px] rounded-2xl bg-gray-50 border border-gray-100 overflow-hidden relative">
+                                <model-viewer
+                                    src={selectedProduct.model_3d_url}
+                                    alt={selectedProduct[`name_${language}`] || selectedProduct.name || ''}
+                                    auto-rotate
+                                    camera-controls
+                                    ar
+                                    ar-modes="webxr scene-viewer quick-look"
+                                    ar-scale="auto"
+                                    touch-action="pan-y"
+                                    style={{ width: '100%', height: '100%' }}
+                                    shadow-intensity="1"
+                                    environment-image="neutral"
+                                    exposure="1"
+                                ></model-viewer>
+                                <button
+                                    onClick={() => setViewMode('image')}
+                                    className="absolute top-4 right-4 bg-white/80 backdrop-blur-md p-2 rounded-full shadow-lg hover:bg-white transition-all text-gray-600"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                <ProductGallery
+                                    images={selectedProduct.images}
+                                    productName={selectedProduct[`name_${language}`] || selectedProduct.name || ''}
+                                />
+                                {selectedProduct.model_3d_url && (
+                                    <button
+                                        onClick={() => setViewMode('3d')}
+                                        className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-md px-6 py-3 rounded-xl shadow-xl hover:bg-white transition-all text-primary font-bold flex items-center gap-2 border border-primary/20 hover:scale-105 active:scale-95"
+                                    >
+                                        <Box className="w-5 h-5" />
+                                        3D KO'RISH
+                                    </button>
+                                )}
+                            </>
+                        )}
+                    </div>
 
                     {/* Product Info */}
                     <div>

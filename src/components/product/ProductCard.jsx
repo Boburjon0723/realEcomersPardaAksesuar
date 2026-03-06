@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, Star, ShoppingBag, Eye } from 'lucide-react';
+import { Heart, Star, ShoppingBag, Eye, Box } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 
@@ -40,11 +40,45 @@ const ProductCard = ({ product }) => {
         >
             {/* Image Container */}
             <div className="relative aspect-[4/5] overflow-hidden cursor-pointer bg-gray-50" onClick={handleProductClick}>
-                <img
-                    src={product.images[currentImageIndex]}
-                    alt={product[`name_${language}`] || product.name}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
+                {/* Content: Image or 3D Model */}
+                {product.model_3d_url && (isHovered || (!product.images || product.images.length === 0)) ? (
+                    <div className="w-full h-full relative">
+                        <model-viewer
+                            src={product.model_3d_url}
+                            alt={product[`name_${language}`] || product.name}
+                            auto-rotate
+                            rotation-per-second="60deg"
+                            interaction-prompt="none"
+                            camera-controls
+                            style={{ width: '100%', height: '100%', backgroundColor: '#f9fafb' }}
+                            shadow-intensity="1"
+                            environment-image="neutral"
+                            exposure="1"
+                        ></model-viewer>
+                        {isHovered && (
+                            <div className="absolute bottom-2 right-2 bg-black/50 text-white text-[8px] px-2 py-1 rounded-full backdrop-blur-md">
+                                3D INTERAKTIV
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <img
+                        src={(product.images && product.images.length > 0) ? product.images[currentImageIndex] : (product.image_url || '/placeholder-product.png')}
+                        alt={product[`name_${language}`] || product.name}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        onError={(e) => { e.target.src = 'https://via.placeholder.com/400x500?text=No+Image'; }}
+                    />
+                )}
+
+                {/* 3D Badge */}
+                {product.model_3d_url && (
+                    <div className="absolute top-3 left-3 z-10">
+                        <div className="bg-primary/90 backdrop-blur-sm text-white p-1.5 rounded-lg shadow-lg flex items-center gap-1">
+                            <Box size={14} className="animate-pulse" />
+                            <span className="text-[10px] font-bold tracking-tighter">3D</span>
+                        </div>
+                    </div>
+                )}
 
                 {/* Overlays */}
                 <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>

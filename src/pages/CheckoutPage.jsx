@@ -97,7 +97,7 @@ const CheckoutPage = () => {
                     name: item.name,
                     price: item.price,
                     quantity: item.quantity,
-                    image: item.images[0],
+                    image: item.images?.[0] || item.model_3d_url || '',
                     color: item.selectedColor || item.color,
                     size: item.size
                 })),
@@ -382,11 +382,26 @@ const CheckoutPage = () => {
                         <div className="space-y-4 mb-6 custom-scrollbar max-h-96 overflow-y-auto">
                             {cart.map(item => (
                                 <div key={item.id} className="flex gap-3">
-                                    <img
-                                        src={item.images[0]}
-                                        className="w-14 h-14 object-cover rounded-md bg-gray-50"
-                                        alt=""
-                                    />
+                                    {(item.images && item.images.length > 0) ? (
+                                        <img
+                                            src={item.images[0]}
+                                            className="w-14 h-14 object-cover rounded-md bg-gray-50"
+                                            alt=""
+                                        />
+                                    ) : item.model_3d_url ? (
+                                        <div className="w-14 h-14 rounded-md bg-gray-50 overflow-hidden">
+                                            <model-viewer
+                                                src={item.model_3d_url}
+                                                auto-rotate
+                                                interaction-prompt="none"
+                                                style={{ width: '100%', height: '100%', backgroundColor: '#f9fafb' }}
+                                            ></model-viewer>
+                                        </div>
+                                    ) : (
+                                        <div className="w-14 h-14 rounded-md bg-gray-100 flex items-center justify-center text-[8px] text-gray-400 font-bold uppercase text-center p-1">
+                                            No Img
+                                        </div>
+                                    )}
                                     <div className="flex-1">
                                         <div className="text-sm font-bold text-gray-900 line-clamp-1">{item.name[language]}</div>
                                         <div className="text-xs text-gray-500">

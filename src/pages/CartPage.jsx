@@ -39,12 +39,27 @@ const CartPage = () => {
 
                         return (
                             <div key={item.cartItemId} className="group bg-white rounded-xl p-4 md:p-6 flex gap-6 border border-gray-100 hover:border-gray-200 transition-colors shadow-sm">
-                                <div className="w-24 h-24 md:w-32 md:h-32 flex-shrink-0 bg-gray-50 rounded-lg overflow-hidden">
-                                    <img
-                                        src={item.images?.[0] || ''}
-                                        alt={item[`name_${language}`] || item.name || ''}
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                    />
+                                <div className="w-24 h-24 md:w-32 md:h-32 flex-shrink-0 bg-gray-50 rounded-lg overflow-hidden relative">
+                                    {(item.images && item.images.length > 0) ? (
+                                        <img
+                                            src={item.images[0]}
+                                            alt={item[`name_${language}`] || item.name || ''}
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                        />
+                                    ) : item.model_3d_url ? (
+                                        <model-viewer
+                                            src={item.model_3d_url}
+                                            alt={item[`name_${language}`] || item.name || ''}
+                                            auto-rotate
+                                            rotation-per-second="60deg"
+                                            interaction-prompt="none"
+                                            style={{ width: '100%', height: '100%', backgroundColor: '#f9fafb' }}
+                                        ></model-viewer>
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-400 font-bold uppercase text-center p-2">
+                                            Tasvir mavjud emas
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="flex-1 flex flex-col justify-between">

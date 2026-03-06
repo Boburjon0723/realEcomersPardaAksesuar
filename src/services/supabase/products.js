@@ -35,6 +35,7 @@ const mapProductFromDB = (product) => {
         rating: product.rating || 0,
         reviews: product.reviews || 0,
         features: product.features || {},
+        model_3d_url: product.model_3d_url || null,
     };
 };
 
@@ -284,6 +285,20 @@ export const searchProducts = async (searchTerm) => {
             products: data.map(mapProductFromDB)
         };
     } catch (error) {
+        return { success: false, error: error.message };
+    }
+};
+// Get all color library
+export const getAllColors = async () => {
+    try {
+        const { data, error } = await supabase
+            .from('product_colors')
+            .select('*')
+            .order('name');
+        if (error) throw error;
+        return { success: true, colors: data };
+    } catch (error) {
+        console.error('Error fetching colors:', error);
         return { success: false, error: error.message };
     }
 };
