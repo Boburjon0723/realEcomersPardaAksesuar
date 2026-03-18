@@ -23,5 +23,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# CRM
-/CRM-tizimi--master/
+# CRM - node_modules va build ignore (source kod commit qilinadi)
+/CRM-tizimi--master/**/node_modules/
+/CRM-tizimi--master/**/.next/
+/CRM-tizimi--master/**/.vercel/
