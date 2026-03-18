@@ -33,6 +33,7 @@ const HomePage = () => {
     const [products, setProducts] = useState([]);
     const [banners, setBanners] = useState([]);
     const [categories, setCategories] = useState([]);
+    const [benefits, setBenefits] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentHeroSlide, setCurrentHeroSlide] = useState(0);
     const [touchStart, setTouchStart] = useState(null);
