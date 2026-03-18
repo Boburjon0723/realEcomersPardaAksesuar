@@ -1,6 +1,8 @@
 # Vercel deploy – E-commerce va CRM
 
-Repoda **2 ta loyiha** bor: E-commerce (root) va CRM (ichki papka).
+**2 ta alohida repo:**
+- **E-commerce:** `realEcomersPardaAksesuar` – asosiy sayt
+- **CRM:** `CRM-tizimi-` – boshqaruv paneli: https://github.com/Boburjon0723/CRM-tizimi-.git
 
 ---
 
@@ -27,8 +29,8 @@ Repoda **2 ta loyiha** bor: E-commerce (root) va CRM (ichki papka).
 
 ### 2.1 Yangi loyiha
 1. **Add New** → **Project**
-2. Xuddi shu repo: `Boburjon0723/realEcomersPardaAksesuar`
-3. **Root Directory** da: `CRM-tizimi--master/CRM-tizimi--master` kiriting
+2. Repo: `Boburjon0723/CRM-tizimi-` (alohida CRM repo)
+3. **Root Directory** bo'sh qoldiring
 4. **Import**
 
 ### 2.2 Environment variables
@@ -44,5 +46,10 @@ Repoda **2 ta loyiha** bor: E-commerce (root) va CRM (ichki papka).
 
 ---
 
-## 3. Avtomatik deploy
-Har bir `git push origin master` dan keyin **ikkala loyiha** ham Vercelda avtomatik yangilanadi.
+## 3. O'zgarishlarni yuborish
+
+- **E-commerce** o'zgartirsa: `realEcomersPardaAksesuar` repoga push
+- **CRM** o'zgartirsa: `CRM-tizimi-` repoga push (lokaldagi `CRM-tizimi--master/CRM-tizimi--master/` papkadagi fayllar)
+
+## 4. Avtomatik deploy
+Har bir `git push origin master` dan keyin tegishli Vercel loyihasi avtomatik yangilanadi.

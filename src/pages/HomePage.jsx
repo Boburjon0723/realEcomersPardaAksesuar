@@ -7,8 +7,19 @@ import RecentlyViewedProducts from '../components/product/RecentlyViewedProducts
 import { getAllProducts } from '../services/supabase/products';
 import { getActiveBanners } from '../services/supabase/banners';
 import { getAllCategories } from '../services/supabase/categories';
+import { getSiteBenefits } from '../services/supabase/siteBenefits';
 import { supabase } from '../supabaseClient';
-import { Truck, ShieldCheck, CreditCard, ArrowRight, X } from 'lucide-react';
+import { Truck, ShieldCheck, CreditCard, ArrowRight, X, Package, Headphones, Award, Zap } from 'lucide-react';
+
+const ICON_MAP = {
+    truck: Truck,
+    'shield-check': ShieldCheck,
+    'credit-card': CreditCard,
+    package: Package,
+    headphones: Headphones,
+    award: Award,
+    zap: Zap
+};
 // Fallback rasmlar – DB bo'sh bo'lsa public/images/hero dan ishlatiladi
 const FALLBACK_HERO_IMAGES = [
     '/images/hero/hero1.jpg',
@@ -73,14 +84,16 @@ const HomePage = () => {
 
     const fetchData = async () => {
         setLoading(true);
-        const [productsResult, bannersResult, categoriesResult] = await Promise.all([
+        const [productsResult, bannersResult, categoriesResult, benefitsResult] = await Promise.all([
             getAllProducts(true),
             getActiveBanners(),
-            getAllCategories()
+            getAllCategories(),
+            getSiteBenefits()
         ]);
 
         if (productsResult.success) setProducts(productsResult.products);
         if (bannersResult.success) setBanners(bannersResult.banners);
+        if (benefitsResult.success) setBenefits(benefitsResult.benefits || []);
         if (categoriesResult.success) {
             const mappedCategories = categoriesResult.categories.map(cat => ({
                 ...cat,
@@ -277,35 +290,64 @@ const HomePage = () => {
 
             <div className="max-w-6xl mx-auto px-6 md:px-8 lg:px-12">
 
-                {/* Benefits Section */}
+                {/* Benefits Section - CRM dan boshqariladi */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20 border-b border-gray-100 pb-12">
-                    <div className="flex items-center space-x-4 p-6 bg-gray-50 rounded-xl hover:shadow-md transition-shadow">
-                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-primary shadow-sm border border-gray-100">
-                            <Truck className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <h3 className="font-bold text-gray-900">{t('fastDelivery')}</h3>
-                            <p className="text-sm text-gray-500">{t('freeDeliveryDesc')}</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center space-x-4 p-6 bg-gray-50 rounded-xl hover:shadow-md transition-shadow">
-                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-primary shadow-sm border border-gray-100">
-                            <ShieldCheck className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <h3 className="font-bold text-gray-900">{t('qualityGuarantee')}</h3>
-                            <p className="text-sm text-gray-500">{t('warrantyDesc')}</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center space-x-4 p-6 bg-gray-50 rounded-xl hover:shadow-md transition-shadow">
-                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-primary shadow-sm border border-gray-100">
-                            <CreditCard className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <h3 className="font-bold text-gray-900">{t('securePayment')}</h3>
-                            <p className="text-sm text-gray-500">{t('easyPaymentDesc')}</p>
-                        </div>
-                    </div>
+                    {loading ? (
+                        [1, 2, 3].map((i) => (
+                            <div key={i} className="flex items-center space-x-4 p-6 bg-gray-50 rounded-xl animate-pulse">
+                                <div className="w-12 h-12 bg-gray-200 rounded-full" />
+                                <div className="flex-1">
+                                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2" />
+                                    <div className="h-3 bg-gray-100 rounded w-full" />
+                                </div>
+                            </div>
+                        ))
+                    ) : benefits.length > 0 ? benefits.map((b) => {
+                        const IconComp = ICON_MAP[b.icon] || Truck;
+                        const title = b[`title_${language}`] || b.title_uz || b.title_ru || b.title_en || '';
+                        const desc = b[`desc_${language}`] || b.desc_uz || b.desc_ru || b.desc_en || '';
+                        return (
+                            <div key={b.id} className="flex items-center space-x-4 p-6 bg-gray-50 rounded-xl hover:shadow-md transition-shadow">
+                                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-primary shadow-sm border border-gray-100">
+                                    <IconComp className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-gray-900">{title}</h3>
+                                    <p className="text-sm text-gray-500">{desc}</p>
+                                </div>
+                            </div>
+                        );
+                    }) : (
+                        <>
+                            <div className="flex items-center space-x-4 p-6 bg-gray-50 rounded-xl hover:shadow-md transition-shadow">
+                                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-primary shadow-sm border border-gray-100">
+                                    <Truck className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-gray-900">{t('fastDelivery')}</h3>
+                                    <p className="text-sm text-gray-500">{t('freeDeliveryDesc')}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center space-x-4 p-6 bg-gray-50 rounded-xl hover:shadow-md transition-shadow">
+                                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-primary shadow-sm border border-gray-100">
+                                    <ShieldCheck className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-gray-900">{t('qualityGuarantee')}</h3>
+                                    <p className="text-sm text-gray-500">{t('warrantyDesc')}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center space-x-4 p-6 bg-gray-50 rounded-xl hover:shadow-md transition-shadow">
+                                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-primary shadow-sm border border-gray-100">
+                                    <CreditCard className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-gray-900">{t('securePayment')}</h3>
+                                    <p className="text-sm text-gray-500">{t('easyPaymentDesc')}</p>
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 {/* Shop by Category */}
