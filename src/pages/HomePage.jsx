@@ -117,9 +117,9 @@ const HomePage = () => {
         window.scrollTo(0, 0);
     };
 
-    // Best Sellers: har bir kategoriyadan max 3 ta mahsulot
+    // Best Sellers: har bir kategoriyadan max 4 ta mahsulot (4 ustunli grid uchun)
     const bestSellersByCategory = useMemo(() => {
-        const PER_CATEGORY = 3;
+        const PER_CATEGORY = 4;
         const grouped = {};
         products.forEach((p) => {
             const key = p.category_id || (typeof p.category === 'object' ? (p.category?.name || p.category?.name_uz) : p.category) || 'uncategorized';
@@ -416,7 +416,7 @@ const HomePage = () => {
                 {/* Recently Viewed */}
                 <RecentlyViewedProducts />
 
-                {/* Best Sellers - Har bir kategoriyadan 3 ta mahsulot */}
+                {/* Best Sellers - Har bir kategoriyadan 4 ta mahsulot */}
                 <section className="mb-20">
                     <div className="text-center mb-12">
                         <span className="inline-block text-primary font-bold tracking-[0.2em] uppercase text-xs mb-3">{t('bestSellers')}</span>
