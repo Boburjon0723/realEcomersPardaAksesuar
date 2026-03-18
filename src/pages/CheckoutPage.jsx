@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Check, CreditCard, AlertCircle, X, Upload, ArrowLeft, ArrowRight, ShieldCheck } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import PageMeta from '../components/common/PageMeta';
 import { createOrder, uploadReceipt } from '../services/supabase/orders';
 import { getSettings } from '../services/supabase/settings';
 
@@ -21,6 +22,7 @@ const CheckoutPage = () => {
         city: '',
         notes: ''
     });
+    const [fieldErrors, setFieldErrors] = useState({});
 
     useEffect(() => {
         if (!currentUser) {
@@ -44,31 +46,23 @@ const CheckoutPage = () => {
     }, []);
 
     const validateForm = () => {
-        if (!formData.name.trim()) {
-            setError(t('nameRequired'));
-            return false;
-        }
-        if (!formData.phone.trim()) {
-            setError(t('phoneRequired'));
-            return false;
-        }
-        if (!formData.address.trim()) {
-            setError(t('addressRequired'));
-            return false;
-        }
-        if (!formData.city.trim()) {
-            setError(t('cityRequired'));
-            return false;
-        }
-        if (!receiptFile) {
-            setError(language === 'uz' ? "Iltimos, to'lov chekini yuklang" : 'Please upload payment receipt');
-            return false;
-        }
-        return true;
+        const errs = {};
+        if (!formData.name.trim()) errs.name = t('nameRequired');
+        else if (formData.name.trim().length < 2) errs.name = language === 'uz' ? "Ism kamida 2 ta belgidan iborat bo'lishi kerak" : language === 'ru' ? 'Имя должно быть не менее 2 символов' : 'Name must be at least 2 characters';
+        if (!formData.phone.trim()) errs.phone = t('phoneRequired');
+        else if (formData.phone.replace(/\D/g, '').length < 9) errs.phone = language === 'uz' ? "To'g'ri telefon raqam kiriting (kamida 9 ta raqam)" : language === 'ru' ? 'Введите корректный номер телефона' : 'Enter a valid phone number (min 9 digits)';
+        if (!formData.address.trim()) errs.address = t('addressRequired');
+        else if (formData.address.trim().length < 5) errs.address = language === 'uz' ? "Manzil kamida 5 ta belgidan iborat bo'lishi kerak" : language === 'ru' ? 'Адрес не менее 5 символов' : 'Address must be at least 5 characters';
+        if (!formData.city.trim()) errs.city = t('cityRequired');
+        if (!receiptFile) errs.receipt = language === 'uz' ? "Iltimos, to'lov chekini yuklang" : language === 'ru' ? 'Загрузите чек об оплате' : 'Please upload payment receipt';
+        setFieldErrors(errs);
+        setError(Object.values(errs)[0] || '');
+        return Object.keys(errs).length === 0;
     };
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
+        setFieldErrors(prev => ({ ...prev, receipt: '' }));
         if (file) {
             if (file.size > 5 * 1024 * 1024) {
                 setError(language === 'uz' ? 'Fayl hajmi 5MB dan oshmasligi kerak' : 'File size should not exceed 5MB');
@@ -81,6 +75,7 @@ const CheckoutPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        setFieldErrors({});
         if (!validateForm()) return;
 
         setLoading(true);
@@ -147,7 +142,9 @@ const CheckoutPage = () => {
 
     if (orderSuccess) {
         return (
-            <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4 max-w-2xl mx-auto">
+            <>
+                <PageMeta title={t('orderSuccess')} description={t('metaDescCheckout')} siteName={settings?.site_name} />
+                <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4 max-w-2xl mx-auto">
                 <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6 animate-fade-in">
                     <Check className="w-12 h-12 text-green-600" />
                 </div>
@@ -162,6 +159,7 @@ const CheckoutPage = () => {
                 </div>
                 <p className="text-sm text-gray-400 mt-2">{t('redirecting')}...</p>
             </div>
+            </>
         );
     }
 
@@ -182,7 +180,9 @@ const CheckoutPage = () => {
     };
 
     return (
-        <div className="container mx-auto px-4 md:px-6 py-8">
+        <>
+            <PageMeta title={t('checkout')} description={t('metaDescCheckout')} siteName={settings?.site_name} />
+            <div className="container mx-auto px-4 md:px-6 py-8">
             <button
                 onClick={() => setCurrentPage('cart')}
                 className="flex items-center text-gray-500 hover:text-primary mb-6 transition-colors font-medium"
@@ -222,9 +222,10 @@ const CheckoutPage = () => {
                                         type="text"
                                         required
                                         value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                                        onChange={(e) => { setFormData({ ...formData, name: e.target.value }); setFieldErrors(prev => ({ ...prev, name: '' })); }}
+                                        className={`w-full px-4 py-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all ${fieldErrors.name ? 'border-red-400' : 'border-gray-200'}`}
                                     />
+                                    {fieldErrors.name && <p className="mt-1 text-sm text-red-600">{fieldErrors.name}</p>}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-2">{t('phone')} *</label>
@@ -232,10 +233,11 @@ const CheckoutPage = () => {
                                         type="tel"
                                         required
                                         value={formData.phone}
-                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                                        onChange={(e) => { setFormData({ ...formData, phone: e.target.value }); setFieldErrors(prev => ({ ...prev, phone: '' })); }}
+                                        className={`w-full px-4 py-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all ${fieldErrors.phone ? 'border-red-400' : 'border-gray-200'}`}
                                         placeholder="+998"
                                     />
+                                    {fieldErrors.phone && <p className="mt-1 text-sm text-red-600">{fieldErrors.phone}</p>}
                                 </div>
                             </div>
                         </div>
@@ -252,14 +254,15 @@ const CheckoutPage = () => {
                                     <select
                                         required
                                         value={formData.city}
-                                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                                        onChange={(e) => { setFormData({ ...formData, city: e.target.value }); setFieldErrors(prev => ({ ...prev, city: '' })); }}
+                                        className={`w-full px-4 py-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all ${fieldErrors.city ? 'border-red-400' : 'border-gray-200'}`}
                                     >
                                         <option value="">{t('selectCity')}</option>
                                         {getAvailableCities().map(cityKey => (
                                             <option key={cityKey} value={cityKey}>{t(cityKey)}</option>
                                         ))}
                                     </select>
+                                    {fieldErrors.city && <p className="mt-1 text-sm text-red-600">{fieldErrors.city}</p>}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-2">{t('address')} *</label>
@@ -267,9 +270,10 @@ const CheckoutPage = () => {
                                         type="text"
                                         required
                                         value={formData.address}
-                                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                                        onChange={(e) => { setFormData({ ...formData, address: e.target.value }); setFieldErrors(prev => ({ ...prev, address: '' })); }}
+                                        className={`w-full px-4 py-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all ${fieldErrors.address ? 'border-red-400' : 'border-gray-200'}`}
                                     />
+                                    {fieldErrors.address && <p className="mt-1 text-sm text-red-600">{fieldErrors.address}</p>}
                                 </div>
                                 <div className="md:col-span-2">
                                     <label className="block text-sm font-bold text-gray-700 mb-2">{t('notes')}</label>
@@ -326,7 +330,7 @@ const CheckoutPage = () => {
                                 </div>
                             </div>
 
-                            <div className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${receiptFile ? 'border-green-500 bg-green-50/50' : 'border-gray-300 hover:border-primary bg-gray-50'}`}>
+                            <div className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${fieldErrors.receipt ? 'border-red-400 bg-red-50/30' : receiptFile ? 'border-green-500 bg-green-50/50' : 'border-gray-300 hover:border-primary bg-gray-50'}`}>
                                 <input
                                     type="file"
                                     accept="image/*,.pdf"
@@ -350,6 +354,7 @@ const CheckoutPage = () => {
                                     )}
                                 </label>
                             </div>
+                            {fieldErrors.receipt && <p className="mt-2 text-sm text-red-600">{fieldErrors.receipt}</p>}
                         </div>
 
                         <button
@@ -437,8 +442,9 @@ const CheckoutPage = () => {
                         </div>
                     </div>
                 </div>
-            </div >
-        </div >
+            </div>
+        </div>
+        </>
     );
 };
 

@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Package, Calendar, ArrowLeft, ShoppingBag, ExternalLink } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import PageMeta from '../components/common/PageMeta';
 import { getUserOrders } from '../services/supabase/orders';
 
 const MyOrdersPage = () => {
-    const { currentUser, setCurrentPage, language } = useApp();
+    const { currentUser, setCurrentPage, language, settings } = useApp();
     const { t, translateColor } = useLanguage();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -61,7 +62,9 @@ const MyOrdersPage = () => {
     }
 
     return (
-        <div className="container mx-auto px-4 md:px-6 py-12 max-w-4xl">
+        <>
+            <PageMeta title={t('myOrders')} description={t('metaDescOrders')} siteName={settings?.site_name} />
+            <div className="container mx-auto px-4 md:px-6 py-12 max-w-4xl">
             <button
                 onClick={() => setCurrentPage('home')}
                 className="flex items-center text-gray-500 hover:text-primary mb-8 transition-colors group"
@@ -174,6 +177,7 @@ const MyOrdersPage = () => {
                 </div>
             )}
         </div>
+        </>
     );
 };
 

@@ -288,17 +288,81 @@ export const searchProducts = async (searchTerm) => {
         return { success: false, error: error.message };
     }
 };
-// Get all color library
+// Get all color library (name_uz, name_ru, name_en for multilingual display)
 export const getAllColors = async () => {
     try {
         const { data, error } = await supabase
             .from('product_colors')
-            .select('*')
+            .select('id, name, name_uz, name_ru, name_en, hex_code, created_at')
             .order('name');
         if (error) throw error;
-        return { success: true, colors: data };
+        return { success: true, colors: data || [] };
     } catch (error) {
         console.error('Error fetching colors:', error);
+        return { success: false, error: error.message };
+    }
+};
+
+// Add new color with multilingual names (O'zbekcha, Ruscha, Inglizcha)
+export const addColor = async ({ name_uz, name_ru, name_en, hex_code }) => {
+    try {
+        const displayName = name_uz || name_ru || name_en || '';
+        if (!displayName.trim() || !hex_code) {
+            return { success: false, error: "Rang nomi va hex_code talab qilinadi" };
+        }
+        const { data, error } = await supabase
+            .from('product_colors')
+            .insert([{
+                name: displayName.trim(),
+                name_uz: (name_uz || '').trim() || displayName.trim(),
+                name_ru: (name_ru || '').trim() || displayName.trim(),
+                name_en: (name_en || '').trim() || displayName.trim(),
+                hex_code: hex_code.startsWith('#') ? hex_code : `#${hex_code}`
+            }])
+            .select()
+            .single();
+        if (error) throw error;
+        return { success: true, color: data };
+    } catch (error) {
+        console.error('Error adding color:', error);
+        return { success: false, error: error.message };
+    }
+};
+
+// Update existing color
+export const updateColor = async (id, { name_uz, name_ru, name_en, hex_code }) => {
+    try {
+        const updates = {};
+        if (name_uz !== undefined) updates.name_uz = String(name_uz || '').trim();
+        if (name_ru !== undefined) updates.name_ru = String(name_ru || '').trim();
+        if (name_en !== undefined) updates.name_en = String(name_en || '').trim();
+        if (hex_code !== undefined) updates.hex_code = hex_code.startsWith('#') ? hex_code : `#${hex_code}`;
+        const displayName = name_uz || name_ru || name_en;
+        if (displayName !== undefined && displayName !== null) updates.name = String(displayName || '').trim();
+        if (Object.keys(updates).length === 0) return { success: true };
+        const { error } = await supabase
+            .from('product_colors')
+            .update(updates)
+            .eq('id', id);
+        if (error) throw error;
+        return { success: true };
+    } catch (error) {
+        console.error('Error updating color:', error);
+        return { success: false, error: error.message };
+    }
+};
+
+// Delete color
+export const deleteColor = async (id) => {
+    try {
+        const { error } = await supabase
+            .from('product_colors')
+            .delete()
+            .eq('id', id);
+        if (error) throw error;
+        return { success: true };
+    } catch (error) {
+        console.error('Error deleting color:', error);
         return { success: false, error: error.message };
     }
 };

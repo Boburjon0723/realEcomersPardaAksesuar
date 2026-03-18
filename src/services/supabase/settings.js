@@ -49,3 +49,31 @@ export const updateSettings = async (id, settingsData) => {
         return { success: false, error: error.message };
     }
 };
+
+const SETTINGS_BUCKET = 'settings';
+const SETTINGS_STORAGE_PATH = 'about-hero';
+
+/** Upload About page hero image to Supabase storage and return public URL */
+export const uploadAboutHeroImage = async (file) => {
+    try {
+        const ext = file.name.split('.').pop() || 'jpg';
+        const fileName = `settings/${SETTINGS_STORAGE_PATH}-${Date.now()}.${ext}`;
+
+        // Avval settings bucket, keyin products bucket (fallback)
+        const buckets = [SETTINGS_BUCKET, 'products'];
+        for (const bucket of buckets) {
+            const { error: uploadError } = await supabase.storage
+                .from(bucket)
+                .upload(fileName, file, { upsert: true });
+
+            if (!uploadError) {
+                const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(fileName);
+                return { success: true, url: publicUrl };
+            }
+        }
+        throw new Error('Storage upload failed');
+    } catch (error) {
+        console.error('Error uploading about hero image:', error);
+        return { success: false, error: error.message };
+    }
+};

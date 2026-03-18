@@ -1,9 +1,12 @@
 import React from 'react';
 import { Truck, Shield, CreditCard, Headphones, Clock, Gift } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useApp } from '../contexts/AppContext';
+import PageMeta from '../components/common/PageMeta';
 
 const ServicesPage = () => {
     const { t } = useLanguage();
+    const { settings } = useApp();
 
     const services = [
         {
@@ -45,7 +48,9 @@ const ServicesPage = () => {
     ];
 
     return (
-        <div className="container mx-auto px-4 md:px-6 py-12">
+        <>
+            <PageMeta title={t('services')} description={t('metaDescServices')} siteName={settings?.site_name} />
+            <div className="container mx-auto px-4 md:px-6 py-12">
             <h1 className="text-4xl font-display font-bold mb-4 text-gray-900 text-center">{t('services')}</h1>
             <p className="text-xl text-gray-500 text-center mb-16 max-w-2xl mx-auto">{t('servicesSubtitle') || 'We provide exceptional services to ensure your shopping experience is as perfect as our products.'}</p>
 
@@ -78,6 +83,7 @@ const ServicesPage = () => {
                 </div>
             </div>
         </div>
+        </>
     );
 };
 

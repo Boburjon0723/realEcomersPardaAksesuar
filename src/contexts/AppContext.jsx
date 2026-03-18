@@ -14,6 +14,7 @@ export const AppProvider = ({ children }) => {
     const [isLogin, setIsLogin] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState(null);
+    const [recentlyViewed, setRecentlyViewed] = useState([]);
     const [settings, setSettings] = useState({
         site_name: 'Nuur Home',
         logo_url: '/favicon.svg',
@@ -95,6 +96,19 @@ export const AppProvider = ({ children }) => {
     useEffect(() => {
         localStorage.setItem('favorites', JSON.stringify(favorites));
     }, [favorites]);
+
+    useEffect(() => {
+        localStorage.setItem('recentlyViewed', JSON.stringify(recentlyViewed));
+    }, [recentlyViewed]);
+
+    // Recently viewed - ProductPage da mahsulot ko'rilganda qo'shiladi
+    const addToRecentlyViewed = (productId) => {
+        if (!productId) return;
+        setRecentlyViewed(prev => {
+            const filtered = prev.filter(id => id !== productId);
+            return [productId, ...filtered].slice(0, 10);
+        });
+    };
 
     // Cart functions
     const addToCart = (product, quantity = 1, selectedColor = null) => {
@@ -187,6 +201,8 @@ export const AppProvider = ({ children }) => {
         setSearchQuery,
         selectedCategory,
         setSelectedCategory,
+        recentlyViewed,
+        addToRecentlyViewed,
         settings,
         setSettings
     };

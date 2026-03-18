@@ -2,14 +2,17 @@ import React from 'react';
 import { ShoppingCart, Minus, Plus, Trash2, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import PageMeta from '../components/common/PageMeta';
 
 const CartPage = () => {
-    const { cart, removeFromCart, updateQuantity, calculatePrice, getTotalPrice, setCurrentPage } = useApp();
+    const { cart, removeFromCart, updateQuantity, calculatePrice, getTotalPrice, setCurrentPage, settings } = useApp();
     const { language, t, translateColor } = useLanguage();
 
     if (cart.length === 0) {
         return (
-            <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
+            <>
+                <PageMeta title={t('cart')} description={t('metaDescCart')} siteName={settings?.site_name} />
+                <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
                 <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
                     <ShoppingCart className="w-10 h-10 text-gray-400" />
                 </div>
@@ -23,11 +26,14 @@ const CartPage = () => {
                     <ArrowRight className="ml-2 w-5 h-5" />
                 </button>
             </div>
+            </>
         );
     }
 
     return (
-        <div className="container mx-auto px-4 md:px-6 py-8">
+        <>
+            <PageMeta title={t('cart')} description={t('metaDescCart')} siteName={settings?.site_name} />
+            <div className="container mx-auto px-4 md:px-6 py-8">
             <h1 className="text-3xl md:text-4xl font-display font-bold mb-8 text-gray-900">{t('cart') || 'Your Cart'}</h1>
 
             <div className="grid lg:grid-cols-3 gap-12">
@@ -182,6 +188,7 @@ const CartPage = () => {
                 </div>
             </div>
         </div>
+        </>
     );
 };
 

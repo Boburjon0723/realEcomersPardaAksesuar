@@ -1,17 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import PageMeta from '../components/common/PageMeta';
 import ProductGrid from '../components/product/ProductGrid';
+import RecentlyViewedProducts from '../components/product/RecentlyViewedProducts';
 import { getAllProducts } from '../services/supabase/products';
 import { getActiveBanners } from '../services/supabase/banners';
 import { getAllCategories } from '../services/supabase/categories';
 import { supabase } from '../supabaseClient';
 import { Truck, ShieldCheck, CreditCard, ArrowRight, X } from 'lucide-react';
-
-const carouselImages = [
+// Fallback rasmlar – DB bo'sh bo'lsa public/images/hero dan ishlatiladi
+const FALLBACK_HERO_IMAGES = [
     '/images/hero/hero1.jpg',
     '/images/hero/hero2.jpg',
-    '/images/hero/hero3.jpg'
+    '/images/hero/hero3.jpg',
 ];
 
 const HomePage = () => {
@@ -22,38 +24,77 @@ const HomePage = () => {
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentHeroSlide, setCurrentHeroSlide] = useState(0);
+    const [touchStart, setTouchStart] = useState(null);
+    const [touchEnd, setTouchEnd] = useState(null);
+
+    // Hero slides: Supabase bannersdan yoki fallback
+    const heroSlides = useMemo(() => {
+        if (banners && banners.length > 0) {
+            return banners.map(b => ({
+                image: b.image_url || b.image || FALLBACK_HERO_IMAGES[0],
+                title: b[`title_${language}`] || b.title || t('heroTitle'),
+                subtitle: b[`subtitle_${language}`] || b.subtitle || null,
+            }));
+        }
+        return FALLBACK_HERO_IMAGES.map((img) => ({
+            image: img,
+            title: settings?.[`banner_text_${language}`] || settings?.banner_text || t('heroTitle'),
+            subtitle: null,
+        }));
+    }, [banners, language, settings, t]);
+
+    const slideCount = heroSlides.length;
+
+    // Carousel timer va swipe handler
+    useEffect(() => {
+        if (slideCount === 0) return;
+        const heroTimer = setInterval(() => {
+            setCurrentHeroSlide(prev => (prev + 1) % slideCount);
+        }, 5000);
+        return () => clearInterval(heroTimer);
+    }, [slideCount]);
+
+    const goToSlide = useCallback((index) => {
+        if (index >= 0 && index < slideCount) setCurrentHeroSlide(index);
+    }, [slideCount]);
+
+    const handleTouchStart = (e) => setTouchStart(e.targetTouches[0].clientX);
+    const handleTouchMove = (e) => setTouchEnd(e.targetTouches[0].clientX);
+    const handleTouchEnd = () => {
+        if (!touchStart || !touchEnd) return;
+        const diff = touchStart - touchEnd;
+        if (Math.abs(diff) > 50) {
+            if (diff > 0) goToSlide((currentHeroSlide + 1) % slideCount);
+            else goToSlide(currentHeroSlide === 0 ? slideCount - 1 : currentHeroSlide - 1);
+        }
+        setTouchStart(null);
+        setTouchEnd(null);
+    };
+
+    const fetchData = async () => {
+        setLoading(true);
+        const [productsResult, bannersResult, categoriesResult] = await Promise.all([
+            getAllProducts(true),
+            getActiveBanners(),
+            getAllCategories()
+        ]);
+
+        if (productsResult.success) setProducts(productsResult.products);
+        if (bannersResult.success) setBanners(bannersResult.banners);
+        if (categoriesResult.success) {
+            const mappedCategories = categoriesResult.categories.map(cat => ({
+                ...cat,
+                image: cat.image_url || 'https://images.unsplash.com/photo-1513694203232-719a280e022f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+                count: productsResult.products ? productsResult.products.filter(p => p.category_id === cat.id || p.category === cat.name).length : 0
+            }));
+            setCategories(mappedCategories);
+        }
+        setLoading(false);
+    };
 
     useEffect(() => {
-        // Carousel Timer
-        const heroTimer = setInterval(() => {
-            setCurrentHeroSlide(prev => (prev + 1) % carouselImages.length);
-        }, 5000);
-
-        const fetchData = async () => {
-            setLoading(true);
-            const [productsResult, bannersResult, categoriesResult] = await Promise.all([
-                getAllProducts(true),
-                getActiveBanners(),
-                getAllCategories()
-            ]);
-
-            if (productsResult.success) setProducts(productsResult.products);
-            if (bannersResult.success) setBanners(bannersResult.banners);
-            if (categoriesResult.success) {
-                // Map categories to match display structure
-                const mappedCategories = categoriesResult.categories.map(cat => ({
-                    ...cat,
-                    image: cat.image_url || 'https://images.unsplash.com/photo-1513694203232-719a280e022f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-                    count: productsResult.products ? productsResult.products.filter(p => p.category_id === cat.id || p.category === cat.name).length : 0
-                }));
-                setCategories(mappedCategories);
-            }
-            setLoading(false);
-        };
         fetchData();
-
-        return () => clearInterval(heroTimer);
-    }, [searchQuery, selectedCategory, language, t, setSelectedCategory, setCurrentPage]);
+    }, []);
 
     // Helper for category navigation
     const handleCategoryClick = (catName) => {
@@ -124,16 +165,10 @@ const HomePage = () => {
         }
     };
 
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center h-[80vh]">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-            </div>
-        );
-    }
-
     return (
-        <div className="pb-16 font-sans">
+        <>
+            <PageMeta title={t('home')} description={t('metaDescHome')} siteName={settings?.site_name} />
+            <div className="pb-16 font-sans">
             {/* Premium Notification Popup */}
             {notification.show && (
                 <div className="fixed top-24 right-4 z-[9999] pointer-events-none">
@@ -161,67 +196,80 @@ const HomePage = () => {
                 </div>
             )}
 
-            {/* Hero Section */}
-            {!selectedCategory && !searchQuery ? (
-                <div className="relative bg-[#f6f4f2] h-[450px] md:h-[650px] flex items-center mb-16 overflow-hidden">
-                    {/* Carousel Background */}
+            {/* Hero Section - Banners jadvalidan yoki fallback (max-w-6xl bilan ikki yonidan qisqartirilgan) */}
+            {!selectedCategory && !searchQuery && slideCount > 0 ? (
+                <div className="max-w-6xl mx-auto px-6 md:px-8 lg:px-12 mb-16">
+                    <div
+                        className="relative bg-[#f6f4f2] h-[350px] sm:h-[420px] md:h-[550px] lg:h-[600px] flex items-center overflow-hidden select-none rounded-2xl shadow-xl"
+                        onTouchStart={handleTouchStart}
+                        onTouchMove={handleTouchMove}
+                        onTouchEnd={handleTouchEnd}
+                    >
+                    {/* Carousel rasmlar */}
                     <div className="absolute inset-0 z-0">
-                        {carouselImages.map((src, index) => (
+                        {heroSlides.map((slide, index) => (
                             <div
                                 key={index}
-                                className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentHeroSlide ? 'opacity-100' : 'opacity-0'}`}
+                                className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${index === currentHeroSlide ? 'opacity-100' : 'opacity-0'}`}
                             >
                                 <img
-                                    src={src}
-                                    alt={`Hero ${index + 1}`}
-                                    className="w-full h-full object-cover"
+                                    src={slide.image}
+                                    alt={`${slide.title}`}
+                                    loading={index === 0 ? 'eager' : 'lazy'}
+                                    className={`w-full h-full object-cover ${index === 0 ? 'object-[center_25%]' : ''}`}
                                 />
                             </div>
                         ))}
-                        <div className="absolute inset-0 bg-black/5"></div>
+                        <div className="absolute inset-0 bg-black/40" />
                     </div>
 
-                    <div className="container mx-auto px-4 md:px-6 relative z-10 text-gray-900">
-                        <div className="max-w-2xl animate-fade-in">
-                            {/* Slide Indicators */}
-                            <div className="flex gap-2 mb-8">
-                                {carouselImages.map((_, index) => (
-                                    <div
+                    <div className="container mx-auto px-4 md:px-6 relative z-10">
+                        <div className="max-w-2xl">
+                            {/* Slide indikatorlar - click bilan */}
+                            <div className="flex gap-2 mb-6 md:mb-8">
+                                {heroSlides.map((_, index) => (
+                                    <button
                                         key={index}
-                                        className={`h-1.5 rounded-full transition-all duration-300 ${index === currentHeroSlide ? 'w-10 bg-primary' : 'w-4 bg-gray-300'}`}
+                                        type="button"
+                                        onClick={() => goToSlide(index)}
+                                        aria-label={`Slide ${index + 1}`}
+                                        className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${index === currentHeroSlide ? 'w-10 bg-white' : 'w-4 bg-white/50 hover:bg-white/70'}`}
                                     />
                                 ))}
                             </div>
-                            <span className="inline-block py-1.5 px-3.5 bg-primary/10 border border-primary/20 rounded-full text-sm font-bold mb-6 text-primary">
+                            <span className="inline-block py-1.5 px-3.5 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-sm font-bold mb-4 md:mb-6 text-white">
                                 {t('premiumQuality')}
                             </span>
-                            <h1 className="text-4xl md:text-6xl font-display font-bold leading-tight mb-6 text-gray-900">
-                                {settings?.[`banner_text_${language}`] || settings?.banner_text || banners[0]?.[`title_${language}`] || banners[0]?.title || t('heroTitle')}
+                            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-display font-bold leading-snug mb-6 md:mb-8 text-white drop-shadow-lg whitespace-pre-line">
+                                {heroSlides[currentHeroSlide]?.title || t('heroTitle')}
                             </h1>
-                            <p className="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed max-w-xl">
-                                {banners[0]?.[`subtitle_${language}`] || banners[0]?.subtitle || t('heroSubtitle')}
-                            </p>
-                            <div className="flex flex-wrap gap-4">
+                            {heroSlides[currentHeroSlide]?.subtitle && (
+                                <p className="text-base sm:text-lg md:text-xl text-white/90 mb-6 md:mb-8 leading-relaxed max-w-2xl drop-shadow-md whitespace-pre-line">
+                                    {heroSlides[currentHeroSlide].subtitle}
+                                </p>
+                            )}
+                            <div className="flex flex-wrap gap-3 md:gap-4">
                                 <button
                                     onClick={() => setCurrentPage('shop')}
-                                    className="px-8 py-4 bg-primary hover:bg-primary-dark text-white rounded-xl font-bold transition-all shadow-xl hover:shadow-primary/30 flex items-center group"
+                                    className="px-6 py-3 md:px-8 md:py-4 bg-primary hover:bg-primary-dark text-white rounded-xl font-bold transition-all shadow-xl hover:shadow-primary/30 flex items-center group"
                                 >
                                     {t('shopNow')}
                                     <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                 </button>
                                 <button
-                                    onClick={() => setCurrentPage('shop')}
-                                    className="px-8 py-4 bg-white/50 hover:bg-white/80 backdrop-blur-md text-gray-900 border border-gray-200 rounded-xl font-bold transition-all shadow-sm"
+                                    onClick={() => setCurrentPage('contact')}
+                                    className="px-6 py-3 md:px-8 md:py-4 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white border border-white/40 rounded-xl font-bold transition-all"
                                 >
-                                    {t('viewCatalog')}
+                                    {t('contactUs') || t('contact')}
                                 </button>
                             </div>
                         </div>
                     </div>
+                    </div>
                 </div>
             ) : null}
 
-            <div className="container mx-auto px-4 md:px-6">
+            <div className="max-w-6xl mx-auto px-6 md:px-8 lg:px-12">
 
                 {/* Benefits Section */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20 border-b border-gray-100 pb-12">
@@ -280,6 +328,7 @@ const HomePage = () => {
                                     <img
                                         src={cat.image}
                                         alt={cat.name}
+                                        loading="lazy"
                                         className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent transition-opacity group-hover:opacity-80"></div>
@@ -315,8 +364,11 @@ const HomePage = () => {
                     </div>
                 )}
 
+                {/* Recently Viewed */}
+                <RecentlyViewedProducts />
+
                 {/* Best Sellers / Products */}
-                <section className="mb-16">
+                <section className="mb-16 py-8 px-4 -mx-4 rounded-2xl bg-gray-50/70">
                     <div className="flex justify-between items-center mb-10">
                         <div className="text-center w-full">
                             <h2 className="text-3xl font-display font-bold text-gray-900 mb-2">{t('bestSellers')}</h2>
@@ -324,7 +376,9 @@ const HomePage = () => {
                         </div>
                     </div>
 
-                    {filteredProducts.length > 0 ? (
+                    {loading ? (
+                        <ProductGrid products={[]} loading={true} />
+                    ) : filteredProducts.length > 0 ? (
                         <ProductGrid products={filteredProducts} />
                     ) : (
                         <div className="text-center py-20 bg-gray-50 rounded-xl">
@@ -367,6 +421,7 @@ const HomePage = () => {
                 )}
             </div>
         </div>
+        </>
     );
 };
 

@@ -5,33 +5,56 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { logoutUser } from '../../services/supabase/auth';
 
 const Header = () => {
-    const { cart, currentUser, searchQuery, setSearchQuery, setShowAuth, setCurrentPage, setCurrentUser, setSelectedCategory, settings } = useApp();
-
+    const { cart, currentUser, currentPage, searchQuery, setSearchQuery, setShowAuth, setCurrentPage, setCurrentUser, setSelectedCategory, settings } = useApp();
     const { language, toggleLanguage, t } = useLanguage();
+
+    const isNavActive = (page) => {
+        if (page === 'shop') return currentPage === 'shop' || currentPage === 'product';
+        return currentPage === page;
+    };
+
+    const currentPageLabel = {
+        cart: t('cart'),
+        checkout: t('checkout') || "To'lov",
+        orders: t('myOrders'),
+        shipping: t('shipping'),
+        returns: t('returns'),
+        faq: t('faq'),
+        terms: t('terms'),
+        privacy: t('privacy')
+    }[currentPage];
     const [mobileMenu, setMobileMenu] = useState(false);
 
     return (
         <header className="sticky top-0 bg-white shadow-sm z-50 border-b border-gray-100">
-            <div className="container mx-auto px-4 md:px-6">
-                <div className="flex items-center justify-between h-16 md:h-20">
+            <div className="container mx-auto px-6 md:px-8 lg:px-12">
+                <div className="flex items-center justify-between h-14 md:h-16">
                     {/* Logo */}
-                    <div className="flex items-center space-x-4 cursor-pointer" onClick={() => {
+                    <div className="flex items-center gap-2 md:gap-3 cursor-pointer" onClick={() => {
                         setCurrentPage('home');
                         setSelectedCategory(null);
                         setSearchQuery('');
                     }}>
-                        <div className="w-14 h-14 flex items-center justify-center filter drop-shadow-md hover:scale-110 transition-transform duration-300">
+                        <div className="w-10 h-10 md:w-11 md:h-11 flex items-center justify-center filter drop-shadow-md hover:scale-105 transition-transform duration-300">
                             <img src={settings.logo_url || "/favicon.svg"} alt={`${settings.site_name || 'Nuur Home'} Logo`} className="w-full h-full object-contain" />
                         </div>
-                        <span className="text-xs md:text-xl font-serif text-gray-800 tracking-widest uppercase truncate max-w-[150px] md:max-w-none">
+                        <span className="text-[11px] md:text-sm font-serif text-gray-800 tracking-wider uppercase whitespace-nowrap">
                             {settings.site_name || 'Nuur Home'}
                         </span>
 
                     </div>
 
+                    {/* Current page indicator (sub-pages) */}
+                    {currentPageLabel && (
+                        <div className="hidden md:flex items-center">
+                            <span className="text-xs font-medium text-primary bg-primary/10 px-3 py-1.5 rounded-lg">
+                                {currentPageLabel}
+                            </span>
+                        </div>
+                    )}
 
                     {/* Desktop Navigation */}
-                    <nav className="hidden md:flex items-center space-x-8">
+                    <nav className="hidden md:flex items-center gap-5">
                         {['home', 'shop', 'about', 'contact'].map((page) => (
                             <button
                                 key={page}
@@ -42,7 +65,9 @@ const Header = () => {
                                         setSearchQuery('');
                                     }
                                 }}
-                                className="text-gray-700 hover:text-primary font-medium transition-colors capitalize"
+                                className={`text-sm font-medium transition-colors capitalize px-2 py-1 rounded-lg ${isNavActive(page)
+                                    ? 'text-primary bg-primary/10'
+                                    : 'text-gray-700 hover:text-primary hover:bg-gray-50'}`}
                             >
                                 {t(page) || page}
                             </button>
@@ -50,14 +75,14 @@ const Header = () => {
                     </nav>
 
                     {/* Right Actions */}
-                    <div className="flex items-center space-x-2 md:space-x-4">
+                    <div className="flex items-center gap-1 md:gap-2">
                         {/* Language Toggle - Mobile: icon only, Desktop: icon + text */}
                         <button
                             onClick={toggleLanguage}
-                            className="p-2 md:px-3 md:py-2 text-gray-600 hover:text-primary transition-colors flex items-center space-x-0 md:space-x-2 rounded-lg hover:bg-gray-50"
+                            className="p-2 md:px-2.5 md:py-1.5 text-gray-600 hover:text-primary transition-colors flex items-center gap-1 rounded-lg hover:bg-gray-50"
                         >
-                            <Globe className="w-5 h-5" />
-                            <span className="hidden md:inline text-sm font-medium">{language.toUpperCase()}</span>
+                            <Globe className="w-4 h-4 md:w-4 md:h-4" />
+                            <span className="hidden md:inline text-xs font-medium">{language.toUpperCase()}</span>
                         </button>
 
                         {/* Cart */}
@@ -65,9 +90,9 @@ const Header = () => {
                             onClick={() => setCurrentPage('cart')}
                             className="relative p-2 text-gray-700 hover:text-primary transition-colors"
                         >
-                            <ShoppingCart className="w-6 h-6" />
+                            <ShoppingCart className="w-5 h-5 md:w-5 md:h-5" />
                             {cart.length > 0 && (
-                                <span className="absolute -top-1 -right-1 bg-primary text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">
+                                <span className="absolute -top-0.5 -right-0.5 bg-primary text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
                                     {cart.length}
                                 </span>
                             )}
@@ -76,9 +101,9 @@ const Header = () => {
                         {/* User - Desktop with Dropdown */}
                         {currentUser ? (
                             <div className="hidden md:block relative group">
-                                <button className="flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors">
-                                    <User className="w-5 h-5 text-gray-600" />
-                                    <span className="text-sm font-medium text-gray-700">{currentUser.name || currentUser.email?.split('@')[0]}</span>
+                                <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
+                                    <User className="w-4 h-4 text-gray-600" />
+                                    <span className="text-xs font-medium text-gray-700 truncate max-w-[100px]">{currentUser.name || currentUser.email?.split('@')[0]}</span>
                                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                     </svg>
@@ -116,9 +141,9 @@ const Header = () => {
                         ) : (
                             <button
                                 onClick={() => setShowAuth(true)}
-                                className="hidden md:flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+                                className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-sm"
                             >
-                                <User className="w-5 h-5" />
+                                <User className="w-4 h-4" />
                                 <span className="font-medium">{t('login') || 'Kirish'}</span>
                             </button>
                         )}
@@ -128,7 +153,7 @@ const Header = () => {
                             className="md:hidden p-2 text-gray-700 hover:text-primary transition-colors"
                             onClick={() => setMobileMenu(true)}
                         >
-                            <Menu className="w-6 h-6" />
+                            <Menu className="w-5 h-5" />
                         </button>
                     </div>
                 </div>
@@ -183,7 +208,9 @@ const Header = () => {
                                             }
                                             setMobileMenu(false);
                                         }}
-                                        className="w-full text-left px-4 py-3 hover:bg-gray-100 rounded-lg capitalize"
+                                        className={`w-full text-left px-4 py-3 rounded-lg capitalize ${isNavActive(page)
+                                            ? 'bg-primary/10 text-primary font-semibold'
+                                            : 'hover:bg-gray-100'}`}
                                     >
                                         {t(page) || page}
                                     </button>

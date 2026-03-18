@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import PageMeta from '../components/common/PageMeta';
 import ProductGrid from '../components/product/ProductGrid';
 import Sidebar from '../components/layout/Sidebar'; // Reusing existing Sidebar logic but wrapping it
 import { getAllProducts } from '../services/supabase/products';
 import { getAllCategories } from '../services/supabase/categories';
+import Breadcrumb from '../components/common/Breadcrumb';
 import { Filter, X, Search } from 'lucide-react';
 
 const ShopPage = () => {
-    const { searchQuery, setSearchQuery, selectedCategory, setSelectedCategory } = useApp();
+    const { searchQuery, setSearchQuery, selectedCategory, setSelectedCategory, setCurrentPage, settings } = useApp();
     const { language, t } = useLanguage();
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showMobileFilters, setShowMobileFilters] = useState(false);
+    const [sortBy, setSortBy] = useState('newest'); // newest | price_asc | price_desc
 
     useEffect(() => {
         const fetchData = async () => {
@@ -55,8 +58,33 @@ const ShopPage = () => {
         return matchesSearch && matchesCategory;
     });
 
+    const sortedProducts = [...filteredProducts].sort((a, b) => {
+        if (sortBy === 'price_asc') return (a.price || 0) - (b.price || 0);
+        if (sortBy === 'price_desc') return (b.price || 0) - (a.price || 0);
+        const dateA = new Date(a.created_at || 0).getTime();
+        const dateB = new Date(b.created_at || 0).getTime();
+        return dateB - dateA;
+    });
+
+    const categoryDisplayName = selectedCategory
+        ? (categories.find(c => c.name === selectedCategory.category)?.[`name_${language}`] || selectedCategory.category)
+        : null;
+
+    const breadcrumbItems = [
+        { label: t('home'), onClick: () => setCurrentPage('home') },
+        ...(selectedCategory
+            ? [
+                { label: t('shop'), onClick: () => { setSelectedCategory(null); setCurrentPage('shop'); } },
+                { label: categoryDisplayName }
+            ]
+            : [{ label: t('shop') }])
+    ];
+
     return (
-        <div className="container mx-auto px-4 md:px-6 py-8">
+        <>
+            <PageMeta title={t('shop')} description={t('metaDescShop')} siteName={settings?.site_name} />
+            <div className="max-w-6xl mx-auto px-6 md:px-8 lg:px-12 py-8">
+            <Breadcrumb items={breadcrumbItems} />
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-center mb-8">
                 <h1 className="text-3xl font-display font-bold text-gray-900 mb-4 md:mb-0">
@@ -79,7 +107,16 @@ const ShopPage = () => {
                     </div>
 
                     <div className="flex items-center gap-4 w-full sm:w-auto justify-end">
-                        <span className="text-gray-500 text-sm whitespace-nowrap">{filteredProducts.length} results</span>
+                        <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value)}
+                            className="px-4 py-2 border border-gray-200 rounded-xl bg-white text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                        >
+                            <option value="newest">{t('sortNewest') || 'Yangilar'}</option>
+                            <option value="price_asc">{t('sortPriceAsc') || 'Narx: pastdan yuqoriga'}</option>
+                            <option value="price_desc">{t('sortPriceDesc') || 'Narx: yuqoridan pastga'}</option>
+                        </select>
+                        <span className="text-gray-500 text-sm whitespace-nowrap">{filteredProducts.length} {t('items')}</span>
                         <button
                             className="md:hidden flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl font-medium text-sm shadow-sm"
                             onClick={() => setShowMobileFilters(true)}
@@ -112,7 +149,7 @@ const ShopPage = () => {
                 )}
 
                 {/* Product Grid */}
-                <div className="flex-1">
+                <div className="flex-1 rounded-2xl bg-gray-50/80 p-4 md:p-6">
                     {selectedCategory && (
                         <div className="mb-6 flex items-center">
                             <span className="text-gray-600 mr-2">{t('activeFilter') || 'Active Filter'}:</span>
@@ -129,11 +166,9 @@ const ShopPage = () => {
                     )}
 
                     {loading ? (
-                        <div className="flex items-center justify-center h-64">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-                        </div>
+                        <ProductGrid products={[]} loading={true} />
                     ) : filteredProducts.length > 0 ? (
-                        <ProductGrid products={filteredProducts} />
+                        <ProductGrid products={sortedProducts} />
                     ) : (
                         <div className="text-center py-20 bg-gray-50 rounded-xl">
                             <p className="text-gray-500 text-lg">No products found matching your criteria.</p>
@@ -148,6 +183,7 @@ const ShopPage = () => {
                 </div>
             </div>
         </div>
+        </>
     );
 };
 

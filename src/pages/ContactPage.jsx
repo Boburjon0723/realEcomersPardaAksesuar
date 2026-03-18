@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { MapPin, Phone, Mail, Clock, Send, MessageSquare } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useApp } from '../contexts/AppContext';
+import PageMeta from '../components/common/PageMeta';
 import { createContactMessage } from '../services/supabase/messages';
 
 const ContactPage = () => {
@@ -18,10 +19,27 @@ const ContactPage = () => {
     const [submitted, setSubmitted] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [fieldErrors, setFieldErrors] = useState({});
+
+    const validateContactForm = () => {
+        const errs = {};
+        if (!formData.name.trim()) errs.name = t('nameRequired') || "Ism kiritilishi shart";
+        else if (formData.name.trim().length < 2) errs.name = t('nameMinLength') || "Ism kamida 2 ta belgidan iborat bo'lishi kerak";
+        if (!formData.email.trim()) errs.email = t('emailRequired') || "Email kiritilishi shart";
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errs.email = t('emailInvalid') || "To'g'ri email kiriting";
+        if (!formData.phone.trim()) errs.phone = t('phoneRequired') || "Telefon raqam shart";
+        else if ((formData.phone.replace(/\D/g, '').length < 9)) errs.phone = t('phoneInvalid') || "To'g'ri telefon raqam kiriting (kamida 9 ta raqam)";
+        if (!formData.message.trim()) errs.message = t('messageRequired') || "Xabar kiritilishi shart";
+        else if (formData.message.trim().length < 10) errs.message = t('messageMinLength') || "Xabar kamida 10 ta belgidan iborat bo'lishi kerak";
+        setFieldErrors(errs);
+        return Object.keys(errs).length === 0;
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        setFieldErrors({});
+        if (!validateContactForm()) return;
         setLoading(true);
 
         try {
@@ -70,7 +88,9 @@ const ContactPage = () => {
     ];
 
     return (
-        <div className="container mx-auto px-4 md:px-6 py-12">
+        <>
+            <PageMeta title={t('contact')} description={t('metaDescContact')} siteName={settings?.site_name} />
+            <div className="container mx-auto px-4 md:px-6 py-12">
             <div className="text-center max-w-2xl mx-auto mb-16">
                 <h1 className="text-4xl font-display font-bold mb-4 text-gray-900">{t('contact') || 'Contact Us'}</h1>
                 <p className="text-xl text-gray-600">{t('contactSubtitle') || 'Have questions? We stick by your side to help you choosing the best for your home.'}</p>
@@ -137,11 +157,12 @@ const ContactPage = () => {
                             <input
                                 type="text"
                                 required
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                                className={`w-full px-4 py-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none ${fieldErrors.name ? 'border-red-400' : 'border-gray-200'}`}
                                 placeholder="Your Name"
                                 value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                onChange={(e) => { setFormData({ ...formData, name: e.target.value }); setFieldErrors(prev => ({ ...prev, name: '' })); }}
                             />
+                            {fieldErrors.name && <p className="mt-1 text-sm text-red-600">{fieldErrors.name}</p>}
                         </div>
                         <div className="grid md:grid-cols-2 gap-6">
                             <div>
@@ -149,21 +170,24 @@ const ContactPage = () => {
                                 <input
                                     type="email"
                                     required
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                                    className={`w-full px-4 py-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none ${fieldErrors.email ? 'border-red-400' : 'border-gray-200'}`}
                                     placeholder="email@example.com"
                                     value={formData.email}
-                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                    onChange={(e) => { setFormData({ ...formData, email: e.target.value }); setFieldErrors(prev => ({ ...prev, email: '' })); }}
                                 />
+                                {fieldErrors.email && <p className="mt-1 text-sm text-red-600">{fieldErrors.email}</p>}
                             </div>
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-2">{t('phone')}</label>
                                 <input
                                     type="tel"
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                                    required
+                                    className={`w-full px-4 py-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none ${fieldErrors.phone ? 'border-red-400' : 'border-gray-200'}`}
                                     placeholder="+998..."
                                     value={formData.phone}
-                                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                    onChange={(e) => { setFormData({ ...formData, phone: e.target.value }); setFieldErrors(prev => ({ ...prev, phone: '' })); }}
                                 />
+                                {fieldErrors.phone && <p className="mt-1 text-sm text-red-600">{fieldErrors.phone}</p>}
                             </div>
                         </div>
                         <div>
@@ -171,11 +195,12 @@ const ContactPage = () => {
                             <textarea
                                 required
                                 rows="4"
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none resize-none"
+                                className={`w-full px-4 py-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none resize-none ${fieldErrors.message ? 'border-red-400' : 'border-gray-200'}`}
                                 placeholder="How can we help you?"
                                 value={formData.message}
-                                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                                onChange={(e) => { setFormData({ ...formData, message: e.target.value }); setFieldErrors(prev => ({ ...prev, message: '' })); }}
                             />
+                            {fieldErrors.message && <p className="mt-1 text-sm text-red-600">{fieldErrors.message}</p>}
                         </div>
                         <button
                             type="submit"
@@ -189,6 +214,7 @@ const ContactPage = () => {
                 </div>
             </div>
         </div>
+        </>
     );
 };
 

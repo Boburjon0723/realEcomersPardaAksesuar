@@ -1,22 +1,40 @@
 import React, { createContext, useContext } from 'react';
 import { translations } from '../utils/translations';
+import { getAllColors } from '../services/supabase/products';
 
 const LanguageContext = createContext();
 
+// Build map: normalized color name -> { name_uz, name_ru, name_en }
+const buildColorMap = (colors) => {
+    const map = {};
+    if (!colors) return map;
+    const normalize = (s) => (s || '').toLowerCase().replace(/'/g, '').replace(/\s+/g, '');
+    colors.forEach((c) => {
+        const entry = { name_uz: c.name_uz || c.name, name_ru: c.name_ru || c.name, name_en: c.name_en || c.name };
+        [c.name, c.name_uz, c.name_ru, c.name_en].filter(Boolean).forEach((n) => {
+            const k = normalize(n);
+            if (k) map[k] = entry;
+        });
+    });
+    return map;
+};
+
 export const LanguageProvider = ({ children }) => {
-    // Default to 'ru' if no saved preference
     const [language, setLanguage] = React.useState('ru');
+    const [colorMap, setColorMap] = React.useState({});
 
     React.useEffect(() => {
         const savedLang = localStorage.getItem('language');
-        if (savedLang) {
-            setLanguage(savedLang);
-        }
+        if (savedLang) setLanguage(savedLang);
     }, []);
 
-    const t = (key) => {
-        return translations[language]?.[key] || key;
-    };
+    React.useEffect(() => {
+        getAllColors().then((res) => {
+            if (res.success && res.colors) setColorMap(buildColorMap(res.colors));
+        });
+    }, []);
+
+    const t = (key) => translations[language]?.[key] || key;
 
     const changeLanguage = (lang) => {
         setLanguage(lang);
@@ -31,14 +49,18 @@ export const LanguageProvider = ({ children }) => {
 
     const translateColor = (color) => {
         if (!color) return '';
-        // Normalize: lowercase, remove apostrophes, remove spaces
-        const key = color.toLowerCase().replace(/'/g, '').replace(/\s+/g, '');
+        const key = (color || '').toLowerCase().replace(/'/g, '').replace(/\s+/g, '');
+        const dbColor = colorMap[key];
+        if (dbColor) {
+            const name = dbColor[`name_${language}`] || dbColor.name_uz || dbColor.name_ru || dbColor.name_en || color;
+            if (name) return name;
+        }
         const translated = t(key);
         return translated === key ? color : translated;
     };
 
     return (
-        <LanguageContext.Provider value={{ language, changeLanguage, toggleLanguage, t, translateColor }}>
+        <LanguageContext.Provider value={{ language, changeLanguage, toggleLanguage, t, translateColor, refreshColors: () => getAllColors().then((res) => res.success && res.colors && setColorMap(buildColorMap(res.colors))) }}>
             {children}
         </LanguageContext.Provider>
     );

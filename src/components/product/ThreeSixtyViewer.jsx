@@ -74,6 +74,7 @@ const ThreeSixtyViewer = ({ images, productName }) => {
                 <img
                     src={validImages[currentIndex]}
                     alt={`${productName} - 360 view frame ${currentIndex}`}
+                    loading="lazy"
                     className="max-w-full max-h-full object-contain pointer-events-none"
                     draggable="false"
                 />

@@ -21,9 +21,22 @@ import AboutPage from './pages/AboutPage';
 import ServicesPage from './pages/ServicesPage';
 import ContactPage from './pages/ContactPage';
 import MyOrdersPage from './pages/MyOrdersPage';
+import ShippingPage from './pages/ShippingPage';
+import ReturnsPage from './pages/ReturnsPage';
+import FaqPage from './pages/FaqPage';
+import TermsPage from './pages/TermsPage';
+import PrivacyPage from './pages/PrivacyPage';
+import NotFoundPage from './pages/NotFoundPage';
 
 // Components
 import AuthModal from './components/auth/AuthModal';
+import ErrorBoundary from './components/common/ErrorBoundary';
+import { useLanguage } from './contexts/LanguageContext';
+
+function ErrorBoundaryWrapper({ children }) {
+  const { t } = useLanguage();
+  return <ErrorBoundary t={t}>{children}</ErrorBoundary>;
+}
 
 function MainApp() {
   const { currentPage, selectedProduct, showAuth } = useApp();
@@ -41,12 +54,19 @@ function MainApp() {
         {currentPage === 'home' && <HomePage />}
         {currentPage === 'shop' && <ShopPage />}
         {currentPage === 'product' && selectedProduct && <ProductPage />}
+        {currentPage === 'product' && !selectedProduct && <NotFoundPage />}
         {currentPage === 'cart' && <CartPage />}
         {currentPage === 'checkout' && <CheckoutPage />}
         {currentPage === 'about' && <AboutPage />}
         {currentPage === 'services' && <ServicesPage />}
         {currentPage === 'contact' && <ContactPage />}
         {currentPage === 'orders' && <MyOrdersPage />}
+        {currentPage === 'shipping' && <ShippingPage />}
+        {currentPage === 'returns' && <ReturnsPage />}
+        {currentPage === 'faq' && <FaqPage />}
+        {currentPage === 'terms' && <TermsPage />}
+        {currentPage === 'privacy' && <PrivacyPage />}
+        {!['home', 'shop', 'product', 'cart', 'checkout', 'about', 'services', 'contact', 'orders', 'shipping', 'returns', 'faq', 'terms', 'privacy'].includes(currentPage) && <NotFoundPage />}
       </main>
 
       <FloatingContacts />
@@ -62,7 +82,9 @@ function App() {
     <LanguageProvider>
       <AuthProvider>
         <AppProvider>
-          <MainApp />
+          <ErrorBoundaryWrapper>
+            <MainApp />
+          </ErrorBoundaryWrapper>
         </AppProvider>
       </AuthProvider>
     </LanguageProvider>

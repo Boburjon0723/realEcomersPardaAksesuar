@@ -14,41 +14,41 @@ const Footer = () => {
     };
 
     return (
-        <footer className="bg-gray-900 text-white pt-16 pb-8 mt-auto">
-            <div className="container mx-auto px-4 md:px-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+        <footer className="bg-gray-900 text-white pt-12 pb-6 mt-auto">
+            <div className="container mx-auto px-6 md:px-10 lg:px-16">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
 
                     {/* Brand Column */}
                     <div>
-                        <div className="flex items-center space-x-4 mb-6">
-                            <div className="w-14 h-14 flex items-center justify-center bg-white/5 rounded-2xl p-2">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 flex items-center justify-center bg-white/5 rounded-xl p-1.5 shrink-0">
                                 {settings.logo_url ? (
                                     <img src={settings.logo_url} alt={settings.site_name} className="w-full h-full object-contain" />
                                 ) : (
                                     <img src="/favicon.svg" alt="Nuur Home Logo" className="w-full h-full object-contain" />
                                 )}
                             </div>
-                            <span className="text-xl md:text-2xl font-display font-bold text-white tracking-tight break-words max-w-[200px]">
+                            <span className="text-sm md:text-base font-display font-bold text-white tracking-tight">
                                 {settings.site_name || 'Nuur Home'}
                             </span>
                         </div>
-                        <p className="text-gray-400 leading-relaxed mb-6">
+                        <p className="text-gray-400 text-xs leading-relaxed mb-4">
                             {t('footerDescription')}
                         </p>
-                        <div className="flex space-x-4">
+                        <div className="flex gap-2">
                             {settings.facebook_url && (
-                                <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all duration-300">
-                                    <Facebook className="w-5 h-5" />
+                                <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all duration-300">
+                                    <Facebook className="w-4 h-4" />
                                 </a>
                             )}
                             {settings.instagram_url && (
-                                <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-pink-600 hover:text-white transition-all duration-300">
-                                    <Instagram className="w-5 h-5" />
+                                <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center hover:bg-pink-600 hover:text-white transition-all duration-300">
+                                    <Instagram className="w-4 h-4" />
                                 </a>
                             )}
                             {settings.telegram_url && (
-                                <a href={settings.telegram_url} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-blue-400 hover:text-white transition-all duration-300">
-                                    <Send className="w-5 h-5" />
+                                <a href={settings.telegram_url} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center hover:bg-blue-400 hover:text-white transition-all duration-300">
+                                    <Send className="w-4 h-4" />
                                 </a>
                             )}
                         </div>
@@ -56,10 +56,10 @@ const Footer = () => {
 
                     {/* Quick Links */}
                     <div>
-                        <h4 className="text-lg font-bold mb-6 text-white border-l-4 border-secondary pl-3">
+                        <h4 className="text-sm font-bold mb-4 text-white border-l-4 border-secondary pl-2">
                             {t('quickLinks')}
                         </h4>
-                        <ul className="space-y-3">
+                        <ul className="space-y-2">
                             {[
                                 { key: 'home', page: 'home' },
                                 { key: 'shop', page: 'shop' },
@@ -70,9 +70,9 @@ const Footer = () => {
                                     <a
                                         href={`#${item.page}`}
                                         onClick={(e) => handleNavigation(e, item.page)}
-                                        className="flex items-center text-gray-400 hover:text-secondary transition-colors group cursor-pointer"
+                                        className="flex items-center text-gray-400 hover:text-secondary transition-colors group cursor-pointer text-xs"
                                     >
-                                        <ChevronRight className="w-4 h-4 mr-2 text-gray-600 group-hover:text-secondary opacity-0 group-hover:opacity-100 transition-all" />
+                                        <ChevronRight className="w-3.5 h-3.5 mr-1.5 text-gray-600 group-hover:text-secondary opacity-0 group-hover:opacity-100 transition-all shrink-0" />
                                         {t(item.key)}
                                     </a>
                                 </li>
@@ -82,17 +82,17 @@ const Footer = () => {
 
                     {/* Customer Service */}
                     <div>
-                        <h4 className="text-lg font-bold mb-6 text-white border-l-4 border-secondary pl-3">
+                        <h4 className="text-sm font-bold mb-4 text-white border-l-4 border-secondary pl-2">
                             {t('customerService')}
                         </h4>
-                        <ul className="space-y-3">
+                        <ul className="space-y-2">
                             {['shipping', 'returns', 'faq', 'terms', 'privacy'].map((key) => (
                                 <li key={key}>
                                     <button
-                                        onClick={() => setCurrentPage('contact')}
-                                        className="flex items-center text-gray-400 hover:text-secondary transition-colors group w-full text-left"
+                                        onClick={() => setCurrentPage(key)}
+                                        className="flex items-center text-gray-400 hover:text-secondary transition-colors group w-full text-left text-xs"
                                     >
-                                        <ChevronRight className="w-4 h-4 mr-2 text-gray-600 group-hover:text-secondary opacity-0 group-hover:opacity-100 transition-all font-bold" />
+                                        <ChevronRight className="w-3.5 h-3.5 mr-1.5 text-gray-600 group-hover:text-secondary opacity-0 group-hover:opacity-100 transition-all font-bold shrink-0" />
                                         {t(key)}
                                     </button>
                                 </li>
@@ -122,15 +122,15 @@ const Footer = () => {
                     </div>
                 </div>
 
-                <div className="border-t border-gray-800 pt-8 mt-8 flex flex-col md:flex-row justify-between items-center">
-                    <p className="text-gray-500 text-sm mb-4 md:mb-0">
+                <div className="border-t border-gray-800 pt-6 mt-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <p className="text-gray-500 text-xs mb-0">
                         &copy; {new Date().getFullYear()} {settings.site_name || 'Nuur Home'}. {t('allRightsReserved')}
                     </p>
-                    <div className="flex items-center space-x-2 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all">
+                    <div className="flex items-center gap-1.5 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all">
                         {/* Payment Method Placeholders */}
-                        <div className="h-8 w-12 bg-white rounded flex items-center justify-center"><span className="text-xs font-bold text-gray-800">VISA</span></div>
-                        <div className="h-8 w-12 bg-white rounded flex items-center justify-center"><span className="text-xs font-bold text-gray-800">MC</span></div>
-                        <div className="h-8 w-12 bg-white rounded flex items-center justify-center"><span className="text-xs font-bold text-gray-800">PAYME</span></div>
+                        <div className="h-6 w-10 bg-white rounded flex items-center justify-center"><span className="text-[10px] font-bold text-gray-800">VISA</span></div>
+                        <div className="h-6 w-10 bg-white rounded flex items-center justify-center"><span className="text-[10px] font-bold text-gray-800">MC</span></div>
+                        <div className="h-6 w-10 bg-white rounded flex items-center justify-center"><span className="text-[10px] font-bold text-gray-800">PAYME</span></div>
                     </div>
                 </div>
             </div>

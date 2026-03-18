@@ -1,15 +1,29 @@
 import React, { useState } from 'react';
-import { Star, Minus, Plus, Heart, ShieldCheck, Truck, ArrowLeft, CheckCircle, X, ShoppingCart, RotateCw } from 'lucide-react';
+import { Star, Minus, Plus, Heart, ShieldCheck, Truck, ArrowLeft, CheckCircle, X, ShoppingCart, RotateCw, Share2 } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import PageMeta from '../components/common/PageMeta';
+import Breadcrumb from '../components/common/Breadcrumb';
 import ProductGallery from '../components/product/ProductGallery';
 import ThreeSixtyViewer from '../components/product/ThreeSixtyViewer';
 import { getAllColors } from '../services/supabase/products';
 import { supabase } from '../supabaseClient';
 import { Box } from 'lucide-react';
 
+const applyColorTo3DModel = (modelViewer, selectedColor, colorMap) => {
+    if (!modelViewer?.model?.materials || !selectedColor || !colorMap[selectedColor]) return;
+    const hexColor = colorMap[selectedColor];
+    const r = parseInt(hexColor.slice(1, 3), 16) / 255;
+    const g = parseInt(hexColor.slice(3, 5), 16) / 255;
+    const b = parseInt(hexColor.slice(5, 7), 16) / 255;
+    const color = [r, g, b, 1.0];
+    modelViewer.model.materials.forEach(material => {
+        material.pbrMetallicRoughness?.setBaseColorFactor(color);
+    });
+};
+
 const ProductPage = () => {
-    const { selectedProduct, currentUser, addToCart, setCurrentPage, toggleFavorite, isFavorite } = useApp();
+    const { selectedProduct, currentUser, addToCart, setCurrentPage, setSelectedCategory, addToRecentlyViewed, toggleFavorite, isFavorite, settings } = useApp();
     const { language, t, translateColor } = useLanguage();
     const [quantity, setQuantity] = useState(1);
     const [activeTab, setActiveTab] = useState('description');
@@ -21,11 +35,58 @@ const ProductPage = () => {
     const [bulkQuantities, setBulkQuantities] = useState({});
     const [showBulkOrder, setShowBulkOrder] = useState(false);
     const [viewMode, setViewMode] = useState(selectedProduct?.model_3d_url ? '3d' : 'image');
+    const [, setShareCopied] = useState(false);
     const [colorMap, setColorMap] = useState({});
+
+    const modelViewerRef = React.useRef(null);
+    const selectedColorRef = React.useRef(null);
+    const colorMapRef = React.useRef({});
+
+    React.useEffect(() => {
+        selectedColorRef.current = selectedColor;
+        colorMapRef.current = colorMap;
+    }, [selectedColor, colorMap]);
+
+    React.useEffect(() => {
+        if (selectedProduct?.id) addToRecentlyViewed(selectedProduct.id);
+    }, [selectedProduct?.id, addToRecentlyViewed]);
 
     const showNotification = (message, type = 'success') => {
         setNotification({ show: true, message, type });
         setTimeout(() => setNotification({ show: false, message: '', type: 'success' }), 5000);
+    };
+
+    const handleShare = async () => {
+        const productName = selectedProduct?.[`name_${language}`] || selectedProduct?.name || '';
+        const url = window.location.href;
+
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: productName,
+                    text: productName,
+                    url
+                });
+                showNotification(t('shareSuccess') || 'Ulashildi!', 'success');
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    copyToClipboard(url);
+                }
+            }
+        } else {
+            copyToClipboard(url);
+        }
+    };
+
+    const copyToClipboard = (text) => {
+        navigator.clipboard.writeText(text).then(() => {
+            setShareCopied(true);
+            showNotification(t('linkCopied') || "Havola nusxalandi!", 'success');
+            setTimeout(() => setShareCopied(false), 2000);
+        }).catch(() => {
+            const tgUrl = `https://t.me/share/url?url=${encodeURIComponent(text)}`;
+            window.open(tgUrl, '_blank', 'width=600,height=400');
+        });
     };
 
     const fetchReviews = React.useCallback(async () => {
@@ -65,23 +126,16 @@ const ProductPage = () => {
         }
     }, [selectedProduct?.id, selectedProduct?.color, selectedProduct?.colors, selectedProduct?.model_3d_url, fetchReviews]);
 
-    // Update 3D model color when selectedColor changes
+    // Update 3D model color when selectedColor changes or when model loads
     React.useEffect(() => {
-        if (viewMode === '3d' && selectedColor && colorMap[selectedColor]) {
-            const modelViewer = document.querySelector('model-viewer');
-            if (modelViewer && modelViewer.model) {
-                const hexColor = colorMap[selectedColor];
-                // Convert hex to model-viewer color (RGB normalized 0-1)
-                const r = parseInt(hexColor.slice(1, 3), 16) / 255;
-                const g = parseInt(hexColor.slice(3, 5), 16) / 255;
-                const b = parseInt(hexColor.slice(5, 7), 16) / 255;
-                const color = [r, g, b, 1.0];
+        if (viewMode !== '3d' || !selectedColor || !colorMap[selectedColor]) return;
+        const modelViewer = modelViewerRef.current || document.querySelector('model-viewer');
+        if (!modelViewer) return;
 
-                modelViewer.model.materials.forEach(material => {
-                    material.pbrMetallicRoughness.setBaseColorFactor(color);
-                });
-            }
-        }
+        const apply = () => applyColorTo3DModel(modelViewer, selectedColorRef.current, colorMapRef.current);
+        apply();
+        modelViewer.addEventListener('load', apply);
+        return () => modelViewer.removeEventListener('load', apply);
     }, [selectedColor, viewMode, colorMap]);
 
     // Dynamic Rating Calculation
@@ -131,8 +185,24 @@ const ProductPage = () => {
     const priceWithDiscount = selectedProduct.price * (1 - discount / 100);
     const favorite = isFavorite(selectedProduct.id);
 
+    const productName = selectedProduct?.[`name_${language}`] || selectedProduct?.name || t('shop');
+    const categoryDisplayName = selectedProduct?.categories?.[`name_${language}`] || selectedProduct?.categories?.name || selectedProduct?.category;
+    const categoryRawName = selectedProduct?.categories?.name;
+
+    const breadcrumbItems = [
+        { label: t('home'), onClick: () => setCurrentPage('home') },
+        { label: t('shop'), onClick: () => setCurrentPage('shop') },
+        ...(categoryDisplayName && categoryRawName
+            ? [{ label: categoryDisplayName, onClick: () => { setSelectedCategory({ category: categoryRawName }); setCurrentPage('shop'); } }]
+            : []),
+        { label: productName }
+    ];
+
     return (
-        <div className="container mx-auto px-4 md:px-6 py-8 relative">
+        <>
+            <PageMeta title={productName} description={t('metaDescProduct')} siteName={settings?.site_name} />
+            <div className="container mx-auto px-4 md:px-6 py-8 relative">
+            <Breadcrumb items={breadcrumbItems} />
             {/* Notification */}
             {notification.show && (
                 <div className={`fixed top-24 right-4 z-50 animate-fade-in-up flex items-center p-4 rounded-xl shadow-2xl border ${notification.type === 'success'
@@ -171,6 +241,7 @@ const ProductPage = () => {
                         {viewMode === '3d' && selectedProduct.model_3d_url ? (
                             <div className="w-full h-[400px] md:h-[600px] rounded-2xl bg-gray-50 border border-gray-100 overflow-hidden relative">
                                 <model-viewer
+                                    ref={modelViewerRef}
                                     src={selectedProduct.model_3d_url}
                                     alt={selectedProduct[`name_${language}`] || selectedProduct.name || ''}
                                     auto-rotate
@@ -209,8 +280,6 @@ const ProductPage = () => {
                                 <ProductGallery
                                     images={selectedProduct.images}
                                     productName={selectedProduct[`name_${language}`] || selectedProduct.name || ''}
-                                    selectedColor={selectedColor}
-                                    hexColor={colorMap[selectedColor]}
                                 />
                                 <div className="absolute bottom-4 right-4 flex flex-col gap-2">
                                     {selectedProduct.model_3d_url && (
@@ -265,6 +334,16 @@ const ProductPage = () => {
                                     {averageRating} ({reviewsCount} {t('reviews')})
                                 </span>
                             </div>
+
+                            {/* Share Button */}
+                            <button
+                                onClick={handleShare}
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-primary transition-colors text-sm font-medium"
+                                title={t('share') || 'Ulashish'}
+                            >
+                                <Share2 className="w-4 h-4" />
+                                {t('share') || 'Ulashish'}
+                            </button>
 
                             {/* Code Display */}
                             <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-widest text-secondary">
@@ -604,6 +683,7 @@ const ProductPage = () => {
                 </div>
             </div>
         </div>
+        </>
     );
 };
 
