@@ -17,7 +17,7 @@ const FALLBACK_HERO_IMAGES = [
 ];
 
 const HomePage = () => {
-    const { searchQuery, setSearchQuery, selectedCategory, setSelectedCategory, setCurrentPage, settings } = useApp();
+    const { searchQuery, selectedCategory, setSelectedCategory, setCurrentPage, settings } = useApp();
     const { language, t } = useLanguage();
     const [products, setProducts] = useState([]);
     const [banners, setBanners] = useState([]);
@@ -102,19 +102,6 @@ const HomePage = () => {
         setCurrentPage('shop');
         window.scrollTo(0, 0);
     };
-
-    // Filter products
-    const filteredProducts = products.filter(product => {
-        const name = product.name?.[language] || '';
-        const category = product.category?.[language] || '';
-        const subcategory = product.subcategory?.[language] || '';
-
-        const matchesSearch = name.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesCategory = !selectedCategory ||
-            (category === selectedCategory.category &&
-                (!selectedCategory.subcategory || subcategory === selectedCategory.subcategory));
-        return matchesSearch && matchesCategory;
-    });
 
     // Best Sellers: har bir kategoriyadan max 3 ta mahsulot
     const bestSellersByCategory = useMemo(() => {
