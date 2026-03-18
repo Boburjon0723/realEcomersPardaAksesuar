@@ -83,6 +83,17 @@ ALTER TABLE product_colors ADD COLUMN IF NOT EXISTS name_uz TEXT;
 ALTER TABLE product_colors ADD COLUMN IF NOT EXISTS name_ru TEXT;
 ALTER TABLE product_colors ADD COLUMN IF NOT EXISTS name_en TEXT;
 
+-- RLS: product_colors uchun (anon key orqali CRM insert qilishi uchun)
+ALTER TABLE product_colors ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public read product_colors" ON product_colors;
+CREATE POLICY "Public read product_colors" ON product_colors FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Allow insert product_colors" ON product_colors;
+CREATE POLICY "Allow insert product_colors" ON product_colors FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Allow update product_colors" ON product_colors;
+CREATE POLICY "Allow update product_colors" ON product_colors FOR UPDATE USING (true);
+DROP POLICY IF EXISTS "Allow delete product_colors" ON product_colors;
+CREATE POLICY "Allow delete product_colors" ON product_colors FOR DELETE USING (true);
+
 -- Mavjud ranglarni to'ldirish
 UPDATE product_colors 
 SET 

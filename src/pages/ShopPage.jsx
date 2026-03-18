@@ -58,13 +58,38 @@ const ShopPage = () => {
         return matchesSearch && matchesCategory;
     });
 
-    const sortedProducts = [...filteredProducts].sort((a, b) => {
-        if (sortBy === 'price_asc') return (a.price || 0) - (b.price || 0);
-        if (sortBy === 'price_desc') return (b.price || 0) - (a.price || 0);
-        const dateA = new Date(a.created_at || 0).getTime();
-        const dateB = new Date(b.created_at || 0).getTime();
-        return dateB - dateA;
-    });
+    const sortedProducts = React.useMemo(() => {
+        let list = [...filteredProducts].sort((a, b) => {
+            if (sortBy === 'price_asc') return (a.price || 0) - (b.price || 0);
+            if (sortBy === 'price_desc') return (b.price || 0) - (a.price || 0);
+            const dateA = new Date(a.created_at || 0).getTime();
+            const dateB = new Date(b.created_at || 0).getTime();
+            return dateB - dateA;
+        });
+
+        // Barchasi bo'limida: kategoriyalar aralash turishi (har bir kategoriyadan navbat bilan)
+        if (!selectedCategory && list.length > 0) {
+            const byCategory = {};
+            list.forEach((p) => {
+                const key = p.categories?.name || p.category_id || 'uncategorized';
+                if (!byCategory[key]) byCategory[key] = [];
+                byCategory[key].push(p);
+            });
+            const categoryKeys = Object.keys(byCategory);
+            const interleaved = [];
+            let idx = 0;
+            while (interleaved.length < list.length) {
+                for (const key of categoryKeys) {
+                    if (byCategory[key][idx] != null) {
+                        interleaved.push(byCategory[key][idx]);
+                    }
+                }
+                idx++;
+            }
+            return interleaved;
+        }
+        return list;
+    }, [filteredProducts, sortBy, selectedCategory]);
 
     const categoryDisplayName = selectedCategory
         ? (categories.find(c => c.name === selectedCategory.category)?.[`name_${language}`] || selectedCategory.category)

@@ -1,11 +1,27 @@
-import React from 'react';
-import { Mail, Phone, MapPin, Facebook, Instagram, Send, ChevronRight } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Mail, Phone, MapPin, Facebook, Instagram, Send, ChevronRight, Globe, ChevronDown } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useApp } from '../../contexts/AppContext';
 
+const FOOTER_LANGUAGES = [
+    { code: 'uz', label: "O'zbekcha" },
+    { code: 'ru', label: 'Русский' },
+    { code: 'en', label: 'English' }
+];
+
 const Footer = () => {
-    const { t } = useLanguage();
+    const { t, language, changeLanguage } = useLanguage();
     const { settings, setCurrentPage } = useApp();
+    const [showLangMenu, setShowLangMenu] = useState(false);
+    const langRef = useRef(null);
+
+    useEffect(() => {
+        function handleClickOutside(e) {
+            if (langRef.current && !langRef.current.contains(e.target)) setShowLangMenu(false);
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const handleNavigation = (e, page) => {
         e.preventDefault();
@@ -123,9 +139,35 @@ const Footer = () => {
                 </div>
 
                 <div className="border-t border-gray-800 pt-6 mt-6 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <p className="text-gray-500 text-xs mb-0">
-                        &copy; {new Date().getFullYear()} {settings.site_name || 'Nuur Home'}. {t('allRightsReserved')}
-                    </p>
+                    <div className="flex flex-wrap items-center gap-4">
+                        <p className="text-gray-500 text-xs mb-0">
+                            &copy; {new Date().getFullYear()} {settings.site_name || 'Nuur Home'}. {t('allRightsReserved')}
+                        </p>
+                        {/* Til tanlash - Footer */}
+                        <div className="relative" ref={langRef}>
+                            <button
+                                onClick={() => setShowLangMenu(!showLangMenu)}
+                                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white text-xs font-medium transition-colors"
+                            >
+                                <Globe className="w-3.5 h-3.5" />
+                                {FOOTER_LANGUAGES.find(l => l.code === language)?.label || language}
+                                <ChevronDown className={`w-3 h-3 transition-transform ${showLangMenu ? 'rotate-180' : ''}`} />
+                            </button>
+                            {showLangMenu && (
+                                <div className="absolute bottom-full left-0 mb-2 w-36 bg-gray-800 rounded-lg border border-gray-700 py-1 z-50">
+                                    {FOOTER_LANGUAGES.map(({ code, label }) => (
+                                        <button
+                                            key={code}
+                                            onClick={() => { changeLanguage(code); setShowLangMenu(false); }}
+                                            className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-700 transition-colors ${language === code ? 'text-secondary font-bold' : 'text-gray-400'}`}
+                                        >
+                                            {label}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
                     <div className="flex items-center gap-1.5 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all">
                         {/* Payment Method Placeholders */}
                         <div className="h-6 w-10 bg-white rounded flex items-center justify-center"><span className="text-[10px] font-bold text-gray-800">VISA</span></div>

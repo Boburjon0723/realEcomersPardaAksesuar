@@ -7,7 +7,7 @@ import { createOrder, uploadReceipt } from '../services/supabase/orders';
 import { getSettings } from '../services/supabase/settings';
 
 const CheckoutPage = () => {
-    const { cart, getTotalPrice, clearCart, setCurrentPage, currentUser, setShowAuth } = useApp();
+    const { cart, getTotalPrice, clearCart, setCurrentPage, currentUser, setShowAuth, setIsLogin } = useApp();
     const { language, t, translateColor } = useLanguage();
     const [paymentMethod, setPaymentMethod] = useState('humo');
     const [orderSuccess, setOrderSuccess] = useState(false);
@@ -26,13 +26,11 @@ const CheckoutPage = () => {
 
     useEffect(() => {
         if (!currentUser) {
+            setIsLogin(true);
             setShowAuth(true);
-            setCurrentPage('home'); // Redirect to home so they don't see checkout without login
-            // Or ideally, stay on checkout but show modal. 
-            // But usually checkout is protected. 
-            // Let's redirect to home and show auth.
+            setCurrentPage('home');
         }
-    }, [currentUser, setShowAuth, setCurrentPage]);
+    }, [currentUser, setShowAuth, setIsLogin, setCurrentPage]);
 
     useEffect(() => {
         const fetchSettings = async () => {

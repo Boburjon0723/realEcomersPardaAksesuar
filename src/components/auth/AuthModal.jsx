@@ -55,9 +55,8 @@ const countries = [
 ];
 
 const AuthModal = () => {
-    const { setShowAuth, setCurrentUser } = useApp();
+    const { setShowAuth, setCurrentUser, isLogin, setIsLogin } = useApp();
     const { t } = useLanguage();
-    const [isLogin, setIsLogin] = useState(true);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [formData, setFormData] = useState({

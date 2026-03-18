@@ -154,6 +154,63 @@ body {
   outline-offset: 2px;
 }
 
+/* Mobile Menu Animations */
+@keyframes mobileMenuSlideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes mobileMenuSlideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes mobileMenuBackdropFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes mobileMenuBackdropFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.animate-mobile-menu-in {
+  animation: mobileMenuSlideIn 0.3s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
+.animate-mobile-menu-out {
+  animation: mobileMenuSlideOut 0.25s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
+.animate-mobile-backdrop-in {
+  animation: mobileMenuBackdropFadeIn 0.2s ease-out forwards;
+}
+
+.animate-mobile-backdrop-out {
+  animation: mobileMenuBackdropFadeOut 0.2s ease-out forwards;
+}
+
 /* ============================================
    TYPOGRAPHY
    ============================================ */

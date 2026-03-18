@@ -3,6 +3,7 @@ import { Truck, MapPin, Clock } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useApp } from '../contexts/AppContext';
 import PageMeta from '../components/common/PageMeta';
+import PageBackBar from '../components/common/PageBackBar';
 
 const ShippingPage = () => {
     const { t } = useLanguage();
@@ -18,6 +19,7 @@ const ShippingPage = () => {
         <>
             <PageMeta title={t('shipping')} description={t('metaDescShipping')} siteName={settings?.site_name} />
             <div className="max-w-4xl mx-auto px-6 md:px-8 py-12">
+            <PageBackBar />
             <h1 className="text-3xl md:text-4xl font-display font-bold text-gray-900 mb-2">
                 {t('shipping')}
             </h1>

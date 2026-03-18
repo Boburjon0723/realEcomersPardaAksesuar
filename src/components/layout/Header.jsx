@@ -1,12 +1,30 @@
-import React, { useState } from 'react';
-import { ShoppingCart, User, Search, Menu, X, Globe, LogOut, Package } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { ShoppingCart, User, Search, Menu, X, Globe, LogOut, Package, ChevronDown } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { logoutUser } from '../../services/supabase/auth';
 
+const LANGUAGES = [
+    { code: 'uz', label: "O'zbekcha" },
+    { code: 'ru', label: 'Русский' },
+    { code: 'en', label: 'English' }
+];
+
 const Header = () => {
-    const { cart, currentUser, currentPage, searchQuery, setSearchQuery, setShowAuth, setCurrentPage, setCurrentUser, setSelectedCategory, settings } = useApp();
-    const { language, toggleLanguage, t } = useLanguage();
+    const { cart, currentUser, currentPage, searchQuery, setSearchQuery, setShowAuth, setIsLogin, setCurrentPage, setCurrentUser, setSelectedCategory, settings } = useApp();
+    const { language, changeLanguage, t } = useLanguage();
+    const [showLangDropdown, setShowLangDropdown] = useState(false);
+    const langDropdownRef = useRef(null);
+
+    useEffect(() => {
+        function handleClickOutside(e) {
+            if (langDropdownRef.current && !langDropdownRef.current.contains(e.target)) {
+                setShowLangDropdown(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const isNavActive = (page) => {
         if (page === 'shop') return currentPage === 'shop' || currentPage === 'product';
@@ -17,6 +35,7 @@ const Header = () => {
         cart: t('cart'),
         checkout: t('checkout') || "To'lov",
         orders: t('myOrders'),
+        profile: t('profile'),
         shipping: t('shipping'),
         returns: t('returns'),
         faq: t('faq'),
@@ -76,14 +95,32 @@ const Header = () => {
 
                     {/* Right Actions */}
                     <div className="flex items-center gap-1 md:gap-2">
-                        {/* Language Toggle - Mobile: icon only, Desktop: icon + text */}
-                        <button
-                            onClick={toggleLanguage}
-                            className="p-2 md:px-2.5 md:py-1.5 text-gray-600 hover:text-primary transition-colors flex items-center gap-1 rounded-lg hover:bg-gray-50"
-                        >
-                            <Globe className="w-4 h-4 md:w-4 md:h-4" />
-                            <span className="hidden md:inline text-xs font-medium">{language.toUpperCase()}</span>
-                        </button>
+                        {/* Language Switcher - bosganda til ro'yxati */}
+                        <div className="relative" ref={langDropdownRef}>
+                            <button
+                                onClick={() => setShowLangDropdown(!showLangDropdown)}
+                                className="p-2 md:px-3 md:py-2 text-gray-600 hover:text-primary transition-colors flex items-center gap-1.5 rounded-lg hover:bg-gray-50 min-w-[100px] md:min-w-[120px] justify-between"
+                            >
+                                <span className="flex items-center gap-1.5">
+                                    <Globe className="w-4 h-4 text-primary" />
+                                    <span className="hidden md:inline text-xs font-medium">{LANGUAGES.find(l => l.code === language)?.label || language.toUpperCase()}</span>
+                                </span>
+                                <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${showLangDropdown ? 'rotate-180' : ''}`} />
+                            </button>
+                            {showLangDropdown && (
+                                <div className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50">
+                                    {LANGUAGES.map(({ code, label }) => (
+                                        <button
+                                            key={code}
+                                            onClick={() => { changeLanguage(code); setShowLangDropdown(false); }}
+                                            className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${language === code ? 'text-primary font-bold' : 'text-gray-700'}`}
+                                        >
+                                            {label}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
 
                         {/* Cart */}
                         <button
@@ -117,6 +154,13 @@ const Header = () => {
                                     </div>
                                     <div className="p-2">
                                         <button
+                                            onClick={() => setCurrentPage('profile')}
+                                            className="w-full flex items-center space-x-2 px-3 py-2 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                                        >
+                                            <User className="w-4 h-4" />
+                                            <span className="text-sm font-medium">{t('profile') || 'Profilim'}</span>
+                                        </button>
+                                        <button
                                             onClick={() => setCurrentPage('orders')}
                                             className="w-full flex items-center space-x-2 px-3 py-2 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
                                         >
@@ -140,11 +184,11 @@ const Header = () => {
                             </div>
                         ) : (
                             <button
-                                onClick={() => setShowAuth(true)}
+                                onClick={() => { setIsLogin(false); setShowAuth(true); }}
                                 className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-sm"
                             >
                                 <User className="w-4 h-4" />
-                                <span className="font-medium">{t('login') || 'Kirish'}</span>
+                                <span className="font-medium">{t('profile') || 'Profilim'}</span>
                             </button>
                         )}
 
@@ -164,12 +208,12 @@ const Header = () => {
                 <div className="fixed inset-0 z-[60] md:hidden">
                     {/* Backdrop */}
                     <div
-                        className="absolute inset-0 bg-black/50"
+                        className="absolute inset-0 bg-black/50 animate-mobile-backdrop-in"
                         onClick={() => setMobileMenu(false)}
                     />
 
                     {/* Menu Panel */}
-                    <div className="absolute right-0 top-0 bottom-0 w-[280px] bg-white shadow-2xl">
+                    <div className="absolute right-0 top-0 bottom-0 w-[280px] max-w-[85vw] bg-white shadow-2xl animate-mobile-menu-in">
                         {/* Header */}
                         <div className="flex items-center justify-between p-4 border-b">
                             <h3 className="text-lg font-bold">Menu</h3>
@@ -224,6 +268,15 @@ const Header = () => {
                                     <p className="text-sm text-secondary font-bold mb-3">{currentUser.phone}</p>
                                     <button
                                         onClick={() => {
+                                            setCurrentPage('profile');
+                                            setMobileMenu(false);
+                                        }}
+                                        className="w-full py-2 bg-white border border-gray-200 text-gray-800 rounded-lg text-sm mb-2 font-bold"
+                                    >
+                                        {t('profile') || 'Profilim'}
+                                    </button>
+                                    <button
+                                        onClick={() => {
                                             setCurrentPage('orders');
                                             setMobileMenu(false);
                                         }}
@@ -247,19 +300,33 @@ const Header = () => {
                             ) : (
                                 <button
                                     onClick={() => {
+                                        setIsLogin(false);
                                         setShowAuth(true);
                                         setMobileMenu(false);
                                     }}
                                     className="w-full py-3 bg-primary text-white rounded-lg font-bold mb-4"
                                 >
-                                    Kirish
+                                    {t('profile') || 'Profilim'}
                                 </button>
                             )}
 
-                            {/* Language */}
-                            <div className="flex items-center justify-center space-x-2 py-2 text-gray-600">
-                                <Globe className="w-5 h-5" />
-                                <span>{language.toUpperCase()}</span>
+                            {/* Til tanlash */}
+                            <div className="border-t pt-4 mt-4">
+                                <p className="text-xs text-gray-500 uppercase px-2 mb-2 flex items-center gap-2">
+                                    <Globe className="w-4 h-4" />
+                                    Til
+                                </p>
+                                <div className="space-y-1">
+                                    {LANGUAGES.map(({ code, label }) => (
+                                        <button
+                                            key={code}
+                                            onClick={() => { changeLanguage(code); setMobileMenu(false); }}
+                                            className={`w-full text-left px-4 py-3 rounded-lg text-sm ${language === code ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-gray-100 text-gray-700'}`}
+                                        >
+                                            {label}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     </div>

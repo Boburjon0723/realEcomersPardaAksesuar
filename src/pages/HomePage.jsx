@@ -116,6 +116,25 @@ const HomePage = () => {
         return matchesSearch && matchesCategory;
     });
 
+    // Best Sellers: har bir kategoriyadan max 3 ta mahsulot
+    const bestSellersByCategory = useMemo(() => {
+        const PER_CATEGORY = 3;
+        const grouped = {};
+        products.forEach((p) => {
+            const key = p.category_id || (typeof p.category === 'object' ? (p.category?.name || p.category?.name_uz) : p.category) || 'uncategorized';
+            if (!grouped[key]) grouped[key] = [];
+            if (grouped[key].length < PER_CATEGORY) grouped[key].push(p);
+        });
+        return Object.entries(grouped)
+            .filter(([, items]) => items.length > 0)
+            .map(([catKey, items]) => {
+                const cat = categories.find(c => c.id === catKey || c.name === catKey);
+                const categoryKey = cat?.name || items[0]?.categories?.name || catKey;
+                const categoryDisplayName = cat?.[`name_${language}`] || cat?.name || items[0]?.categories?.name || (typeof items[0]?.category === 'object' ? items[0]?.category?.[`name_${language}`] : items[0]?.category) || catKey;
+                return { categoryKey, categoryDisplayName, products: items };
+            });
+    }, [products, categories, language]);
+
     const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
 
     const handleSubscribe = async (e) => {
@@ -367,27 +386,46 @@ const HomePage = () => {
                 {/* Recently Viewed */}
                 <RecentlyViewedProducts />
 
-                {/* Best Sellers / Products */}
-                <section className="mb-16 py-8 px-4 -mx-4 rounded-2xl bg-gray-50/70">
-                    <div className="flex justify-between items-center mb-10">
-                        <div className="text-center w-full">
-                            <h2 className="text-3xl font-display font-bold text-gray-900 mb-2">{t('bestSellers')}</h2>
-                            <p className="text-gray-500 max-w-2xl mx-auto">{t('aboutSubtitle')}</p>
-                        </div>
+                {/* Best Sellers - Har bir kategoriyadan 3 ta mahsulot */}
+                <section className="mb-20">
+                    <div className="text-center mb-12">
+                        <span className="inline-block text-primary font-bold tracking-[0.2em] uppercase text-xs mb-3">{t('bestSellers')}</span>
+                        <h2 className="text-3xl md:text-4xl font-display font-bold text-gray-900 mb-3">{t('bestSellers')}</h2>
+                        <p className="text-gray-500 max-w-2xl mx-auto text-base">{t('aboutSubtitle')}</p>
                     </div>
 
                     {loading ? (
                         <ProductGrid products={[]} loading={true} />
-                    ) : filteredProducts.length > 0 ? (
-                        <ProductGrid products={filteredProducts} />
+                    ) : bestSellersByCategory.length > 0 ? (
+                        <div className="space-y-14">
+                            {bestSellersByCategory.map(({ categoryKey, categoryDisplayName, products: catProducts }) => (
+                                <div key={categoryKey} className="rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 shadow-sm overflow-hidden">
+                                    <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                                        <div className="flex items-center justify-between">
+                                            <h3 className="text-lg font-bold text-gray-900 capitalize">{categoryDisplayName}</h3>
+                                            <button
+                                                onClick={() => handleCategoryClick(categoryKey)}
+                                                className="text-sm font-medium text-primary hover:text-primary/80 flex items-center gap-1 group"
+                                            >
+                                                {t('viewAll') || 'Barchasini ko\'rish'}
+                                                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="p-6">
+                                        <ProductGrid products={catProducts} />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     ) : (
-                        <div className="text-center py-20 bg-gray-50 rounded-xl">
+                        <div className="text-center py-20 bg-gray-50 rounded-2xl border border-gray-100">
                             <p className="text-gray-500 text-lg">{t('noProducts')}</p>
                             <button
-                                onClick={() => { setSelectedCategory(null); setSearchQuery(''); }}
-                                className="mt-4 text-primary font-medium hover:underline"
+                                onClick={() => setCurrentPage('shop')}
+                                className="mt-4 px-6 py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary/90"
                             >
-                                {t('clearFilters')}
+                                {t('shopNow')}
                             </button>
                         </div>
                     )}

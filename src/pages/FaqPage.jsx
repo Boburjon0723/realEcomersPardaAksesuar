@@ -3,6 +3,7 @@ import { ChevronDown, HelpCircle } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useApp } from '../contexts/AppContext';
 import PageMeta from '../components/common/PageMeta';
+import PageBackBar from '../components/common/PageBackBar';
 
 const FaqPage = () => {
     const { t } = useLanguage();
@@ -15,6 +16,7 @@ const FaqPage = () => {
         <>
             <PageMeta title={t('faq')} description={t('metaDescFaq')} siteName={settings?.site_name} />
             <div className="max-w-4xl mx-auto px-6 md:px-8 py-12">
+            <PageBackBar />
             <div className="flex items-center gap-3 mb-12">
                 <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center">
                     <HelpCircle className="w-7 h-7 text-primary" />

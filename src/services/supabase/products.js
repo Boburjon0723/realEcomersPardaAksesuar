@@ -138,6 +138,28 @@ const MOCK_PRODUCTS = [
     }
 ];
 
+// Get products by array of IDs
+export const getProductsByIds = async (productIds) => {
+    if (!productIds || productIds.length === 0) {
+        return { success: true, products: [] };
+    }
+    try {
+        const { data, error } = await supabase
+            .from(PRODUCTS_TABLE)
+            .select(`*, categories(name)`)
+            .in('id', productIds);
+        if (error) throw error;
+        const products = (data || []).map(mapProductFromDB);
+        // Order by original IDs order
+        const orderMap = new Map(productIds.map((id, i) => [id, i]));
+        products.sort((a, b) => (orderMap.get(a.id) ?? 999) - (orderMap.get(b.id) ?? 999));
+        return { success: true, products };
+    } catch (error) {
+        console.error('Error fetching products by IDs:', error);
+        return { success: false, products: [] };
+    }
+};
+
 // Get product by ID
 export const getProductById = async (productId) => {
     try {

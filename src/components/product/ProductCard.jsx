@@ -13,15 +13,13 @@ const ProductCard = ({ product, onQuickView }) => {
     const images = product.images && product.images.length > 0 ? product.images : (product.image_url ? [product.image_url] : []);
     const hasMultipleImages = images.length > 1;
 
+    // 2+ rasm bo'lsa: almashish intervali (hover da tezroq)
     useEffect(() => {
-        let interval;
-        if (isHovered && hasMultipleImages) {
-            interval = setInterval(() => {
-                setCurrentImageIndex((prev) => (prev + 1) % images.length);
-            }, 1500);
-        } else {
-            setCurrentImageIndex(0);
-        }
+        if (!hasMultipleImages) return;
+        const intervalMs = isHovered ? 1500 : 2500;
+        const interval = setInterval(() => {
+            setCurrentImageIndex((prev) => (prev + 1) % images.length);
+        }, intervalMs);
         return () => clearInterval(interval);
     }, [images.length, isHovered, hasMultipleImages]);
 
@@ -67,9 +65,24 @@ const ProductCard = ({ product, onQuickView }) => {
                             </div>
                         )}
                     </div>
+                ) : hasMultipleImages ? (
+                    <div className="relative w-full h-full overflow-hidden">
+                        {images.map((imgSrc, idx) => (
+                            <img
+                                key={idx}
+                                src={imgSrc || 'https://via.placeholder.com/400x500?text=No+Image'}
+                                alt={`${productName} ${idx + 1}`}
+                                loading={idx === 0 ? 'lazy' : 'eager'}
+                                className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ease-in-out group-hover:scale-105 ${
+                                    idx === currentImageIndex ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
+                                }`}
+                                onError={(e) => { e.target.src = 'https://via.placeholder.com/400x500?text=No+Image'; }}
+                            />
+                        ))}
+                    </div>
                 ) : (
                     <img
-                        src={images[currentImageIndex] || 'https://via.placeholder.com/400x500?text=No+Image'}
+                        src={images[0] || 'https://via.placeholder.com/400x500?text=No+Image'}
                         alt={productName}
                         loading="lazy"
                         className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
