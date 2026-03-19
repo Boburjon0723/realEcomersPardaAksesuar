@@ -3,13 +3,15 @@
 // Yoqtirilganlar | Buyurtmalarim | Ko'rib chiqqanlar
 // ==========================================
 import React, { useState, useEffect } from 'react';
-import { Heart, Package, Eye, ArrowLeft, ShoppingBag, ExternalLink, ChevronRight, MapPin, User, Settings } from 'lucide-react';
+import { Heart, Package, Eye, ArrowLeft, ShoppingBag, ExternalLink, ChevronRight, MapPin, User, Settings, Lock } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import PageMeta from '../components/common/PageMeta';
 import { getUserOrders } from '../services/supabase/orders';
 import { getProductsByIds } from '../services/supabase/products';
 import ProductGrid from '../components/product/ProductGrid';
+import EditProfileModal from '../components/auth/EditProfileModal';
+import ChangePasswordModal from '../components/auth/ChangePasswordModal';
 
 const TABS = [
     { id: 'wishlist', icon: Heart, labelKey: 'wishlist' },
@@ -18,9 +20,12 @@ const TABS = [
 ];
 
 const ProfilePage = () => {
-    const { currentUser, setCurrentPage, favorites, recentlyViewed, addToCart, language, settings } = useApp();
+    const { currentUser, setCurrentPage, setCurrentUser, favorites, recentlyViewed, addToCart, language, settings } = useApp();
     const { t } = useLanguage();
     const [activeTab, setActiveTab] = useState('wishlist');
+    const [showEditProfile, setShowEditProfile] = useState(false);
+    const [showChangePassword, setShowChangePassword] = useState(false);
+    const [profileToast, setProfileToast] = useState(null);
     const [orders, setOrders] = useState([]);
     const [wishlistProducts, setWishlistProducts] = useState([]);
     const [recentProducts, setRecentProducts] = useState([]);
@@ -302,31 +307,85 @@ const ProfilePage = () => {
                     </main>
                 </div>
 
-                {/* Qo'shimcha takliflar - Kelajakda qo'shiladigan funksiyalar */}
-                <div className="mt-12 p-6 bg-primary/5 rounded-2xl border border-primary/20">
-                    <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                {/* Profil sozlamalari - dinamik */}
+                <div className="mt-12 p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
+                    <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <Settings className="w-5 h-5 text-primary" />
-                        {t('comingSoon')}
+                        {t('profileSettings') || 'Profil sozlamalari'}
                     </h4>
-                    <ul className="space-y-2 text-sm text-gray-600">
-                        <li className="flex items-center gap-2">
-                            <MapPin className="w-4 h-4 text-primary" />
-                            {language === 'uz' ? "Manzillar ro'yxati (yetkazib berish manzillari)" : language === 'ru' ? 'Список адресов доставки' : 'Saved delivery addresses'}
-                        </li>
-                        <li className="flex items-center gap-2">
-                            <User className="w-4 h-4 text-primary" />
-                            {language === 'uz' ? "Profil ma'lumotlarini tahrirlash (ism, telefon, email)" : language === 'ru' ? 'Редактирование профиля' : 'Edit profile (name, phone, email)'}
-                        </li>
-                        <li className="flex items-center gap-2">
-                            <Settings className="w-4 h-4 text-primary" />
-                            {language === 'uz' ? 'Parolni o\'zgartirish' : language === 'ru' ? 'Смена пароля' : 'Change password'}
-                        </li>
-                        <li className="flex items-center gap-2">
-                            <ShoppingBag className="w-4 h-4 text-primary" />
-                            {language === 'uz' ? "Yoqtirilgandan savatga tez qo'shish" : language === 'ru' ? 'Быстрое добавление в корзину из избранного' : 'Quick add wishlist to cart'}
-                        </li>
-                    </ul>
+                    <div className="space-y-2">
+                        <button
+                            onClick={() => {
+                                setProfileToast(t('comingSoon'));
+                                setTimeout(() => setProfileToast(null), 3000);
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-gray-700 hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100"
+                        >
+                            <MapPin className="w-5 h-5 text-primary shrink-0" />
+                            <span className="font-medium">{t('savedAddresses') || "Manzillar ro'yxati"}</span>
+                            <ChevronRight className="w-4 h-4 ml-auto text-gray-400" />
+                        </button>
+                        <button
+                            onClick={() => setShowEditProfile(true)}
+                            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-gray-700 hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100"
+                        >
+                            <User className="w-5 h-5 text-primary shrink-0" />
+                            <span className="font-medium">{t('editProfile') || "Profilni tahrirlash"}</span>
+                            <ChevronRight className="w-4 h-4 ml-auto text-gray-400" />
+                        </button>
+                        <button
+                            onClick={() => setShowChangePassword(true)}
+                            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-gray-700 hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100"
+                        >
+                            <Lock className="w-5 h-5 text-primary shrink-0" />
+                            <span className="font-medium">{t('changePassword') || "Parolni o'zgartirish"}</span>
+                            <ChevronRight className="w-4 h-4 ml-auto text-gray-400" />
+                        </button>
+                        <button
+                            onClick={async () => {
+                                if (!favorites?.length) {
+                                    setProfileToast(language === 'uz' ? "Avval sevimlilarga mahsulot qo'shing" : language === 'ru' ? 'Сначала добавьте товары в избранное' : 'Add products to wishlist first');
+                                    setTimeout(() => setProfileToast(''), 3000);
+                                    return;
+                                }
+                                const res = await getProductsByIds(favorites);
+                                if (res.success && res.products?.length) {
+                                    res.products.forEach((p) => addToCart(p));
+                                    setProfileToast(t('addAllToCartSuccess') || t('addAllToCart'));
+                                    setTimeout(() => setProfileToast(''), 3000);
+                                }
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-gray-700 hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100"
+                        >
+                            <ShoppingBag className="w-5 h-5 text-primary shrink-0" />
+                            <span className="font-medium">{t('quickAddWishlist') || "Yoqtirilganlarni savatga qo'shish"}</span>
+                            <ChevronRight className="w-4 h-4 ml-auto text-gray-400" />
+                        </button>
+                    </div>
                 </div>
+
+                {profileToast && (
+                    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 bg-gray-900 text-white rounded-xl text-sm font-medium shadow-lg animate-fade-in">
+                        {profileToast}
+                    </div>
+                )}
+
+                {showEditProfile && (
+                    <EditProfileModal
+                        user={currentUser}
+                        onClose={() => setShowEditProfile(false)}
+                        onSuccess={(updated) => {
+                            if (updated) setCurrentUser(updated);
+                            localStorage.setItem('user', JSON.stringify(updated));
+                        }}
+                    />
+                )}
+                {showChangePassword && (
+                    <ChangePasswordModal
+                        onClose={() => setShowChangePassword(false)}
+                        onSuccess={() => setShowChangePassword(false)}
+                    />
+                )}
             </div>
         </>
     );

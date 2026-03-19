@@ -211,6 +211,21 @@ body {
   animation: mobileMenuBackdropFadeOut 0.2s ease-out forwards;
 }
 
+@keyframes slideUpFromBottom {
+  from {
+    transform: translateY(100%);
+    opacity: 0.8;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slideUpFromBottom 0.3s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
 /* ============================================
    TYPOGRAPHY
    ============================================ */

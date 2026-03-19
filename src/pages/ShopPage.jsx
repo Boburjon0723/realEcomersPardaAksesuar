@@ -108,7 +108,7 @@ const ShopPage = () => {
     return (
         <>
             <PageMeta title={t('shop')} description={t('metaDescShop')} siteName={settings?.site_name} />
-            <div className="max-w-6xl mx-auto px-6 md:px-8 lg:px-12 py-8">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-6 sm:py-8">
             <Breadcrumb items={breadcrumbItems} />
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-center mb-8">
@@ -131,22 +131,22 @@ const ShopPage = () => {
                         />
                     </div>
 
-                    <div className="flex items-center gap-4 w-full sm:w-auto justify-end">
+                    <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto justify-between sm:justify-end pl-0 sm:pl-0">
                         <select
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value)}
-                            className="px-4 py-2 border border-gray-200 rounded-xl bg-white text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                            className="min-w-[120px] sm:min-w-0 flex-1 sm:flex-none px-3 sm:px-4 py-2 border border-gray-200 rounded-xl bg-white text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                         >
                             <option value="newest">{t('sortNewest') || 'Yangilar'}</option>
                             <option value="price_asc">{t('sortPriceAsc') || 'Narx: pastdan yuqoriga'}</option>
                             <option value="price_desc">{t('sortPriceDesc') || 'Narx: yuqoridan pastga'}</option>
                         </select>
-                        <span className="text-gray-500 text-sm whitespace-nowrap">{filteredProducts.length} {t('items')}</span>
+                        <span className="text-gray-500 text-sm whitespace-nowrap shrink-0">{filteredProducts.length} {t('items')}</span>
                         <button
-                            className="md:hidden flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl font-medium text-sm shadow-sm"
+                            className="md:hidden flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl font-medium text-sm shadow-sm shrink-0"
                             onClick={() => setShowMobileFilters(true)}
                         >
-                            <Filter className="w-4 h-4" /> Filters
+                            <Filter className="w-4 h-4" /> {t('filter') || 'Filter'}
                         </button>
                     </div>
                 </div>
@@ -158,17 +158,27 @@ const ShopPage = () => {
                     <Sidebar />
                 </div>
 
-                {/* Mobile Sidebar Overlay */}
+                {/* Mobile Filter - pastdan chiqadigan bottom sheet (yondan emas) */}
                 {showMobileFilters && (
-                    <div className="fixed inset-0 z-50 bg-black/50 md:hidden" onClick={() => setShowMobileFilters(false)}>
-                        <div className="absolute right-0 top-0 h-full w-80 bg-white p-6 overflow-y-auto" onClick={e => e.stopPropagation()}>
-                            <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-xl font-bold">Filters</h2>
-                                <button onClick={() => setShowMobileFilters(false)}>
-                                    <X className="w-6 h-6" />
+                    <div className="fixed inset-0 z-50 md:hidden" onClick={() => setShowMobileFilters(false)}>
+                        <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
+                        <div
+                            className="absolute bottom-0 left-0 right-0 max-h-[85vh] bg-white rounded-t-2xl shadow-2xl overflow-y-auto animate-slide-up"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="sticky top-0 bg-white border-b border-gray-100 px-4 py-4 flex justify-between items-center rounded-t-2xl z-10">
+                                <h2 className="text-lg font-bold text-gray-900">{t('filter') || 'Filter'}</h2>
+                                <button
+                                    onClick={() => setShowMobileFilters(false)}
+                                    className="p-2 -m-2 rounded-full hover:bg-gray-100 transition-colors"
+                                    aria-label="Yopish"
+                                >
+                                    <X className="w-5 h-5 text-gray-600" />
                                 </button>
                             </div>
-                            <Sidebar />
+                            <div className="p-4 pb-8">
+                                <Sidebar />
+                            </div>
                         </div>
                     </div>
                 )}

@@ -78,13 +78,43 @@ export const logoutUser = async () => {
     }
 };
 
-// Reset password
+// Reset password (email orqali)
 export const resetPassword = async (email) => {
     try {
         const { error } = await supabase.auth.resetPasswordForEmail(email);
         if (error) throw error;
         return { success: true };
     } catch (error) {
+        return { success: false, error: error.message };
+    }
+};
+
+// Profil ma'lumotlarini yangilash (ism, telefon)
+export const updateUserProfile = async (name, phone) => {
+    try {
+        const { data, error } = await supabase.auth.updateUser({
+            data: {
+                display_name: name,
+                name,
+                phone
+            }
+        });
+        if (error) throw error;
+        return { success: true, user: data.user };
+    } catch (error) {
+        console.error('Update profile error:', error);
+        return { success: false, error: error.message };
+    }
+};
+
+// Parolni o'zgartirish (kirish qilingan foydalanuvchi uchun)
+export const updatePassword = async (newPassword) => {
+    try {
+        const { error } = await supabase.auth.updateUser({ password: newPassword });
+        if (error) throw error;
+        return { success: true };
+    } catch (error) {
+        console.error('Update password error:', error);
         return { success: false, error: error.message };
     }
 };

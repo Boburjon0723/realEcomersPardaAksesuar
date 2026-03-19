@@ -22,6 +22,7 @@ import ServicesPage from './pages/ServicesPage';
 import ContactPage from './pages/ContactPage';
 import MyOrdersPage from './pages/MyOrdersPage';
 import ProfilePage from './pages/ProfilePage';
+import AlbumPage from './pages/AlbumPage';
 import ShippingPage from './pages/ShippingPage';
 import ReturnsPage from './pages/ReturnsPage';
 import FaqPage from './pages/FaqPage';
@@ -63,12 +64,13 @@ function MainApp() {
         {currentPage === 'contact' && <ContactPage />}
         {currentPage === 'orders' && <MyOrdersPage />}
         {currentPage === 'profile' && <ProfilePage />}
+        {currentPage === 'album' && <AlbumPage />}
         {currentPage === 'shipping' && <ShippingPage />}
         {currentPage === 'returns' && <ReturnsPage />}
         {currentPage === 'faq' && <FaqPage />}
         {currentPage === 'terms' && <TermsPage />}
         {currentPage === 'privacy' && <PrivacyPage />}
-        {!['home', 'shop', 'product', 'cart', 'checkout', 'about', 'services', 'contact', 'orders', 'profile', 'shipping', 'returns', 'faq', 'terms', 'privacy'].includes(currentPage) && <NotFoundPage />}
+        {!['home', 'shop', 'product', 'cart', 'checkout', 'about', 'services', 'contact', 'orders', 'profile', 'album', 'shipping', 'returns', 'faq', 'terms', 'privacy'].includes(currentPage) && <NotFoundPage />}
       </main>
 
       <FloatingContacts />

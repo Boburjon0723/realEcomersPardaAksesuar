@@ -79,6 +79,7 @@ const Footer = () => {
                             {[
                                 { key: 'home', page: 'home' },
                                 { key: 'shop', page: 'shop' },
+                                { key: 'album', page: 'album' },
                                 { key: 'about', page: 'about' },
                                 { key: 'contact', page: 'contact' }
                             ].map((item) => (

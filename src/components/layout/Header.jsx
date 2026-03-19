@@ -5,9 +5,9 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { logoutUser } from '../../services/supabase/auth';
 
 const LANGUAGES = [
-    { code: 'uz', label: "O'zbekcha" },
-    { code: 'ru', label: 'Русский' },
-    { code: 'en', label: 'English' }
+    { code: 'uz', label: "O'zbekcha", short: "O'z" },
+    { code: 'ru', label: 'Русский', short: 'Ru' },
+    { code: 'en', label: 'English', short: 'En' }
 ];
 
 const Header = () => {
@@ -28,10 +28,12 @@ const Header = () => {
 
     const isNavActive = (page) => {
         if (page === 'shop') return currentPage === 'shop' || currentPage === 'product';
+        if (page === 'album') return currentPage === 'album';
         return currentPage === page;
     };
 
     const currentPageLabel = {
+        album: t('album'),
         cart: t('cart'),
         checkout: t('checkout') || "To'lov",
         orders: t('myOrders'),
@@ -74,7 +76,7 @@ const Header = () => {
 
                     {/* Desktop Navigation */}
                     <nav className="hidden md:flex items-center gap-5">
-                        {['home', 'shop', 'about', 'contact'].map((page) => (
+                        {['home', 'shop', 'album', 'about', 'contact'].map((page) => (
                             <button
                                 key={page}
                                 onClick={() => {
@@ -95,25 +97,27 @@ const Header = () => {
 
                     {/* Right Actions */}
                     <div className="flex items-center gap-1 md:gap-2">
-                        {/* Language Switcher - bosganda til ro'yxati */}
+                        {/* Language Switcher - mobil: keng touch target, aniq label; desktop: globe + til nomi */}
                         <div className="relative" ref={langDropdownRef}>
                             <button
                                 onClick={() => setShowLangDropdown(!showLangDropdown)}
-                                className="p-2 md:px-3 md:py-2 text-gray-600 hover:text-primary transition-colors flex items-center gap-1.5 rounded-lg hover:bg-gray-50 min-w-[100px] md:min-w-[120px] justify-between"
+                                className="flex items-center gap-2 px-3 py-2.5 md:px-3 md:py-2 text-gray-600 hover:text-primary transition-colors rounded-xl hover:bg-gray-50 active:bg-gray-100 min-h-[44px] md:min-h-0 touch-manipulation"
+                                style={{ minWidth: '44px' }}
                             >
-                                <span className="flex items-center gap-1.5">
-                                    <Globe className="w-4 h-4 text-primary" />
-                                    <span className="hidden md:inline text-xs font-medium">{LANGUAGES.find(l => l.code === language)?.label || language.toUpperCase()}</span>
+                                <Globe className="w-5 h-5 md:w-4 md:h-4 text-primary shrink-0" />
+                                <span className="text-sm font-medium md:hidden">
+                                    {LANGUAGES.find(l => l.code === language)?.short || language.toUpperCase()}
                                 </span>
-                                <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${showLangDropdown ? 'rotate-180' : ''}`} />
+                                <span className="hidden md:inline text-xs font-medium">{LANGUAGES.find(l => l.code === language)?.label || language.toUpperCase()}</span>
+                                <ChevronDown className={`w-4 h-4 md:w-3.5 md:h-3.5 text-gray-400 transition-transform shrink-0 hidden md:block ${showLangDropdown ? 'rotate-180' : ''}`} />
                             </button>
                             {showLangDropdown && (
-                                <div className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50">
+                                <div className="absolute right-0 mt-2 w-48 min-w-[180px] bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50 md:w-40 md:min-w-0">
                                     {LANGUAGES.map(({ code, label }) => (
                                         <button
                                             key={code}
                                             onClick={() => { changeLanguage(code); setShowLangDropdown(false); }}
-                                            className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${language === code ? 'text-primary font-bold' : 'text-gray-700'}`}
+                                            className={`w-full text-left px-4 py-3 md:py-2 text-sm hover:bg-gray-50 active:bg-gray-100 transition-colors ${language === code ? 'text-primary font-bold bg-primary/5' : 'text-gray-700'}`}
                                         >
                                             {label}
                                         </button>
@@ -241,7 +245,7 @@ const Header = () => {
                             {/* Navigation */}
                             <div className="space-y-2 mb-6">
                                 <p className="text-xs text-gray-500 uppercase px-2 mb-2">Sahifalar</p>
-                                {['home', 'shop', 'about', 'contact'].map((page) => (
+                                {['home', 'shop', 'album', 'about', 'contact'].map((page) => (
                                     <button
                                         key={page}
                                         onClick={() => {

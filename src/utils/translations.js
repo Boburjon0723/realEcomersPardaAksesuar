@@ -3,6 +3,7 @@ export const translations = {
         // --- Header & Nav ---
         home: "Bosh sahifa",
         shop: "Do'kon",
+        album: "Albom",
         about: "Biz haqimizda",
         services: "Xizmatlar",
         contact: "Aloqa",
@@ -387,6 +388,7 @@ export const translations = {
         // --- Header & Nav ---
         home: "Главная",
         shop: "Магазин",
+        album: "Альбом",
         about: "О нас",
         services: "Услуги",
         contact: "Контакты",
@@ -762,6 +764,7 @@ export const translations = {
         // --- Header & Nav ---
         home: "Home",
         shop: "Shop",
+        album: "Album",
         about: "About Us",
         services: "Services",
         contact: "Contact",

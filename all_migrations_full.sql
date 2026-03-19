@@ -203,6 +203,29 @@ SELECT * FROM (VALUES
 ) AS v(sort_order, icon, title_uz, title_ru, title_en, desc_uz, desc_ru, desc_en)
 WHERE NOT EXISTS (SELECT 1 FROM site_benefits LIMIT 1);
 
+-- ==================== 9. ALBUM_IMAGES (Albom sahifasi - qo'shimcha rasmlar) ====================
+CREATE TABLE IF NOT EXISTS album_images (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    image_url TEXT NOT NULL,
+    title_uz TEXT,
+    title_ru TEXT,
+    title_en TEXT,
+    sort_order INT DEFAULT 0,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE album_images ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public read album_images" ON album_images;
+CREATE POLICY "Public read album_images" ON album_images FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Allow insert album_images" ON album_images;
+CREATE POLICY "Allow insert album_images" ON album_images FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Allow update album_images" ON album_images;
+CREATE POLICY "Allow update album_images" ON album_images FOR UPDATE USING (true);
+DROP POLICY IF EXISTS "Allow delete album_images" ON album_images;
+CREATE POLICY "Allow delete album_images" ON album_images FOR DELETE USING (true);
+
 -- ==================== TUGADI ====================
 -- Barcha migratsiyalar muvaffaqiyatli bajarildi.
 -- E-commerce: narx USD, ranglar UZ/RU/EN, About header rasmi settings orqali boshqariladi.
