@@ -212,6 +212,7 @@ CREATE TABLE IF NOT EXISTS album_images (
     title_en TEXT,
     sort_order INT DEFAULT 0,
     is_active BOOLEAN DEFAULT true,
+    format TEXT DEFAULT 'portrait',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

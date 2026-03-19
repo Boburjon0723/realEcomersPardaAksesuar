@@ -3,13 +3,14 @@ import { useApp } from '../contexts/AppContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import PageMeta from '../components/common/PageMeta';
 import { getAlbumImages } from '../services/supabase/albumImages';
-import { ArrowRight, Images } from 'lucide-react';
+import { ArrowRight, Images, X } from 'lucide-react';
 
 const AlbumPage = () => {
     const { setCurrentPage, settings } = useApp();
     const { language, t } = useLanguage();
     const [albumImages, setAlbumImages] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [selectedImage, setSelectedImage] = useState(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -28,7 +29,7 @@ const AlbumPage = () => {
                 description={t('albumMetaDesc') || "Barcha mahsulot modellari - vizual katalog"}
                 siteName={settings?.site_name}
             />
-            <div className="min-h-screen bg-gray-50 pb-16">
+            <div className={`min-h-screen bg-gray-50 pb-16 transition-all duration-300 ${selectedImage ? 'pr-0 sm:pr-[32rem] md:pr-[36rem] lg:pr-[42rem]' : ''}`}>
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 pt-6 sm:pt-8">
                     {/* Header */}
                     <div className="mb-10">
@@ -68,21 +69,24 @@ const AlbumPage = () => {
                             </button>
                         </div>
                     ) : (
-                        /* Masonry grid - mobil 2, tablet 3, desktop 4 ustun */
+                        /* Masonry bento - format bo'yicha o'lcham va ustun span */
                         <div
                             className="columns-2 sm:columns-3 lg:columns-4 gap-3 sm:gap-4"
                             style={{ columnGap: 'clamp(0.75rem, 2vw, 1rem)' }}
                         >
                             {albumImages.map((img) => {
                                 const title = img[`title_${language}`] || img.title_uz || img.title_ru || img.title_en || '';
+                                const format = img.format || 'portrait';
+                                const aspectClass = format === 'square' ? 'aspect-square' : format === 'landscape' ? 'aspect-[3/2]' : format === 'large' ? 'aspect-[3/2] sm:aspect-[16/9]' : 'aspect-[4/5]';
+                                const spanClass = format === 'large' ? 'column-span-2 break-inside-avoid' : 'break-inside-avoid';
                                 return (
                                     <div
                                         key={img.id}
-                                        className="break-inside-avoid mb-3 sm:mb-4 group cursor-pointer"
-                                        onClick={() => window.open(img.image_url, '_blank')}
+                                        className={`${spanClass} mb-3 sm:mb-4 group cursor-pointer`}
+                                        onClick={() => setSelectedImage(img)}
                                     >
-                                        <div className="rounded-xl sm:rounded-2xl overflow-hidden bg-white shadow-[0_2px_12px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_50px_rgba(5,77,59,0.18)] transition-all duration-300 border border-gray-100 hover:border-primary/30 active:scale-[0.98] sm:hover:-translate-y-1">
-                                            <div className="relative aspect-[4/5] overflow-hidden bg-gray-50">
+                                        <div className={`rounded-xl sm:rounded-2xl overflow-hidden bg-white shadow-[0_2px_12px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_50px_rgba(5,77,59,0.18)] transition-all duration-300 border active:scale-[0.98] sm:hover:-translate-y-1 ${selectedImage?.id === img.id ? 'border-2 border-primary ring-2 ring-primary/30 shadow-lg' : 'border-gray-100 hover:border-primary/30'}`}>
+                                            <div className={`relative ${aspectClass} overflow-hidden bg-gray-50`}>
                                                 <img
                                                     src={img.image_url}
                                                     alt={title || 'Album'}
@@ -115,6 +119,40 @@ const AlbumPage = () => {
                     )}
                 </div>
             </div>
+
+            {/* O'ng tomondan ochiladigan rasm paneli — chap galereya scroll va bosish uchun ochiq */}
+            {selectedImage && (
+                <>
+                    <div
+                        className="fixed inset-0 bg-black/30 z-40 animate-fade-in pointer-events-none"
+                        aria-hidden="true"
+                    />
+                    <div className="fixed inset-y-0 right-0 w-full sm:max-w-lg md:max-w-xl lg:max-w-2xl bg-white z-50 shadow-2xl flex flex-col animate-slide-in-right">
+                        <div className="flex items-center justify-between p-4 border-b border-gray-100 flex-shrink-0">
+                            <h3 className="font-bold text-gray-900 text-sm sm:text-base truncate pr-2">
+                                {selectedImage[`title_${language}`] || selectedImage.title_uz || selectedImage.title_ru || selectedImage.title_en || ''}
+                            </h3>
+                            <button
+                                onClick={() => setSelectedImage(null)}
+                                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                                aria-label="Yopish"
+                            >
+                                <X className="w-5 h-5 text-gray-600" />
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-auto p-4 flex items-center justify-center min-h-0">
+                            <img
+                                src={selectedImage.image_url}
+                                alt={selectedImage[`title_${language}`] || selectedImage.title_uz || selectedImage.title_ru || selectedImage.title_en || 'Album'}
+                                className="max-w-full max-h-full w-auto h-auto object-contain"
+                                onError={(e) => {
+                                    e.target.src = 'https://via.placeholder.com/400x500?text=No+Image';
+                                }}
+                            />
+                        </div>
+                    </div>
+                </>
+            )}
         </>
     );
 };

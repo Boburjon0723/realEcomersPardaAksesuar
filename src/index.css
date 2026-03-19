@@ -376,6 +376,18 @@ code {
   }
 }
 
+@keyframes slideInPanelRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 @keyframes pulse {
 
   0%,
@@ -416,6 +428,19 @@ code {
 
 .animate-slide-in {
   animation: slideInRight var(--transition-slow) ease-out;
+}
+
+@keyframes slideInPanelRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation: slideInPanelRight 0.3s cubic-bezier(0.32, 0.72, 0, 1) forwards;
 }
 
 .animate-pulse {
