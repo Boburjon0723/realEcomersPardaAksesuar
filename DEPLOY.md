@@ -33,6 +33,20 @@ Deploy tugmasini bosing yoki `git push` qiling.
 
 ## 2. CRM (boshqaruv paneli)
 
+**CRM alohida Git repoda:** [https://github.com/Boburjon0723/CRM-tizimi-.git](https://github.com/Boburjon0723/CRM-tizimi-.git)
+
+### CRM o'zgarishlarini CRM repoga yuborish
+
+```bash
+# Birinchi marta (remote qo'shilgan bo'lsa skip)
+git remote add crm https://github.com/Boburjon0723/CRM-tizimi-.git
+
+# CRM papkasini CRM repoga push
+git subtree push --prefix=CRM-tizimi--master/CRM-tizimi--master crm master
+```
+
+Vercel da CRM proyekti uchun **ushbu reponi** ulang: `Boburjon0723/CRM-tizimi-` (alohida, e-commerce dan ajratilgan).
+
 ### Vercel da yangi proyekt
 
 1. [vercel.com](https://vercel.com) → Add New Project
