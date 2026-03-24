@@ -125,12 +125,34 @@ const ProductPage = () => {
     };
 
     const fetchReviews = React.useCallback(async () => {
-        const { data } = await supabase
+        const pid = selectedProduct?.id;
+        if (!pid) {
+            setReviews([]);
+            return;
+        }
+        const idStr = String(pid);
+        // Avvalo auth_users bog'lanishi bilan (agar Supabase FK/embed ishlamasa — xato beradi)
+        let { data, error } = await supabase
             .from('reviews')
             .select('*, auth_users(email)')
-            .eq('product_id', selectedProduct.id)
+            .eq('product_id', idStr)
             .eq('status', 'approved')
             .order('created_at', { ascending: false });
+        if (error) {
+            const fallback = await supabase
+                .from('reviews')
+                .select('*')
+                .eq('product_id', idStr)
+                .eq('status', 'approved')
+                .order('created_at', { ascending: false });
+            data = fallback.data;
+            error = fallback.error;
+        }
+        if (error) {
+            console.error('[reviews] fetch', error);
+            setReviews([]);
+            return;
+        }
         setReviews(data || []);
     }, [selectedProduct?.id]);
 
@@ -146,6 +168,7 @@ const ProductPage = () => {
         fetchColors();
 
         if (selectedProduct?.id) {
+            setReviews([]);
             fetchReviews();
             // Reset selected color and bulk quantities when product changes
             setSelectedColor(selectedProduct.colors?.[0] || selectedProduct.color || null);
@@ -191,7 +214,7 @@ const ProductPage = () => {
         setSubmitStatus('submitting');
         const { error } = await supabase.from('reviews').insert([
             {
-                product_id: selectedProduct.id,
+                product_id: String(selectedProduct.id),
                 user_id: currentUser.id,
                 rating: reviewForm.rating,
                 comment: reviewForm.comment,
