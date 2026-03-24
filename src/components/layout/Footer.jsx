@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Mail, Phone, MapPin, Facebook, Instagram, Send, ChevronRight, Globe, ChevronDown } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useApp } from '../../hooks/useApp';
+import { normalizeExternalUrl, normalizeTelegramUrl } from '../../utils/externalUrl';
 
 const FOOTER_LANGUAGES = [
     { code: 'uz', label: "O'zbekcha" },
@@ -53,7 +54,7 @@ const Footer = () => {
                         </p>
                         <div className="flex gap-2">
                             {settings.facebook_url && (
-                                <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all duration-300">
+                                <a href={normalizeExternalUrl(settings.facebook_url)} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all duration-300">
                                     <Facebook className="w-4 h-4" />
                                 </a>
                             )}
@@ -63,7 +64,7 @@ const Footer = () => {
                                 </a>
                             )}
                             {settings.telegram_url && (
-                                <a href={settings.telegram_url} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center hover:bg-blue-400 hover:text-white transition-all duration-300">
+                                <a href={normalizeTelegramUrl(settings.telegram_url)} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center hover:bg-blue-400 hover:text-white transition-all duration-300">
                                     <Send className="w-4 h-4" />
                                 </a>
                             )}

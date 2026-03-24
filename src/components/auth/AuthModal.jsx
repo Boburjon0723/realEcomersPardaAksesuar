@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Lock, User as UserIcon, ArrowRight, Phone } from 'lucide-react';
 import { useApp } from '../../hooks/useApp';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { loginUser, registerUser } from '../../services/supabase/auth';
+import { loginUser, registerUser, resetPassword } from '../../services/supabase/auth';
 import { AUTH_RETURN_PATH_KEY } from '../../constants/storageKeys';
 
 const countries = [
@@ -59,6 +59,9 @@ const AuthModal = () => {
     const { setShowAuth, setCurrentUser, isLogin, setIsLogin, navigate } = useApp();
     const { t } = useLanguage();
     const [loading, setLoading] = useState(false);
+    const [resetLoading, setResetLoading] = useState(false);
+    const [showForgotPassword, setShowForgotPassword] = useState(false);
+    const [forgotSent, setForgotSent] = useState(false);
     const [error, setError] = useState('');
     const [formData, setFormData] = useState({
         name: '',
@@ -69,6 +72,34 @@ const AuthModal = () => {
         password: '',
         confirmPassword: ''
     });
+
+    const handleForgotSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        setForgotSent(false);
+        const email = formData.email.trim();
+        if (!email) {
+            setError(t('emailRequired') || 'Email kiriting');
+            return;
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            setError(t('emailInvalid') || "To'g'ri email kiriting");
+            return;
+        }
+        setResetLoading(true);
+        try {
+            const result = await resetPassword(email);
+            if (result.success) {
+                setForgotSent(true);
+            } else {
+                setError(result.error || t('errorMsg'));
+            }
+        } catch (err) {
+            setError(err?.message || t('errorMsg'));
+        } finally {
+            setResetLoading(false);
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -130,10 +161,20 @@ const AuthModal = () => {
             <div className="bg-white rounded-2xl p-8 max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl scale-100 animate-scale-in">
                 <div className="flex justify-between items-center mb-8">
                     <h2 className="text-2xl font-display font-bold text-gray-900">
-                        {isLogin ? t('login') : t('register')}
+                        {isLogin && showForgotPassword
+                            ? (t('resetPasswordTitle') || 'Parolni tiklash')
+                            : isLogin
+                              ? t('login')
+                              : t('register')}
                     </h2>
                     <button
-                        onClick={() => setShowAuth(false)}
+                        type="button"
+                        onClick={() => {
+                            setShowAuth(false);
+                            setShowForgotPassword(false);
+                            setForgotSent(false);
+                            setError('');
+                        }}
                         className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                     >
                         <X className="w-6 h-6 text-gray-500" />
@@ -146,6 +187,53 @@ const AuthModal = () => {
                     </div>
                 )}
 
+                {isLogin && showForgotPassword ? (
+                <form onSubmit={handleForgotSubmit} className="space-y-5">
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                        {t('resetPasswordHint')}
+                    </p>
+                    {forgotSent && (
+                        <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm font-medium">
+                            {t('resetPasswordSent')}
+                        </div>
+                    )}
+                    <div>
+                        <label className="block text-sm font-bold mb-2 text-gray-700">
+                            {t('email') || 'Email'}
+                        </label>
+                        <div className="relative group">
+                            <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors">@</span>
+                            <input
+                                type="email"
+                                required
+                                value={formData.email}
+                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none font-medium"
+                                placeholder="example@mail.com"
+                                autoComplete="email"
+                            />
+                        </div>
+                    </div>
+                    <button
+                        type="submit"
+                        disabled={resetLoading}
+                        className={`w-full bg-primary hover:bg-primary-dark text-white py-4 rounded-lg transition-all shadow-lg hover:shadow-primary/30 font-bold text-lg flex items-center justify-center gap-2 ${resetLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                    >
+                        {resetLoading ? (t('sending') || '...') : (t('resetPasswordSubmit') || 'Havolani yuborish')}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setShowForgotPassword(false);
+                            setForgotSent(false);
+                            setError('');
+                        }}
+                        className="w-full text-center text-primary hover:text-primary-dark font-bold py-2"
+                    >
+                        {t('backToLogin')}
+                    </button>
+                </form>
+                ) : (
                 <form onSubmit={handleSubmit} className="space-y-5">
                     {!isLogin && (
                         <div>
@@ -262,7 +350,15 @@ const AuthModal = () => {
                                 {t('password')}
                             </label>
                             {isLogin && (
-                                <button type="button" className="text-xs font-bold text-primary hover:underline">
+                                <button
+                                    type="button"
+                                    className="text-xs font-bold text-primary hover:underline"
+                                    onClick={() => {
+                                        setShowForgotPassword(true);
+                                        setForgotSent(false);
+                                        setError('');
+                                    }}
+                                >
                                     {t('forgotPassword')}
                                 </button>
                             )}
@@ -275,7 +371,7 @@ const AuthModal = () => {
                                 value={formData.password}
                                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                 className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none font-medium"
-                                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                                placeholder="••••••••"
                             />
                         </div>
                     </div>
@@ -294,7 +390,7 @@ const AuthModal = () => {
                                     value={formData.confirmPassword}
                                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                                     className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none font-medium"
-                                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                                    placeholder="••••••••"
                                 />
                             </div>
                         </div>
@@ -309,16 +405,25 @@ const AuthModal = () => {
                         {!loading && <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
                     </button>
                 </form>
+                )}
 
+                {!(isLogin && showForgotPassword) && (
                 <div className="mt-8 text-center border-t border-gray-100 pt-6">
                     <p className="text-gray-500 mb-2">{isLogin ? "Don't have an account?" : "Already have an account?"}</p>
                     <button
-                        onClick={() => setIsLogin(!isLogin)}
+                        type="button"
+                        onClick={() => {
+                            setIsLogin(!isLogin);
+                            setShowForgotPassword(false);
+                            setForgotSent(false);
+                            setError('');
+                        }}
                         className="text-primary hover:text-primary-dark font-bold text-lg hover:underline transition-all"
                     >
                         {isLogin ? t('noAccount') || 'Create Account' : t('haveAccount') || 'Sign In'}
                     </button>
                 </div>
+                )}
             </div>
         </div>
     );

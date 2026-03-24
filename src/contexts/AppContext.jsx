@@ -11,6 +11,7 @@ export const AppProvider = ({ children }) => {
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [showAuth, setShowAuth] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
+    const [showPasswordRecovery, setShowPasswordRecovery] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [recentlyViewed, setRecentlyViewed] = useState([]);
@@ -22,7 +23,9 @@ export const AppProvider = ({ children }) => {
         work_hours: '',
         telegram_url: '',
         instagram_url: '',
-        facebook_url: ''
+        facebook_url: '',
+        latitude: null,
+        longitude: null
     });
 
     // LocalStorage dan yuklash va Settings yuklash
@@ -60,6 +63,9 @@ export const AppProvider = ({ children }) => {
 
         // Listen for Supabase auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'PASSWORD_RECOVERY' && session?.user) {
+                setShowPasswordRecovery(true);
+            }
             if (session?.user) {
                 const user = {
                     id: session.user.id,
@@ -195,6 +201,8 @@ export const AppProvider = ({ children }) => {
             setShowAuth,
             isLogin,
             setIsLogin,
+            showPasswordRecovery,
+            setShowPasswordRecovery,
             searchQuery,
             setSearchQuery,
             selectedCategory,
@@ -211,6 +219,7 @@ export const AppProvider = ({ children }) => {
             selectedProduct,
             showAuth,
             isLogin,
+            showPasswordRecovery,
             searchQuery,
             selectedCategory,
             recentlyViewed,

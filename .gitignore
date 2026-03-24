@@ -26,6 +26,9 @@ yarn-error.log*
 # temp / local only
 /crm-push-temp/
 
+# Katalog vitrinasi alohida Git repoda — ichki .git asosiy repoga kirmasin
+catalog-vitrina/.git/
+
 # CRM - node_modules va build ignore (source kod commit qilinadi)
 /CRM-tizimi--master/**/node_modules/
 /CRM-tizimi--master/**/.next/

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useOutletContext, useLocation } from 'react-router-dom';
 import { fetchActiveProducts } from '../api/catalog';
 import CategorySection from '../components/CategorySection';
+import ProductDetailPanel from '../components/ProductDetailPanel';
 
 function mapError(e) {
   const msg = e?.message || '';
@@ -21,6 +22,7 @@ export default function CatalogPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -76,45 +78,60 @@ export default function CatalogPage() {
   }, [categories, products]);
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-10 md:px-8">
-      {loading && (
-        <p className="text-center text-stone-600">Yuklanmoqda…</p>
-      )}
+    <div
+      className={`transition-all duration-300 ${
+        selectedProduct ? 'pr-0 sm:pr-[32rem] md:pr-[36rem] lg:pr-[42rem]' : ''
+      }`}
+    >
+      <main className="mx-auto max-w-7xl px-3 py-8 sm:px-4 sm:py-10 md:px-8">
+        {loading && (
+          <p className="text-center text-stone-600">Yuklanmoqda…</p>
+        )}
 
-      {!loading && err && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-800">
-          {err}
-        </div>
-      )}
+        {!loading && err && (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-800">
+            {err}
+          </div>
+        )}
 
-      {!loading && !err && products.length === 0 && (
-        <p className="text-center text-stone-600">
-          Hozircha faol mahsulot yo‘q.
-        </p>
-      )}
+        {!loading && !err && products.length === 0 && (
+          <p className="text-center text-stone-600">
+            Hozircha faol mahsulot yo‘q.
+          </p>
+        )}
 
-      {!loading && !err && products.length > 0 && (
-        <div className="space-y-16">
-          {sections.ordered.map(({ category, products: list }) => (
-            <CategorySection
-              key={category.id}
-              category={category}
-              products={list}
-            />
-          ))}
+        {!loading && !err && products.length > 0 && (
+          <div className="space-y-12 sm:space-y-16">
+            {sections.ordered.map(({ category, products: list }) => (
+              <CategorySection
+                key={category.id}
+                category={category}
+                products={list}
+                onSelectProduct={setSelectedProduct}
+              />
+            ))}
 
-          {sections.uncategorized.length > 0 && (
-            <CategorySection
-              category={{
-                id: null,
-                name: 'Boshqa',
-                name_uz: 'Boshqa',
-              }}
-              products={sections.uncategorized}
-            />
-          )}
-        </div>
+            {sections.uncategorized.length > 0 && (
+              <CategorySection
+                category={{
+                  id: null,
+                  name: 'Boshqa',
+                  name_uz: 'Boshqa',
+                }}
+                products={sections.uncategorized}
+                onSelectProduct={setSelectedProduct}
+              />
+            )}
+          </div>
+        )}
+      </main>
+
+      {selectedProduct && (
+        <ProductDetailPanel
+          product={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+        />
       )}
-    </main>
+    </div>
   );
 }

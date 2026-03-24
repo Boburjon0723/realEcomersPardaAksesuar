@@ -1,6 +1,7 @@
 import React from 'react';
 import { Send, Phone, Instagram } from 'lucide-react';
 import { useApp } from '../../hooks/useApp';
+import { normalizeExternalUrl, normalizeTelegramUrl } from '../../utils/externalUrl';
 
 const FloatingContacts = () => {
     const { settings } = useApp();
@@ -9,7 +10,7 @@ const FloatingContacts = () => {
         <div className="fixed bottom-8 right-8 flex flex-col space-y-4 z-40 group">
             {settings.telegram_url && (
                 <a
-                    href={settings.telegram_url}
+                    href={normalizeTelegramUrl(settings.telegram_url)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-12 h-12 bg-[#0088cc] text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 hover:shadow-xl transition-all duration-300"
@@ -31,7 +32,7 @@ const FloatingContacts = () => {
 
             {settings.instagram_url && (
                 <a
-                    href={settings.instagram_url}
+                    href={normalizeExternalUrl(settings.instagram_url)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-12 h-12 bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 hover:shadow-xl transition-all duration-300"

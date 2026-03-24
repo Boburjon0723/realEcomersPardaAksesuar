@@ -19,6 +19,14 @@ export const translations = {
         noAccount: "Akkauntingiz yo'qmi? Yaratish",
         haveAccount: "Akkauntingiz bormi? Kirish",
         forgotPassword: "Parolni unutdingizmi?",
+        resetPasswordTitle: "Parolni tiklash",
+        resetPasswordHint:
+            "Ro'yxatdan o'tgan email manzilingizni kiriting. Sizga parolni tiklash havolasi yuboriladi.",
+        resetPasswordSent:
+            "Agar bu email bilan hisob bo'lsa, pochtangizga tiklash havolasi yuborildi. Spam papkasini ham tekshiring.",
+        resetPasswordSubmit: "Tiklash havolasini yuborish",
+        backToLogin: "Kirishga qaytish",
+        sending: "Yuborilmoqda...",
 
         // --- Auth ---
         name: "Ism",
@@ -318,6 +326,8 @@ export const translations = {
         message: "Xabar",
         messageSent: "Xabar muvaffaqiyatli yuborildi!",
         mapPlaceholder: "Xarita",
+        contactMapFallback: "Xarita uchun sozlamalarda koordinata yoki manzilni kiriting.",
+        openInMaps: "Xaritada ochish",
         workingHours: "Ish vaqti",
         contactSubtitle: "Savollaringiz bormi? Biz sizga yordam berishga tayyormiz.",
 
@@ -446,6 +456,14 @@ export const translations = {
         noAccount: "Нет аккаунта? Создать",
         haveAccount: "Есть аккаунт? Войти",
         forgotPassword: "Забыли пароль?",
+        resetPasswordTitle: "Восстановление пароля",
+        resetPasswordHint:
+            "Введите email, указанный при регистрации. Мы отправим ссылку для сброса пароля.",
+        resetPasswordSent:
+            "Если аккаунт существует, на почту отправлена ссылка. Проверьте папку «Спам».",
+        resetPasswordSubmit: "Отправить ссылку",
+        backToLogin: "Назад ко входу",
+        sending: "Отправка...",
 
         // --- Auth ---
         name: "Имя",
@@ -746,6 +764,8 @@ export const translations = {
         message: "Сообщение",
         messageSent: "Сообщение успешно отправлено!",
         mapPlaceholder: "Карта",
+        contactMapFallback: "Укажите координаты или адрес в настройках, чтобы показать карту.",
+        openInMaps: "Открыть на карте",
         workingHours: "Режим работы",
         contactSubtitle: "У вас есть вопросы? Мы готовы помочь вам.",
 
@@ -874,6 +894,14 @@ export const translations = {
         noAccount: "Don't have an account? Sign up",
         haveAccount: "Have an account? Login",
         forgotPassword: "Forgot password?",
+        resetPasswordTitle: "Reset password",
+        resetPasswordHint:
+            "Enter the email you used to register. We will send you a password reset link.",
+        resetPasswordSent:
+            "If an account exists for this email, we sent a reset link. Check your spam folder.",
+        resetPasswordSubmit: "Send reset link",
+        backToLogin: "Back to login",
+        sending: "Sending...",
 
         // --- Auth ---
         name: "Name",
@@ -1172,6 +1200,8 @@ export const translations = {
         message: "Message",
         messageSent: "Message sent successfully!",
         mapPlaceholder: "Map",
+        contactMapFallback: "Add coordinates or address in site settings to show the map.",
+        openInMaps: "Open in maps",
         workingHours: "Working Hours",
         contactSubtitle: "Have questions? We are here to help.",
 

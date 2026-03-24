@@ -26,7 +26,9 @@ export const getSettings = async () => {
                 facebook_url: '',
                 humo_card: '',
                 uzcard_card: '',
-                visa_card: ''
+                visa_card: '',
+                latitude: null,
+                longitude: null
             }
         };
     } catch (error) {

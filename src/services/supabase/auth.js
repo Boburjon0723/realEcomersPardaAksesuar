@@ -78,10 +78,19 @@ export const logoutUser = async () => {
     }
 };
 
-// Reset password (email orqali)
-export const resetPassword = async (email) => {
+/**
+ * Parolni tiklash — emailga havola yuboriladi.
+ * Supabase Dashboard → Authentication → URL configuration:
+ * Site URL va Redirect URLs da domeningiz (masalan https://sizning-domen.uz) bo'lishi kerak.
+ */
+export const resetPassword = async (email, options = {}) => {
     try {
-        const { error } = await supabase.auth.resetPasswordForEmail(email);
+        const redirectTo =
+            options.redirectTo ||
+            (typeof window !== 'undefined' ? `${window.location.origin}/` : undefined);
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo,
+        });
         if (error) throw error;
         return { success: true };
     } catch (error) {

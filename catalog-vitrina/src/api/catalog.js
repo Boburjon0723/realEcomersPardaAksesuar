@@ -67,6 +67,7 @@ export async function fetchActiveProducts() {
       category_id,
       image_url,
       images,
+      size,
       is_active,
       created_at,
       categories ( id, name, name_uz, name_ru, name_en )
