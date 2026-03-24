@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { getSettings } from '../services/supabase/settings';
 import { supabase } from '../supabaseClient';
 
@@ -111,8 +111,7 @@ export const AppProvider = ({ children }) => {
         });
     }, []);
 
-    // Cart functions
-    const addToCart = (product, quantity = 1, selectedColor = null) => {
+    const addToCart = useCallback((product, quantity = 1, selectedColor = null) => {
         setCart(prev => {
             const colorToUse = selectedColor || product.color || (product.colors && product.colors[0]);
             const cartItemId = `${product.id}-${colorToUse || 'default'}`;
@@ -127,84 +126,107 @@ export const AppProvider = ({ children }) => {
             }
             return [...prev, { ...product, quantity, selectedColor: colorToUse, cartItemId }];
         });
-    };
+    }, []);
 
-    const removeFromCart = (cartItemId) => {
+    const removeFromCart = useCallback((cartItemId) => {
         setCart(prev => prev.filter(item => item.cartItemId !== cartItemId));
-    };
+    }, []);
 
-    const updateQuantity = (cartItemId, quantity) => {
+    const updateQuantity = useCallback((cartItemId, quantity) => {
         if (quantity < 1) return;
         setCart(prev =>
             prev.map(item =>
                 item.cartItemId === cartItemId ? { ...item, quantity } : item
             )
         );
-    };
+    }, []);
 
-    const clearCart = () => {
+    const clearCart = useCallback(() => {
         setCart([]);
-    };
+    }, []);
 
-    const calculatePrice = (product, quantity) => {
+    const calculatePrice = useCallback((product, quantity) => {
         if (!product || !product.priceRanges) return product?.price || 0;
         const range = product.priceRanges.find(r => quantity >= r.min && quantity <= r.max);
         const discount = range ? range.discount : 0;
         return product.price * (1 - discount / 100);
-    };
+    }, []);
 
-    const getTotalPrice = () => {
+    const getTotalPrice = useCallback(() => {
         return cart.reduce((total, item) => {
             return total + calculatePrice(item, item.quantity) * item.quantity;
         }, 0);
-    };
+    }, [cart, calculatePrice]);
 
-    const getCartCount = () => {
+    const getCartCount = useCallback(() => {
         return cart.reduce((total, item) => total + item.quantity, 0);
-    };
+    }, [cart]);
 
-    // Favorites functions
-    const toggleFavorite = (productId) => {
+    const toggleFavorite = useCallback((productId) => {
         setFavorites(prev =>
             prev.includes(productId)
                 ? prev.filter(id => id !== productId)
                 : [...prev, productId]
         );
-    };
+    }, []);
 
-    const isFavorite = (productId) => {
+    const isFavorite = useCallback((productId) => {
         return favorites.includes(productId);
-    };
+    }, [favorites]);
 
-    const value = {
-        currentUser,
-        setCurrentUser,
-        cart,
-        addToCart,
-        removeFromCart,
-        updateQuantity,
-        clearCart,
-        calculatePrice,
-        getTotalPrice,
-        getCartCount,
-        favorites,
-        toggleFavorite,
-        isFavorite,
-        selectedProduct,
-        setSelectedProduct,
-        showAuth,
-        setShowAuth,
-        isLogin,
-        setIsLogin,
-        searchQuery,
-        setSearchQuery,
-        selectedCategory,
-        setSelectedCategory,
-        recentlyViewed,
-        addToRecentlyViewed,
-        settings,
-        setSettings
-    };
+    const value = useMemo(
+        () => ({
+            currentUser,
+            setCurrentUser,
+            cart,
+            addToCart,
+            removeFromCart,
+            updateQuantity,
+            clearCart,
+            calculatePrice,
+            getTotalPrice,
+            getCartCount,
+            favorites,
+            toggleFavorite,
+            isFavorite,
+            selectedProduct,
+            setSelectedProduct,
+            showAuth,
+            setShowAuth,
+            isLogin,
+            setIsLogin,
+            searchQuery,
+            setSearchQuery,
+            selectedCategory,
+            setSelectedCategory,
+            recentlyViewed,
+            addToRecentlyViewed,
+            settings,
+            setSettings
+        }),
+        [
+            currentUser,
+            cart,
+            favorites,
+            selectedProduct,
+            showAuth,
+            isLogin,
+            searchQuery,
+            selectedCategory,
+            recentlyViewed,
+            settings,
+            addToCart,
+            removeFromCart,
+            updateQuantity,
+            clearCart,
+            calculatePrice,
+            getTotalPrice,
+            getCartCount,
+            toggleFavorite,
+            isFavorite,
+            addToRecentlyViewed
+        ]
+    );
 
     return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
