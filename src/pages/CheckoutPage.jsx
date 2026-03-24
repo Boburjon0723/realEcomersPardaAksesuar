@@ -6,6 +6,18 @@ import PageMeta from '../components/common/PageMeta';
 import { createOrder, uploadReceipt } from '../services/supabase/orders';
 import { getSettings } from '../services/supabase/settings';
 import { AUTH_RETURN_PATH_KEY } from '../constants/storageKeys';
+import { OTHER_VALUE, UZBEKISTAN_REGIONS, getCitiesForRegion } from '../data/uzbekistanDelivery';
+
+const countryCitiesFlat = {
+    uzbekistan: ['tashkent', 'samarkand', 'bukhara', 'andijan', 'namangan', 'fergana', 'nukus', 'karshi'],
+    kazakhstan: ['astana', 'almaty', 'shymkent'],
+    kyrgyzstan: ['bishkek', 'osh'],
+    tajikistan: ['dushanbe', 'khujand'],
+    turkmenistan: ['ashgabat'],
+    turkey: ['istanbul', 'ankara'],
+    uae: ['dubai', 'abu_dhabi'],
+    russia: ['moscow', 'saint_petersburg']
+};
 
 const CheckoutPage = () => {
     const { cart, getTotalPrice, clearCart, setCurrentPage, currentUser, setShowAuth, setIsLogin } = useApp();
@@ -18,9 +30,12 @@ const CheckoutPage = () => {
     const [settings, setSettings] = useState(null);
     const [formData, setFormData] = useState({
         name: currentUser?.name || '',
-        phone: currentUser?.phone || '', // Taking phone from user if available
+        phone: currentUser?.phone || '',
         address: '',
+        region: '',
         city: '',
+        regionManual: '',
+        cityManual: '',
         notes: ''
     });
     const [fieldErrors, setFieldErrors] = useState({});
@@ -36,6 +51,26 @@ const CheckoutPage = () => {
         fetchSettings();
     }, []);
 
+    const userCountry = (currentUser?.country || 'uzbekistan').toLowerCase();
+    const isUzbekistan = userCountry === 'uzbekistan';
+
+    const buildDeliveryAddressLine = () => {
+        if (!isUzbekistan) {
+            const cityLabel = formData.city ? t(formData.city) : '';
+            return `${cityLabel}, ${formData.address}`.trim();
+        }
+        if (formData.region === OTHER_VALUE) {
+            const head = [formData.regionManual, formData.cityManual].filter((s) => s && String(s).trim()).join(', ');
+            return `${head}; ${formData.address}`;
+        }
+        const regionLabel = formData.region ? t(formData.region) : '';
+        if (formData.city === OTHER_VALUE) {
+            return `${regionLabel}, ${String(formData.cityManual || '').trim()}; ${formData.address}`;
+        }
+        const cityLabel = formData.city ? t(formData.city) : '';
+        return `${regionLabel}, ${cityLabel}; ${formData.address}`;
+    };
+
     const validateForm = () => {
         const errs = {};
         if (!formData.name.trim()) errs.name = t('nameRequired');
@@ -44,7 +79,22 @@ const CheckoutPage = () => {
         else if (formData.phone.replace(/\D/g, '').length < 9) errs.phone = t('phoneMinDigits');
         if (!formData.address.trim()) errs.address = t('addressRequired');
         else if (formData.address.trim().length < 5) errs.address = t('addressMinLength');
-        if (!formData.city.trim()) errs.city = t('cityRequired');
+
+        if (isUzbekistan) {
+            if (!formData.region) errs.region = t('regionRequired');
+            else if (formData.region === OTHER_VALUE) {
+                if (!formData.regionManual.trim() || formData.regionManual.trim().length < 2) errs.regionManual = t('regionManualRequired');
+                if (!formData.cityManual.trim() || formData.cityManual.trim().length < 2) errs.cityManual = t('cityManualRequired');
+            } else {
+                if (!formData.city) errs.city = t('cityRequired');
+                else if (formData.city === OTHER_VALUE && (!formData.cityManual.trim() || formData.cityManual.trim().length < 2)) {
+                    errs.cityManual = t('cityManualRequired');
+                }
+            }
+        } else {
+            if (!formData.city.trim()) errs.city = t('cityRequired');
+        }
+
         if (!receiptFile) errs.receipt = t('receiptRequired');
         setFieldErrors(errs);
         setError(Object.values(errs)[0] || '');
@@ -76,7 +126,7 @@ const CheckoutPage = () => {
                 customerInfo: {
                     ...formData,
                     email: currentUser?.email || '',
-                    address: `${formData.city}, ${formData.address}`
+                    address: buildDeliveryAddressLine()
                 },
                 products: cart.map(item => ({
                     id: item.id,
@@ -201,20 +251,8 @@ const CheckoutPage = () => {
         );
     }
 
-    const countryCities = {
-        uzbekistan: ['tashkent', 'samarkand', 'bukhara', 'andijan', 'namangan', 'fergana', 'nukus', 'karshi'],
-        kazakhstan: ['astana', 'almaty', 'shymkent'],
-        kyrgyzstan: ['bishkek', 'osh'],
-        tajikistan: ['dushanbe', 'khujand'],
-        turkmenistan: ['ashgabat'],
-        turkey: ['istanbul', 'ankara'],
-        uae: ['dubai', 'abu_dhabi'],
-        russia: ['moscow', 'saint_petersburg']
-    };
-
-    const getAvailableCities = () => {
-        const country = currentUser?.country?.toLowerCase() || 'uzbekistan';
-        return countryCities[country] || countryCities.uzbekistan;
+    const getAvailableCitiesFlat = () => {
+        return countryCitiesFlat[userCountry] || countryCitiesFlat.uzbekistan;
     };
 
     return (
@@ -280,35 +318,128 @@ const CheckoutPage = () => {
                             </div>
                         </div>
 
-                        {/* Section 2: Delivery */}
+                        {/* Section 2: Delivery — O'zbekiston: viloyat → shahar/tuman; «Boshqa» + qo'lda */}
                         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8">
                             <h3 className="text-xl font-bold mb-6 text-gray-900 flex items-center">
                                 <span className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center mr-3 text-sm font-bold">2</span>
                                 {t('deliveryInfo')}
                             </h3>
                             <div className="grid md:grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">{t('city')} *</label>
-                                    <select
-                                        required
-                                        value={formData.city}
-                                        onChange={(e) => { setFormData({ ...formData, city: e.target.value }); setFieldErrors(prev => ({ ...prev, city: '' })); }}
-                                        className={`w-full px-4 py-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all ${fieldErrors.city ? 'border-red-400' : 'border-gray-200'}`}
-                                    >
-                                        <option value="">{t('selectCity')}</option>
-                                        {getAvailableCities().map(cityKey => (
-                                            <option key={cityKey} value={cityKey}>{t(cityKey)}</option>
-                                        ))}
-                                    </select>
-                                    {fieldErrors.city && <p className="mt-1 text-sm text-red-600">{fieldErrors.city}</p>}
-                                </div>
-                                <div>
+                                <p className="md:col-span-2 text-sm text-gray-500 -mt-2">{t('deliveryLocationHint')}</p>
+
+                                {isUzbekistan ? (
+                                    <>
+                                        <div>
+                                            <label className="block text-sm font-bold text-gray-700 mb-2">{t('selectRegion')} *</label>
+                                            <select
+                                                value={formData.region}
+                                                onChange={(e) => {
+                                                    const v = e.target.value;
+                                                    setFormData((prev) => ({
+                                                        ...prev,
+                                                        region: v,
+                                                        city: '',
+                                                        cityManual: '',
+                                                        regionManual: v === OTHER_VALUE ? prev.regionManual : ''
+                                                    }));
+                                                    setFieldErrors((prev) => ({ ...prev, region: '', regionManual: '', cityManual: '', city: '' }));
+                                                }}
+                                                className={`w-full px-4 py-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all ${fieldErrors.region ? 'border-red-400' : 'border-gray-200'}`}
+                                            >
+                                                <option value="">{t('selectRegion')}</option>
+                                                {UZBEKISTAN_REGIONS.map((r) => (
+                                                    <option key={r.id} value={r.id}>{t(r.id)}</option>
+                                                ))}
+                                                <option value={OTHER_VALUE}>{t('locationOther')}</option>
+                                            </select>
+                                            {fieldErrors.region && <p className="mt-1 text-sm text-red-600">{fieldErrors.region}</p>}
+                                        </div>
+
+                                        {formData.region && formData.region !== OTHER_VALUE && (
+                                            <div>
+                                                <label className="block text-sm font-bold text-gray-700 mb-2">{t('cityDistrict')} *</label>
+                                                <select
+                                                    value={formData.city}
+                                                    onChange={(e) => {
+                                                        const v = e.target.value;
+                                                        setFormData((prev) => ({ ...prev, city: v, cityManual: v === OTHER_VALUE ? prev.cityManual : '' }));
+                                                        setFieldErrors((prev) => ({ ...prev, city: '', cityManual: '' }));
+                                                    }}
+                                                    className={`w-full px-4 py-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all ${fieldErrors.city ? 'border-red-400' : 'border-gray-200'}`}
+                                                >
+                                                    <option value="">{t('selectCity')}</option>
+                                                    {getCitiesForRegion(formData.region).map((cityKey) => (
+                                                        <option key={cityKey} value={cityKey}>{t(cityKey)}</option>
+                                                    ))}
+                                                    <option value={OTHER_VALUE}>{t('locationOther')}</option>
+                                                </select>
+                                                {fieldErrors.city && <p className="mt-1 text-sm text-red-600">{fieldErrors.city}</p>}
+                                            </div>
+                                        )}
+
+                                        {formData.region === OTHER_VALUE && (
+                                            <>
+                                                <div>
+                                                    <label className="block text-sm font-bold text-gray-700 mb-2">{t('specifyRegionManual')} *</label>
+                                                    <input
+                                                        type="text"
+                                                        value={formData.regionManual}
+                                                        onChange={(e) => { setFormData({ ...formData, regionManual: e.target.value }); setFieldErrors((prev) => ({ ...prev, regionManual: '' })); }}
+                                                        className={`w-full px-4 py-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all ${fieldErrors.regionManual ? 'border-red-400' : 'border-gray-200'}`}
+                                                    />
+                                                    {fieldErrors.regionManual && <p className="mt-1 text-sm text-red-600">{fieldErrors.regionManual}</p>}
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-bold text-gray-700 mb-2">{t('specifyCityManual')} *</label>
+                                                    <input
+                                                        type="text"
+                                                        value={formData.cityManual}
+                                                        onChange={(e) => { setFormData({ ...formData, cityManual: e.target.value }); setFieldErrors((prev) => ({ ...prev, cityManual: '' })); }}
+                                                        className={`w-full px-4 py-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all ${fieldErrors.cityManual ? 'border-red-400' : 'border-gray-200'}`}
+                                                    />
+                                                    {fieldErrors.cityManual && <p className="mt-1 text-sm text-red-600">{fieldErrors.cityManual}</p>}
+                                                </div>
+                                            </>
+                                        )}
+
+                                        {formData.region && formData.region !== OTHER_VALUE && formData.city === OTHER_VALUE && (
+                                            <div className="md:col-span-2">
+                                                <label className="block text-sm font-bold text-gray-700 mb-2">{t('specifyCityManual')} *</label>
+                                                <input
+                                                    type="text"
+                                                    value={formData.cityManual}
+                                                    onChange={(e) => { setFormData({ ...formData, cityManual: e.target.value }); setFieldErrors((prev) => ({ ...prev, cityManual: '' })); }}
+                                                    className={`w-full px-4 py-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all ${fieldErrors.cityManual ? 'border-red-400' : 'border-gray-200'}`}
+                                                    placeholder={t('cityDistrict')}
+                                                />
+                                                {fieldErrors.cityManual && <p className="mt-1 text-sm text-red-600">{fieldErrors.cityManual}</p>}
+                                            </div>
+                                        )}
+                                    </>
+                                ) : (
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2">{t('city')} *</label>
+                                        <select
+                                            value={formData.city}
+                                            onChange={(e) => { setFormData({ ...formData, city: e.target.value }); setFieldErrors((prev) => ({ ...prev, city: '' })); }}
+                                            className={`w-full px-4 py-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all ${fieldErrors.city ? 'border-red-400' : 'border-gray-200'}`}
+                                        >
+                                            <option value="">{t('selectCity')}</option>
+                                            {getAvailableCitiesFlat().map((cityKey) => (
+                                                <option key={cityKey} value={cityKey}>{t(cityKey)}</option>
+                                            ))}
+                                        </select>
+                                        {fieldErrors.city && <p className="mt-1 text-sm text-red-600">{fieldErrors.city}</p>}
+                                    </div>
+                                )}
+
+                                <div className={isUzbekistan ? 'md:col-span-2' : ''}>
                                     <label className="block text-sm font-bold text-gray-700 mb-2">{t('address')} *</label>
                                     <input
                                         type="text"
                                         required
                                         value={formData.address}
-                                        onChange={(e) => { setFormData({ ...formData, address: e.target.value }); setFieldErrors(prev => ({ ...prev, address: '' })); }}
+                                        onChange={(e) => { setFormData({ ...formData, address: e.target.value }); setFieldErrors((prev) => ({ ...prev, address: '' })); }}
                                         className={`w-full px-4 py-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all ${fieldErrors.address ? 'border-red-400' : 'border-gray-200'}`}
                                     />
                                     {fieldErrors.address && <p className="mt-1 text-sm text-red-600">{fieldErrors.address}</p>}
