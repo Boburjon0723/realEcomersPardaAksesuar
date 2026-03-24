@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useCallback } from 'react';
 import { getSettings } from '../services/supabase/settings';
 import { supabase } from '../supabaseClient';
 
@@ -101,13 +101,15 @@ export const AppProvider = ({ children }) => {
     }, [recentlyViewed]);
 
     // Recently viewed - ProductPage da mahsulot ko'rilganda qo'shiladi
-    const addToRecentlyViewed = (productId) => {
+    // useCallback: useEffect dependency bo'lsa har renderda yangi ref bo'lmasin (cheksiz loop oldini olish)
+    const addToRecentlyViewed = useCallback((productId) => {
         if (!productId) return;
         setRecentlyViewed(prev => {
+            if (prev[0] === productId) return prev;
             const filtered = prev.filter(id => id !== productId);
             return [productId, ...filtered].slice(0, 10);
         });
-    };
+    }, []);
 
     // Cart functions
     const addToCart = (product, quantity = 1, selectedColor = null) => {
