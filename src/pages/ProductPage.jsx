@@ -9,6 +9,7 @@ import ProductGallery from '../components/product/ProductGallery';
 import ThreeSixtyViewer from '../components/product/ThreeSixtyViewer';
 import { getAllColors, getProductById } from '../services/supabase/products';
 import { supabase } from '../supabaseClient';
+import { getShareableUrl } from '../utils/siteUrl';
 import { Box } from 'lucide-react';
 
 const applyColorTo3DModel = (modelViewer, selectedColor, colorMap) => {
@@ -93,7 +94,7 @@ const ProductPage = () => {
 
     const handleShare = async () => {
         const productName = selectedProduct?.[`name_${language}`] || selectedProduct?.name || '';
-        const url = window.location.href;
+        const url = getShareableUrl();
 
         if (navigator.share) {
             try {
