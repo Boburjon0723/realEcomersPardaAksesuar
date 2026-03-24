@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Mail, Phone, MapPin, Facebook, Instagram, Send, ChevronRight, Globe, ChevronDown } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { useApp } from '../../contexts/AppContext';
+import { useApp } from '../../hooks/useApp';
 
 const FOOTER_LANGUAGES = [
     { code: 'uz', label: "O'zbekcha" },

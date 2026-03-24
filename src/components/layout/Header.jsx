@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ShoppingCart, User, Search, Menu, X, Globe, LogOut, Package, ChevronDown } from 'lucide-react';
-import { useApp } from '../../contexts/AppContext';
+import { useApp } from '../../hooks/useApp';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { logoutUser } from '../../services/supabase/auth';
 

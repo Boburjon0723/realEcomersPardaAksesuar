@@ -1,10 +1,12 @@
 // ==========================================
-// src/App.jsx - ASOSIY FAYL
+// src/App.jsx - ASOSIY FAYL (React Router + URL)
 // ==========================================
 import React, { useEffect } from 'react';
-import { AppProvider, useApp } from './contexts/AppContext';
+import { Routes, Route, Outlet, useLocation } from 'react-router-dom';
+import { AppProvider } from './contexts/AppContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { AuthProvider } from './contexts/AuthContext';
+import { useApp } from './hooks/useApp';
 
 // Layout
 import Header from './components/layout/Header';
@@ -40,44 +42,50 @@ function ErrorBoundaryWrapper({ children }) {
   return <ErrorBoundary t={t}>{children}</ErrorBoundary>;
 }
 
-function MainApp() {
-  const { currentPage, selectedProduct, showAuth } = useApp();
+function MainLayout() {
+  const location = useLocation();
+  const { showAuth } = useApp();
 
-  // Scroll to top on page change
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [currentPage]);
+  }, [location.pathname]);
 
   return (
     <div className="min-h-screen bg-white flex flex-col font-sans text-gray-900">
       <Header />
-
       <main className="flex-1 mt-20">
-        {currentPage === 'home' && <HomePage />}
-        {currentPage === 'shop' && <ShopPage />}
-        {currentPage === 'product' && selectedProduct && <ProductPage />}
-        {currentPage === 'product' && !selectedProduct && <NotFoundPage />}
-        {currentPage === 'cart' && <CartPage />}
-        {currentPage === 'checkout' && <CheckoutPage />}
-        {currentPage === 'about' && <AboutPage />}
-        {currentPage === 'services' && <ServicesPage />}
-        {currentPage === 'contact' && <ContactPage />}
-        {currentPage === 'orders' && <MyOrdersPage />}
-        {currentPage === 'profile' && <ProfilePage />}
-        {currentPage === 'album' && <AlbumPage />}
-        {currentPage === 'shipping' && <ShippingPage />}
-        {currentPage === 'returns' && <ReturnsPage />}
-        {currentPage === 'faq' && <FaqPage />}
-        {currentPage === 'terms' && <TermsPage />}
-        {currentPage === 'privacy' && <PrivacyPage />}
-        {!['home', 'shop', 'product', 'cart', 'checkout', 'about', 'services', 'contact', 'orders', 'profile', 'album', 'shipping', 'returns', 'faq', 'terms', 'privacy'].includes(currentPage) && <NotFoundPage />}
+        <Outlet />
       </main>
-
       <FloatingContacts />
       <Footer />
-
       {showAuth && <AuthModal />}
     </div>
+  );
+}
+
+function AppRoutes() {
+  return (
+    <Routes>
+      <Route path="/" element={<MainLayout />}>
+        <Route index element={<HomePage />} />
+        <Route path="shop" element={<ShopPage />} />
+        <Route path="product/:productId" element={<ProductPage />} />
+        <Route path="cart" element={<CartPage />} />
+        <Route path="checkout" element={<CheckoutPage />} />
+        <Route path="about" element={<AboutPage />} />
+        <Route path="services" element={<ServicesPage />} />
+        <Route path="contact" element={<ContactPage />} />
+        <Route path="orders" element={<MyOrdersPage />} />
+        <Route path="profile" element={<ProfilePage />} />
+        <Route path="album" element={<AlbumPage />} />
+        <Route path="shipping" element={<ShippingPage />} />
+        <Route path="returns" element={<ReturnsPage />} />
+        <Route path="faq" element={<FaqPage />} />
+        <Route path="terms" element={<TermsPage />} />
+        <Route path="privacy" element={<PrivacyPage />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Route>
+    </Routes>
   );
 }
 
@@ -87,7 +95,7 @@ function App() {
       <AuthProvider>
         <AppProvider>
           <ErrorBoundaryWrapper>
-            <MainApp />
+            <AppRoutes />
           </ErrorBoundaryWrapper>
         </AppProvider>
       </AuthProvider>

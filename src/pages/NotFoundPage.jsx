@@ -1,7 +1,7 @@
 import React from 'react';
 import { Home, Search } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useApp } from '../contexts/AppContext';
+import { useApp } from '../hooks/useApp';
 import PageMeta from '../components/common/PageMeta';
 
 const NotFoundPage = () => {

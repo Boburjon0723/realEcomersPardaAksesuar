@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useApp } from '../contexts/AppContext';
+import { useApp } from '../hooks/useApp';
 import { useLanguage } from '../contexts/LanguageContext';
 import PageMeta from '../components/common/PageMeta';
 import ProductGrid from '../components/product/ProductGrid';
@@ -20,7 +20,7 @@ const ICON_MAP = {
     award: Award,
     zap: Zap
 };
-// Fallback rasmlar – DB bo'sh bo'lsa public/images/hero dan ishlatiladi
+// Fallback rasmlar â€“ DB bo'sh bo'lsa public/images/hero dan ishlatiladi
 const FALLBACK_HERO_IMAGES = [
     '/images/hero/hero1.jpg',
     '/images/hero/hero2.jpg',

@@ -1,7 +1,7 @@
 import React from 'react';
 import { ArrowLeft, X } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { useApp } from '../../contexts/AppContext';
+import { useApp } from '../../hooks/useApp';
 
 /**
  * Qo'llab quvvatlash sahifalari uchun ortga qaytish va yopish tugmalari

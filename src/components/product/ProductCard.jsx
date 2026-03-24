@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Heart, Star, ShoppingBag, Eye, Box } from 'lucide-react';
-import { useApp } from '../../contexts/AppContext';
+import { useApp } from '../../hooks/useApp';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { formatPriceUSD } from '../../utils/price';
 
 const ProductCard = ({ product, onQuickView }) => {
-    const { addToCart, setCurrentPage, setSelectedProduct, toggleFavorite, isFavorite } = useApp();
+    const { addToCart, setCurrentPage, toggleFavorite, isFavorite } = useApp();
     const { language, t, translateColor } = useLanguage();
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [isHovered, setIsHovered] = useState(false);
@@ -32,8 +32,7 @@ const ProductCard = ({ product, onQuickView }) => {
     const displayPrice = formatPriceUSD(product.price);
 
     const handleProductClick = () => {
-        setSelectedProduct(product);
-        setCurrentPage('product');
+        setCurrentPage('product', { product });
     };
 
     return (
@@ -74,7 +73,7 @@ const ProductCard = ({ product, onQuickView }) => {
                                 alt={`${productName} ${idx + 1}`}
                                 loading={idx === 0 ? 'lazy' : 'eager'}
                                 className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ease-in-out group-hover:scale-105 ${
-                                    idx === currentImageIndex ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
+                                    idx === currentImageIndex ? 'opacity-100 z-[1]' : 'opacity-0 z-0 pointer-events-none'
                                 }`}
                                 onError={(e) => { e.target.src = 'https://via.placeholder.com/400x500?text=No+Image'; }}
                             />
@@ -91,7 +90,7 @@ const ProductCard = ({ product, onQuickView }) => {
                 )}
 
                 {/* Badges row - chap ustun */}
-                <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5">
+                <div className="absolute top-3 left-3 z-20 flex flex-col gap-1.5 pointer-events-none [&_button]:pointer-events-auto">
                     {discountPercent > 0 && (
                         <span className="bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-lg">
                             -{discountPercent}%
@@ -111,9 +110,11 @@ const ProductCard = ({ product, onQuickView }) => {
                     )}
                 </div>
 
-                {/* Quick Actions - pastda, gorizontal */}
-                <div className="absolute bottom-14 left-2 right-2 z-10 flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                {/* Quick Actions — kichik ekranda doim ko‘rinadi; md+ da hover */}
+                <div className="absolute bottom-14 left-2 right-2 z-20 flex justify-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300">
                     <button
+                        type="button"
+                        aria-label={favorite ? t('removeFromFavorites') : t('addToFavorites')}
                         onClick={(e) => {
                             e.stopPropagation();
                             toggleFavorite(product.id);
@@ -123,6 +124,8 @@ const ProductCard = ({ product, onQuickView }) => {
                         <Heart className={`w-3.5 h-3.5 ${favorite ? 'fill-current' : ''}`} />
                     </button>
                     <button
+                        type="button"
+                        aria-label={t('quickViewBtn')}
                         onClick={(e) => {
                             e.stopPropagation();
                             onQuickView ? onQuickView() : handleProductClick();
@@ -135,7 +138,7 @@ const ProductCard = ({ product, onQuickView }) => {
 
                 {/* Image dots (agar bir nechta rasm bo'lsa) */}
                 {hasMultipleImages && (
-                    <div className="absolute bottom-16 left-0 right-0 flex justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+                    <div className="absolute bottom-16 left-0 right-0 flex justify-center gap-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 z-20 pointer-events-none">
                         {images.map((_, i) => (
                             <div
                                 key={i}
@@ -145,9 +148,11 @@ const ProductCard = ({ product, onQuickView }) => {
                     </div>
                 )}
 
-                {/* Add to Cart - past, ixcham tugma */}
-                <div className="absolute bottom-0 left-0 right-0 p-2 translate-y-full group-hover:translate-y-0 transition-transform duration-300 bg-gradient-to-t from-black/50 to-transparent">
+                {/* Savat — mobil planshetda doim; md+ da hover bilan chiqadi */}
+                <div className="absolute bottom-0 left-0 right-0 z-20 p-2 translate-y-0 md:translate-y-full md:group-hover:translate-y-0 transition-transform duration-300 bg-gradient-to-t from-black/50 to-transparent">
                     <button
+                        type="button"
+                        aria-label={`${t('addToCart')}: ${productName}`}
                         onClick={(e) => {
                             e.stopPropagation();
                             addToCart(product);

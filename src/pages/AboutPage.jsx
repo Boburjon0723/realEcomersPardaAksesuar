@@ -1,7 +1,7 @@
 import React from 'react';
 import { Award, Users, TrendingUp, Heart, CheckCircle } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useApp } from '../contexts/AppContext';
+import { useApp } from '../hooks/useApp';
 import PageMeta from '../components/common/PageMeta';
 import aboutLuxuryLivingImage from '../assets/images/hero-luxury-living-room.png';
 import aboutCurtainImage from '../assets/images/about-curtain-accessories.png';
@@ -52,7 +52,7 @@ const AboutPage = () => {
                     ))}
                 </div>
 
-                {/* Nuur Home — Kompaniya haqida (til almashganda avtomatik o'zgaradi) */}
+                {/* Nuur Home â€” Kompaniya haqida (til almashganda avtomatik o'zgaradi) */}
                 <div className="grid md:grid-cols-2 gap-16 mb-24 items-center">
                     <div>
                         <span className="text-secondary font-bold tracking-wider uppercase text-sm mb-2 block">Nuur Home Collection</span>

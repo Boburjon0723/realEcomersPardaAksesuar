@@ -3,6 +3,22 @@ import { supabase } from '../supabaseClient';
 
 const AuthContext = createContext();
 
+function getAdminEmailSet() {
+    const raw = process.env.REACT_APP_ADMIN_EMAILS || '';
+    return new Set(
+        raw
+            .split(',')
+            .map((e) => e.trim().toLowerCase())
+            .filter(Boolean)
+    );
+}
+
+function userIsAdmin(user) {
+    const email = user?.email?.toLowerCase().trim();
+    if (!email) return false;
+    return getAdminEmailSet().has(email);
+}
+
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -15,8 +31,7 @@ export const AuthProvider = ({ children }) => {
             const currentUser = session?.user || null;
             setUser(currentUser);
             if (currentUser) {
-                const adminEmails = process.env.REACT_APP_ADMIN_EMAILS?.split(',') || [];
-                setIsAdmin(adminEmails.includes(currentUser.email));
+                setIsAdmin(userIsAdmin(currentUser));
             }
             setLoading(false);
         };
@@ -28,8 +43,7 @@ export const AuthProvider = ({ children }) => {
             const currentUser = session?.user || null;
             setUser(currentUser);
             if (currentUser) {
-                const adminEmails = process.env.REACT_APP_ADMIN_EMAILS?.split(',') || [];
-                setIsAdmin(adminEmails.includes(currentUser.email));
+                setIsAdmin(userIsAdmin(currentUser));
             } else {
                 setIsAdmin(false);
             }

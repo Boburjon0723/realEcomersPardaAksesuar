@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { MapPin, Phone, Mail, Clock, Send, MessageSquare } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useApp } from '../contexts/AppContext';
+import { useApp } from '../hooks/useApp';
 import PageMeta from '../components/common/PageMeta';
 import { createContactMessage } from '../services/supabase/messages';
 

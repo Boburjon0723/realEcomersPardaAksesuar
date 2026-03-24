@@ -1,6 +1,7 @@
 -- ============================================================
--- TechGear E-commerce - Barcha migratsiyalar (bitta fayl)
--- Supabase: Dashboard > SQL Editor > New query > bu faylni paste qiling > Run
+-- TechGear E-commerce - INCREMENTAL migratsiyalar (ESKI bazaga qo'shimchalar)
+-- YANGI Supabase loyihasi uchun: avvalo supabase_fresh_install_complete.sql ni ishga tushiring.
+-- Keyin kerak bo'lsa ushbu fayldagi qo'shimcha ALTER lar (ixtiyoriy).
 -- ============================================================
 -- Eslatma: Agar products, categories, banners jadvalari mavjud bo'lmasa,
 -- 4, 5, 6-bo'limlardagi ALTER TABLE xatolik beradi - ularni o'chirib qoldiring.

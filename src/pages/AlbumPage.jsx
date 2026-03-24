@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useApp } from '../contexts/AppContext';
+import { useApp } from '../hooks/useApp';
 import { useLanguage } from '../contexts/LanguageContext';
 import PageMeta from '../components/common/PageMeta';
 import { getAlbumImages } from '../services/supabase/albumImages';
@@ -120,7 +120,7 @@ const AlbumPage = () => {
                 </div>
             </div>
 
-            {/* O'ng tomondan ochiladigan rasm paneli — chap galereya scroll va bosish uchun ochiq */}
+            {/* O'ng tomondan ochiladigan rasm paneli â€” chap galereya scroll va bosish uchun ochiq */}
             {selectedImage && (
                 <>
                     <div

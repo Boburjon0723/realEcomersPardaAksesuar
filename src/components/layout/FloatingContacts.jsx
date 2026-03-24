@@ -1,6 +1,6 @@
 import React from 'react';
 import { Send, Phone, Instagram } from 'lucide-react';
-import { useApp } from '../../contexts/AppContext';
+import { useApp } from '../../hooks/useApp';
 
 const FloatingContacts = () => {
     const { settings } = useApp();

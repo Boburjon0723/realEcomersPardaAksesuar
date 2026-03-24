@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { X, Lock, User as UserIcon, ArrowRight, Phone } from 'lucide-react';
-import { useApp } from '../../contexts/AppContext';
+import { useApp } from '../../hooks/useApp';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { loginUser, registerUser } from '../../services/supabase/auth';
+import { AUTH_RETURN_PATH_KEY } from '../../constants/storageKeys';
 
 const countries = [
     { id: 'uzbekistan', code: '+998', name: 'uzbekistan' },
@@ -55,7 +56,7 @@ const countries = [
 ];
 
 const AuthModal = () => {
-    const { setShowAuth, setCurrentUser, isLogin, setIsLogin } = useApp();
+    const { setShowAuth, setCurrentUser, isLogin, setIsLogin, navigate } = useApp();
     const { t } = useLanguage();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -101,6 +102,13 @@ const AuthModal = () => {
                 setCurrentUser(user);
                 localStorage.setItem('user', JSON.stringify(user));
                 setShowAuth(false);
+                try {
+                    const returnTo = sessionStorage.getItem(AUTH_RETURN_PATH_KEY);
+                    if (returnTo) {
+                        sessionStorage.removeItem(AUTH_RETURN_PATH_KEY);
+                        navigate(returnTo);
+                    }
+                } catch (_) { /* ignore */ }
             } else {
                 if (result.error.includes('Email not confirmed')) {
                     setError(t('verifyError'));
@@ -267,7 +275,7 @@ const AuthModal = () => {
                                 value={formData.password}
                                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                 className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none font-medium"
-                                placeholder="••••••••"
+                                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                             />
                         </div>
                     </div>
@@ -286,7 +294,7 @@ const AuthModal = () => {
                                     value={formData.confirmPassword}
                                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                                     className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none font-medium"
-                                    placeholder="••••••••"
+                                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                                 />
                             </div>
                         </div>

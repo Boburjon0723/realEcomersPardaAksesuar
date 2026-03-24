@@ -1,6 +1,6 @@
 import React from 'react';
 import { ShoppingCart, Minus, Plus, Trash2, ArrowRight, ArrowLeft } from 'lucide-react';
-import { useApp } from '../contexts/AppContext';
+import { useApp } from '../hooks/useApp';
 import { useLanguage } from '../contexts/LanguageContext';
 import PageMeta from '../components/common/PageMeta';
 

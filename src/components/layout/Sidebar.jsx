@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronRight } from 'lucide-react';
-import { useApp } from '../../contexts/AppContext';
+import { useApp } from '../../hooks/useApp';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { getAllCategories } from '../../services/supabase/categories';
 

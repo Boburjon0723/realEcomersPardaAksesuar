@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { X, ShoppingBag } from 'lucide-react';
-import { useApp } from '../../contexts/AppContext';
+import { useApp } from '../../hooks/useApp';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { formatPriceUSD } from '../../utils/price';
 
 const ProductQuickView = ({ product, onClose }) => {
-    const { addToCart, setCurrentPage, setSelectedProduct } = useApp();
+    const { addToCart, setCurrentPage } = useApp();
     const { language, t, translateColor } = useLanguage();
     const [selectedColor, setSelectedColor] = useState(product?.color || product?.colors?.[0] || null);
 
@@ -21,8 +21,7 @@ const ProductQuickView = ({ product, onClose }) => {
     };
 
     const handleViewFull = () => {
-        setSelectedProduct(product);
-        setCurrentPage('product');
+        setCurrentPage('product', { product });
         onClose();
     };
 

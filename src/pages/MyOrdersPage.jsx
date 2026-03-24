@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Package, Calendar, ArrowLeft, ShoppingBag, ExternalLink } from 'lucide-react';
-import { useApp } from '../contexts/AppContext';
+import { useApp } from '../hooks/useApp';
 import { useLanguage } from '../contexts/LanguageContext';
 import PageMeta from '../components/common/PageMeta';
 import { getUserOrders } from '../services/supabase/orders';
@@ -167,7 +167,7 @@ const MyOrdersPage = () => {
                                             className="flex items-center text-xs font-bold text-secondary hover:text-primary transition-colors bg-gray-50 px-4 py-2 rounded-lg"
                                         >
                                             <ExternalLink className="w-4 h-4 mr-2" />
-                                            {language === 'uz' ? "To'lov cheki" : language === 'ru' ? "Чек оплаты" : "Payment Receipt"}
+                                            {language === 'uz' ? "To'lov cheki" : language === 'ru' ? 'Чек оплаты' : "Payment Receipt"}
                                         </a>
                                     )}
                                 </div>

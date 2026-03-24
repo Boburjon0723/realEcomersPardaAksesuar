@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useApp } from '../contexts/AppContext';
+import { useApp } from '../hooks/useApp';
 import { useLanguage } from '../contexts/LanguageContext';
 import PageMeta from '../components/common/PageMeta';
 import ProductGrid from '../components/product/ProductGrid';

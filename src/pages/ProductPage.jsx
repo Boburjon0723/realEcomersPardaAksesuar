@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
-import { Star, Minus, Plus, Heart, ShieldCheck, Truck, ArrowLeft, CheckCircle, X, ShoppingCart, RotateCw, Share2 } from 'lucide-react';
-import { useApp } from '../contexts/AppContext';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { Star, Minus, Plus, Heart, ShieldCheck, ArrowLeft, CheckCircle, X, ShoppingCart, RotateCw, Share2 } from 'lucide-react';
+import { useApp } from '../hooks/useApp';
 import { useLanguage } from '../contexts/LanguageContext';
 import PageMeta from '../components/common/PageMeta';
 import Breadcrumb from '../components/common/Breadcrumb';
 import ProductGallery from '../components/product/ProductGallery';
 import ThreeSixtyViewer from '../components/product/ThreeSixtyViewer';
-import { getAllColors } from '../services/supabase/products';
+import { getAllColors, getProductById } from '../services/supabase/products';
 import { supabase } from '../supabaseClient';
 import { Box } from 'lucide-react';
 
@@ -23,7 +24,41 @@ const applyColorTo3DModel = (modelViewer, selectedColor, colorMap) => {
 };
 
 const ProductPage = () => {
-    const { selectedProduct, currentUser, addToCart, setCurrentPage, setSelectedCategory, addToRecentlyViewed, toggleFavorite, isFavorite, settings } = useApp();
+    const { productId } = useParams();
+    const { selectedProduct, setSelectedProduct, currentUser, addToCart, setCurrentPage, setSelectedCategory, addToRecentlyViewed, toggleFavorite, isFavorite, settings } = useApp();
+    const [loadingProduct, setLoadingProduct] = useState(true);
+    const [loadError, setLoadError] = useState(false);
+
+    useEffect(() => {
+        if (!productId) {
+            setLoadingProduct(false);
+            setLoadError(true);
+            return;
+        }
+        if (String(selectedProduct?.id) === String(productId)) {
+            setLoadingProduct(false);
+            setLoadError(false);
+            return;
+        }
+        let cancelled = false;
+        (async () => {
+            setLoadingProduct(true);
+            setLoadError(false);
+            const res = await getProductById(productId);
+            if (cancelled) return;
+            if (res.success && res.product) {
+                setSelectedProduct(res.product);
+                setLoadError(false);
+            } else {
+                setSelectedProduct(null);
+                setLoadError(true);
+            }
+            setLoadingProduct(false);
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [productId, selectedProduct?.id, setSelectedProduct]);
     const { language, t, translateColor } = useLanguage();
     const [quantity, setQuantity] = useState(1);
     const [activeTab, setActiveTab] = useState('description');
@@ -138,12 +173,12 @@ const ProductPage = () => {
         return () => modelViewer.removeEventListener('load', apply);
     }, [selectedColor, viewMode, colorMap]);
 
-    // Dynamic Rating Calculation
+    // Dynamic Rating Calculation (selectedProduct hali null bo'lishi mumkin — loading / topilmadi)
     const averageRating = reviews.length > 0
         ? (reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviews.length).toFixed(1)
-        : selectedProduct.rating || 0;
+        : (selectedProduct?.rating ?? 0);
 
-    const reviewsCount = reviews.length > 0 ? reviews.length : selectedProduct.reviews || 0;
+    const reviewsCount = reviews.length > 0 ? reviews.length : (selectedProduct?.reviews ?? 0);
 
     const handleSubmitReview = async (e) => {
         e.preventDefault();
@@ -177,7 +212,25 @@ const ProductPage = () => {
         }
     };
 
-    if (!selectedProduct) return null;
+    if (loadingProduct) {
+        return (
+            <div className="container mx-auto px-4 py-16 flex flex-col items-center justify-center min-h-[40vh]">
+                <div className="animate-pulse rounded-2xl bg-gray-200 w-full max-w-4xl h-64 md:h-96 mb-8" />
+                <p className="text-gray-500 text-sm">{/* t('loading') */}Yuklanmoqda…</p>
+            </div>
+        );
+    }
+
+    if (loadError || !selectedProduct) {
+        return (
+            <div className="container mx-auto px-4 py-16 text-center">
+                <p className="text-gray-600 mb-4">{/* */}Mahsulot topilmadi.</p>
+                <button type="button" onClick={() => setCurrentPage('shop')} className="text-primary font-semibold underline">
+                    Do‘konga qaytish
+                </button>
+            </div>
+        );
+    }
 
     // Calculate price with discount
     const finalPrice = selectedProduct.priceRanges?.find(r => quantity >= r.min && quantity <= r.max);
@@ -533,12 +586,8 @@ const ProductPage = () => {
                         {/* Features List */}
                         <div className="space-y-4 border-t border-gray-100 pt-6">
                             <div className="flex items-center gap-3 text-gray-700">
-                                <Truck className="w-5 h-5 text-secondary" />
-                                <span>Free shipping on orders over $100</span>
-                            </div>
-                            <div className="flex items-center gap-3 text-gray-700">
-                                <ShieldCheck className="w-5 h-5 text-secondary" />
-                                <span>2 year quality warranty</span>
+                                <ShieldCheck className="w-5 h-5 text-secondary shrink-0" />
+                                <span>{t('warrantyDesc')}</span>
                             </div>
                         </div>
                     </div>
@@ -571,24 +620,53 @@ const ProductPage = () => {
 
                         {activeTab === 'features' && (
                             <div className="grid md:grid-cols-2 gap-4">
-                                {selectedProduct.features && (
-                                    Array.isArray(selectedProduct.features[language])
-                                        ? selectedProduct.features[language].map((feature, idx) => (
-                                            <div key={idx} className="flex items-center p-4 bg-gray-50 rounded-lg">
-                                                <div className="w-2 h-2 bg-secondary rounded-full mr-3"></div>
-                                                <span className="text-gray-700 font-medium">{feature}</span>
+                                {selectedProduct.features && (() => {
+                                    const f = selectedProduct.features;
+                                    const byLang = f[language];
+                                    const hasLangBuckets = f && typeof f === 'object' && ['uz', 'ru', 'en'].some((code) => Array.isArray(f[code]));
+
+                                    if (Array.isArray(byLang)) {
+                                        return byLang
+                                            .filter((feature) => {
+                                                if (typeof feature === 'string') return feature.trim() !== '';
+                                                return String(feature?.name ?? '').trim() || String(feature?.value ?? '').trim();
+                                            })
+                                            .map((feature, idx) => {
+                                                const line = typeof feature === 'string'
+                                                    ? feature
+                                                    : (() => {
+                                                        const n = String(feature?.name ?? '').trim();
+                                                        const v = String(feature?.value ?? '').trim();
+                                                        if (n && v) return `${n}: ${v}`;
+                                                        return n || v || '';
+                                                    })();
+                                                return (
+                                                    <div key={idx} className="flex items-center p-4 bg-gray-50 rounded-lg">
+                                                        <div className="w-2 h-2 bg-secondary rounded-full mr-3 shrink-0"></div>
+                                                        <span className="text-gray-700 font-medium">{line}</span>
+                                                    </div>
+                                                );
+                                            });
+                                    }
+
+                                    if (hasLangBuckets && !Array.isArray(byLang)) {
+                                        return (
+                                            <div className="col-span-full text-gray-500 italic md:col-span-2">
+                                                {t('noFeatures') || 'No features available'}
                                             </div>
-                                        ))
-                                        : Object.entries(selectedProduct.features).map(([key, value], idx) => (
-                                            <div key={idx} className="flex items-center p-4 bg-gray-50 rounded-lg">
-                                                <div className="w-2 h-2 bg-secondary rounded-full mr-3"></div>
-                                                <span className="text-gray-700 font-medium">
-                                                    <span className="font-bold text-gray-900">{key}: </span>
-                                                    {value}
-                                                </span>
-                                            </div>
-                                        ))
-                                )}
+                                        );
+                                    }
+
+                                    return Object.entries(f).map(([key, value], idx) => (
+                                        <div key={idx} className="flex items-center p-4 bg-gray-50 rounded-lg">
+                                            <div className="w-2 h-2 bg-secondary rounded-full mr-3"></div>
+                                            <span className="text-gray-700 font-medium">
+                                                <span className="font-bold text-gray-900">{key}: </span>
+                                                {value}
+                                            </span>
+                                        </div>
+                                    ));
+                                })()}
                                 {!selectedProduct.features && (
                                     <div className="text-gray-500 italic">
                                         {t('noFeatures') || 'No features available'}

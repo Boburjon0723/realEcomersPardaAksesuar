@@ -1,14 +1,13 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
 import { getSettings } from '../services/supabase/settings';
 import { supabase } from '../supabaseClient';
 
-const AppContext = createContext();
+export const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
     const [currentUser, setCurrentUser] = useState(null);
     const [cart, setCart] = useState([]);
     const [favorites, setFavorites] = useState([]);
-    const [currentPage, setCurrentPage] = useState('home');
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [showAuth, setShowAuth] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
@@ -189,8 +188,6 @@ export const AppProvider = ({ children }) => {
         favorites,
         toggleFavorite,
         isFavorite,
-        currentPage,
-        setCurrentPage,
         selectedProduct,
         setSelectedProduct,
         showAuth,
@@ -210,10 +207,3 @@ export const AppProvider = ({ children }) => {
     return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
 
-export const useApp = () => {
-    const context = useContext(AppContext);
-    if (!context) {
-        throw new Error('useApp must be used within AppProvider');
-    }
-    return context;
-};

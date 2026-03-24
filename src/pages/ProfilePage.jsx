@@ -4,7 +4,7 @@
 // ==========================================
 import React, { useState, useEffect } from 'react';
 import { Heart, Package, Eye, ArrowLeft, ShoppingBag, ExternalLink, ChevronRight, MapPin, User, Settings, Lock } from 'lucide-react';
-import { useApp } from '../contexts/AppContext';
+import { useApp } from '../hooks/useApp';
 import { useLanguage } from '../contexts/LanguageContext';
 import PageMeta from '../components/common/PageMeta';
 import { getUserOrders } from '../services/supabase/orders';
@@ -261,7 +261,7 @@ const ProfilePage = () => {
                                                         <span className="truncate">
                                                             {typeof item.name === 'object' ? item.name[language] || item.name.uz : item.name}
                                                         </span>
-                                                        <span>×{item.quantity}</span>
+                                                        <span>Ã—{item.quantity}</span>
                                                     </div>
                                                 ))}
                                             </div>

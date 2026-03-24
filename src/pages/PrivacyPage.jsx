@@ -1,7 +1,7 @@
 import React from 'react';
 import { Shield } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useApp } from '../contexts/AppContext';
+import { useApp } from '../hooks/useApp';
 import PageMeta from '../components/common/PageMeta';
 import PageBackBar from '../components/common/PageBackBar';
 

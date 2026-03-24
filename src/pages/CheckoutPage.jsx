@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Check, CreditCard, AlertCircle, X, Upload, ArrowLeft, ArrowRight, ShieldCheck } from 'lucide-react';
-import { useApp } from '../contexts/AppContext';
+import { Check, CreditCard, AlertCircle, X, Upload, ArrowLeft, ArrowRight, ShieldCheck, LogIn } from 'lucide-react';
+import { useApp } from '../hooks/useApp';
 import { useLanguage } from '../contexts/LanguageContext';
 import PageMeta from '../components/common/PageMeta';
 import { createOrder, uploadReceipt } from '../services/supabase/orders';
 import { getSettings } from '../services/supabase/settings';
+import { AUTH_RETURN_PATH_KEY } from '../constants/storageKeys';
 
 const CheckoutPage = () => {
     const { cart, getTotalPrice, clearCart, setCurrentPage, currentUser, setShowAuth, setIsLogin } = useApp();
@@ -25,14 +26,6 @@ const CheckoutPage = () => {
     const [fieldErrors, setFieldErrors] = useState({});
 
     useEffect(() => {
-        if (!currentUser) {
-            setIsLogin(true);
-            setShowAuth(true);
-            setCurrentPage('home');
-        }
-    }, [currentUser, setShowAuth, setIsLogin, setCurrentPage]);
-
-    useEffect(() => {
         const fetchSettings = async () => {
             // ... existing code ...
             const result = await getSettings();
@@ -46,13 +39,13 @@ const CheckoutPage = () => {
     const validateForm = () => {
         const errs = {};
         if (!formData.name.trim()) errs.name = t('nameRequired');
-        else if (formData.name.trim().length < 2) errs.name = language === 'uz' ? "Ism kamida 2 ta belgidan iborat bo'lishi kerak" : language === 'ru' ? 'Имя должно быть не менее 2 символов' : 'Name must be at least 2 characters';
+        else if (formData.name.trim().length < 2) errs.name = t('nameMinLength');
         if (!formData.phone.trim()) errs.phone = t('phoneRequired');
-        else if (formData.phone.replace(/\D/g, '').length < 9) errs.phone = language === 'uz' ? "To'g'ri telefon raqam kiriting (kamida 9 ta raqam)" : language === 'ru' ? 'Введите корректный номер телефона' : 'Enter a valid phone number (min 9 digits)';
+        else if (formData.phone.replace(/\D/g, '').length < 9) errs.phone = t('phoneMinDigits');
         if (!formData.address.trim()) errs.address = t('addressRequired');
-        else if (formData.address.trim().length < 5) errs.address = language === 'uz' ? "Manzil kamida 5 ta belgidan iborat bo'lishi kerak" : language === 'ru' ? 'Адрес не менее 5 символов' : 'Address must be at least 5 characters';
+        else if (formData.address.trim().length < 5) errs.address = t('addressMinLength');
         if (!formData.city.trim()) errs.city = t('cityRequired');
-        if (!receiptFile) errs.receipt = language === 'uz' ? "Iltimos, to'lov chekini yuklang" : language === 'ru' ? 'Загрузите чек об оплате' : 'Please upload payment receipt';
+        if (!receiptFile) errs.receipt = t('receiptRequired');
         setFieldErrors(errs);
         setError(Object.values(errs)[0] || '');
         return Object.keys(errs).length === 0;
@@ -63,7 +56,7 @@ const CheckoutPage = () => {
         setFieldErrors(prev => ({ ...prev, receipt: '' }));
         if (file) {
             if (file.size > 5 * 1024 * 1024) {
-                setError(language === 'uz' ? 'Fayl hajmi 5MB dan oshmasligi kerak' : 'File size should not exceed 5MB');
+                setError(t('maxFileSize'));
                 return;
             }
             setReceiptFile(file);
@@ -110,15 +103,15 @@ const CheckoutPage = () => {
 
             // Upload receipt if provided
             if (receiptFile) {
-                console.log('Uploading receipt for order:', orderId);
                 const uploadResult = await uploadReceipt(orderId, receiptFile);
 
                 if (!uploadResult.success) {
-                    console.error('Receipt upload failed:', uploadResult.error);
+                    if (process.env.NODE_ENV === 'development') {
+                        // eslint-disable-next-line no-console
+                        console.error('Receipt upload failed:', uploadResult.error);
+                    }
                     throw new Error(`Order created but receipt upload failed: ${uploadResult.error}`);
                 }
-
-                console.log('Receipt uploaded successfully:', uploadResult.url);
             }
 
             setOrderSuccess(true);
@@ -126,7 +119,10 @@ const CheckoutPage = () => {
             setTimeout(() => setCurrentPage('home'), 4000);
 
         } catch (err) {
-            console.error('Checkout error:', err);
+            if (process.env.NODE_ENV === 'development') {
+                // eslint-disable-next-line no-console
+                console.error('Checkout error:', err);
+            }
             setError(err.message || t('unknownError'));
         } finally {
             setLoading(false);
@@ -135,8 +131,54 @@ const CheckoutPage = () => {
 
     const getCardNumber = (method) => {
         if (!settings) return '...';
-        return settings[`${method}_card`] || (language === 'uz' ? 'Karta raqami kiritilmagan' : 'Card number not set');
+        return settings[`${method}_card`] || t('cardNumberNotSet');
     };
+
+    const openLoginForCheckout = () => {
+        try {
+            sessionStorage.setItem(AUTH_RETURN_PATH_KEY, '/checkout');
+        } catch (_) { /* ignore */ }
+        setIsLogin(true);
+        setShowAuth(true);
+    };
+
+    if (!currentUser) {
+        return (
+            <>
+                <PageMeta title={t('checkout')} description={t('metaDescCheckout')} siteName={settings?.site_name} />
+                <div className="container mx-auto px-4 md:px-6 py-8 max-w-lg mx-auto">
+                    <button
+                        type="button"
+                        onClick={() => setCurrentPage('cart')}
+                        className="flex items-center text-gray-500 hover:text-primary mb-6 transition-colors font-medium"
+                    >
+                        <ArrowLeft className="w-4 h-4 mr-2" />
+                        {t('backToCart') || 'Back to Cart'}
+                    </button>
+                    <h1 className="text-2xl md:text-3xl font-display font-bold mb-6 text-gray-900">{t('checkout')}</h1>
+                    <div className="rounded-2xl border border-amber-200/80 bg-gradient-to-b from-amber-50 to-amber-50/70 p-6 md:p-8 text-center shadow-sm ring-1 ring-amber-100/80">
+                        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-100/90 text-amber-700 mb-4 shadow-inner">
+                            <LogIn className="w-7 h-7" aria-hidden />
+                        </div>
+                        <p className="text-gray-800 font-semibold mb-2 text-base md:text-lg">
+                            {t('checkoutLoginRequired')}
+                        </p>
+                        <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+                            {t('checkoutLoginReturnHint')}
+                        </p>
+                        <button
+                            type="button"
+                            onClick={openLoginForCheckout}
+                            className="w-full sm:w-auto min-h-[48px] inline-flex items-center justify-center gap-2 px-8 py-3 rounded-xl bg-primary text-white font-bold hover:bg-primary/90 active:scale-[0.98] transition-all shadow-md shadow-primary/20"
+                        >
+                            <LogIn className="w-5 h-5" aria-hidden />
+                            {t('login')}
+                        </button>
+                    </div>
+                </div>
+            </>
+        );
+    }
 
     if (orderSuccess) {
         return (
@@ -148,9 +190,7 @@ const CheckoutPage = () => {
                 </div>
                 <h2 className="text-3xl font-display font-bold mb-4 text-gray-900">{t('orderSuccess') || 'Order Successful!'}</h2>
                 <p className="text-gray-600 mb-8 text-lg leading-relaxed">
-                    {language === 'uz'
-                        ? 'Buyurtmangiz muvaffaqiyatli qabul qilindi. To\'lov cheki tasdiqlangach, operatorlarimiz siz bilan bog\'lanishadi.'
-                        : 'Your order has been collected perfectly. Our team will review the receipt and contact you shortly.'}
+                    {t('orderSuccessMsg')}
                 </p>
                 <div className="w-full bg-gray-100 rounded-full h-1 overflow-hidden">
                     <div className="bg-primary h-full w-full animate-[shimmer_2s_infinite]"></div>
