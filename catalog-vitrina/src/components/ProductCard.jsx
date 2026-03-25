@@ -1,8 +1,14 @@
-import { productTitle, productDescription, productImageUrl } from '../api/catalog';
+import {
+  productTitle,
+  productDescription,
+  productImageUrl,
+} from '../api/catalog';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export default function ProductCard({ product, onSelect }) {
-  const title = productTitle(product);
-  const desc = productDescription(product);
+  const { language } = useLanguage();
+  const title = productTitle(product, language);
+  const desc = productDescription(product, language);
   const img = productImageUrl(product);
   const code = product.size ? String(product.size).trim() : '';
 
@@ -28,12 +34,16 @@ export default function ProductCard({ product, onSelect }) {
             loading="lazy"
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-sm text-stone-400">—</div>
+          <div className="flex h-full items-center justify-center text-sm text-stone-400">
+            —
+          </div>
         )}
       </div>
       <div className="flex flex-1 flex-col p-2 sm:p-4">
         {code ? (
-          <p className="mb-1 font-mono text-[11px] font-semibold text-brand sm:text-xs">{code}</p>
+          <p className="mb-1 font-mono text-[11px] font-semibold text-brand sm:text-xs">
+            {code}
+          </p>
         ) : null}
         <h3 className="line-clamp-2 text-xs font-semibold leading-snug text-stone-900 sm:text-sm">
           {title}

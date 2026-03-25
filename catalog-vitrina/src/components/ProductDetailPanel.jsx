@@ -1,10 +1,17 @@
 import { useEffect } from 'react';
 import { X } from 'lucide-react';
-import { productTitle, productDescription, productImageUrl } from '../api/catalog';
+import {
+  productTitle,
+  productDescription,
+  productImageUrl,
+} from '../api/catalog';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const PLACEHOLDER = 'https://via.placeholder.com/400x500?text=No+Image';
 
 export default function ProductDetailPanel({ product, onClose }) {
+  const { language, t } = useLanguage();
+
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === 'Escape') onClose();
@@ -15,17 +22,18 @@ export default function ProductDetailPanel({ product, onClose }) {
 
   if (!product) return null;
 
-  const title = productTitle(product);
-  const desc = productDescription(product);
+  const title = productTitle(product, language);
+  const desc = productDescription(product, language);
   const img = productImageUrl(product);
   const code = product.size ? String(product.size).trim() : '';
+  const closeLabel = t('close');
 
   return (
     <>
       <button
         type="button"
         className="fixed inset-0 z-40 animate-fade-in bg-black/30"
-        aria-label="Yopish"
+        aria-label={closeLabel}
         onClick={onClose}
       />
       <div className="fixed inset-y-0 right-0 z-50 flex w-full max-h-screen flex-col bg-white shadow-2xl animate-slide-in-right sm:max-w-lg md:max-w-xl lg:max-w-2xl">
@@ -37,7 +45,7 @@ export default function ProductDetailPanel({ product, onClose }) {
             type="button"
             onClick={onClose}
             className="rounded-full p-2 transition-colors hover:bg-stone-100"
-            aria-label="Yopish"
+            aria-label={closeLabel}
           >
             <X className="h-5 w-5 text-stone-600" />
           </button>

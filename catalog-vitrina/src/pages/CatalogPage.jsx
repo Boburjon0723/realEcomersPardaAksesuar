@@ -3,37 +3,40 @@ import { useOutletContext, useLocation } from 'react-router-dom';
 import { fetchActiveProducts } from '../api/catalog';
 import CategorySection from '../components/CategorySection';
 import ProductDetailPanel from '../components/ProductDetailPanel';
+import { useLanguage } from '../contexts/LanguageContext';
 
-function mapError(e) {
+function parseFetchError(e) {
   const msg = e?.message || '';
-  if (msg === 'ENV_MISSING') {
-    return 'Supabase sozlanmagan. catalog-vitrina/.env faylida VITE_SUPABASE_URL va VITE_SUPABASE_ANON_KEY kiriting. Keyin serverni qayta ishga tushiring.';
+  if (msg === 'ENV_MISSING') return { kind: 'env' };
+  if (
+    msg.includes('Failed to fetch') ||
+    msg === 'TypeError: Failed to fetch'
+  ) {
+    return { kind: 'network' };
   }
-  if (msg.includes('Failed to fetch') || msg === 'TypeError: Failed to fetch') {
-    return 'Internet yoki Supabase ga ulanish yo‘q. URL/kalitni tekshiring.';
-  }
-  return msg || 'Yuklashda xatolik';
+  return { kind: 'raw', message: msg || '' };
 }
 
 export default function CatalogPage() {
   const { categories = [] } = useOutletContext() || {};
   const location = useLocation();
+  const { t } = useLanguage();
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState('');
+  const [fetchErr, setFetchErr] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      setErr('');
+      setFetchErr(null);
       try {
         const prods = await fetchActiveProducts();
         if (!cancelled) setProducts(prods);
       } catch (e) {
-        if (!cancelled) setErr(mapError(e));
+        if (!cancelled) setFetchErr(parseFetchError(e));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -43,8 +46,15 @@ export default function CatalogPage() {
     };
   }, []);
 
+  const errMessage = useMemo(() => {
+    if (!fetchErr) return '';
+    if (fetchErr.kind === 'env') return t('errEnv');
+    if (fetchErr.kind === 'network') return t('errNetwork');
+    return fetchErr.message || t('errGeneric');
+  }, [fetchErr, t]);
+
   useEffect(() => {
-    if (loading || err) return;
+    if (loading || fetchErr) return;
     const hash = location.hash?.replace(/^#/, '');
     if (!hash || !hash.startsWith('cat-')) return;
     const el = document.getElementById(hash);
@@ -53,7 +63,7 @@ export default function CatalogPage() {
         el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     }
-  }, [loading, err, location.hash, products]);
+  }, [loading, fetchErr, location.hash, products]);
 
   const sections = useMemo(() => {
     const byCatId = new Map();
@@ -85,22 +95,20 @@ export default function CatalogPage() {
     >
       <main className="mx-auto max-w-7xl px-3 py-8 sm:px-4 sm:py-10 md:px-8">
         {loading && (
-          <p className="text-center text-stone-600">Yuklanmoqda…</p>
+          <p className="text-center text-stone-600">{t('loading')}</p>
         )}
 
-        {!loading && err && (
+        {!loading && fetchErr && (
           <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-800">
-            {err}
+            {errMessage}
           </div>
         )}
 
-        {!loading && !err && products.length === 0 && (
-          <p className="text-center text-stone-600">
-            Hozircha faol mahsulot yo‘q.
-          </p>
+        {!loading && !fetchErr && products.length === 0 && (
+          <p className="text-center text-stone-600">{t('emptyProducts')}</p>
         )}
 
-        {!loading && !err && products.length > 0 && (
+        {!loading && !fetchErr && products.length > 0 && (
           <div className="space-y-12 sm:space-y-16">
             {sections.ordered.map(({ category, products: list }) => (
               <CategorySection
@@ -113,11 +121,8 @@ export default function CatalogPage() {
 
             {sections.uncategorized.length > 0 && (
               <CategorySection
-                category={{
-                  id: null,
-                  name: 'Boshqa',
-                  name_uz: 'Boshqa',
-                }}
+                category={{ id: null }}
+                titleOverride={t('categoryOther')}
                 products={sections.uncategorized}
                 onSelectProduct={setSelectedProduct}
               />

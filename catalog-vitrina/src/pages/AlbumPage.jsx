@@ -1,33 +1,35 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Images, X } from 'lucide-react';
 import { fetchAlbumImages } from '../api/album';
 import { albumImageTitle } from '../api/lang';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const PLACEHOLDER = 'https://via.placeholder.com/400x500?text=No+Image';
 
+function parseFetchError(e) {
+  const msg = e?.message || '';
+  if (msg === 'ENV_MISSING') return { kind: 'env' };
+  return { kind: 'raw', message: msg || '' };
+}
+
 export default function AlbumPage() {
+  const { language, t } = useLanguage();
   const [albumImages, setAlbumImages] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState('');
+  const [fetchErr, setFetchErr] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      setErr('');
+      setFetchErr(null);
       try {
         const rows = await fetchAlbumImages();
         if (!cancelled) setAlbumImages(rows);
       } catch (e) {
-        if (!cancelled) {
-          if (e?.message === 'ENV_MISSING') {
-            setErr('Supabase .env sozlanmagan.');
-          } else {
-            setErr(e?.message || 'Yuklashda xatolik');
-          }
-        }
+        if (!cancelled) setFetchErr(parseFetchError(e));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -37,13 +39,13 @@ export default function AlbumPage() {
     };
   }, []);
 
-  const lang = (import.meta.env.VITE_CATALOG_LANG || 'uz').toLowerCase();
-  const emptyMsg =
-    lang === 'ru'
-      ? 'В альбоме пока нет изображений.'
-      : lang === 'en'
-        ? 'No images in the album yet.'
-        : "Albomda rasmlar hali yo'q.";
+  const errMessage = useMemo(() => {
+    if (!fetchErr) return '';
+    if (fetchErr.kind === 'env') return t('envMissingShort');
+    return fetchErr.message || t('errGeneric');
+  }, [fetchErr, t]);
+
+  const closeLabel = t('close');
 
   return (
     <div
@@ -54,14 +56,12 @@ export default function AlbumPage() {
       <div className="mx-auto max-w-6xl px-4 pt-6 sm:px-6 sm:pt-8 md:px-8 lg:px-12">
         <div className="mb-10">
           <span className="mb-2 inline-block text-xs font-bold uppercase tracking-[0.2em] text-brand">
-            Albom
+            {t('albumBadge')}
           </span>
           <h1 className="mb-2 text-3xl font-bold tracking-tight text-stone-900 md:text-4xl">
-            Modellar albomi
+            {t('albumTitle')}
           </h1>
-          <p className="max-w-2xl text-base text-stone-500">
-            Rasmlar galereyasi. Rasmni bosing — to‘liq ko‘rinish ochiladi.
-          </p>
+          <p className="max-w-2xl text-base text-stone-500">{t('albumDesc')}</p>
         </div>
 
         {loading && (
@@ -76,33 +76,33 @@ export default function AlbumPage() {
           </div>
         )}
 
-        {!loading && err && (
+        {!loading && fetchErr && (
           <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-800">
-            {err}
+            {errMessage}
           </div>
         )}
 
-        {!loading && !err && albumImages.length === 0 && (
+        {!loading && !fetchErr && albumImages.length === 0 && (
           <div className="rounded-2xl border border-stone-100 bg-white py-20 text-center shadow-sm">
             <Images className="mx-auto mb-4 h-16 w-16 text-stone-300" />
-            <p className="mb-6 text-lg text-stone-500">{emptyMsg}</p>
+            <p className="mb-6 text-lg text-stone-500">{t('albumEmpty')}</p>
             <Link
               to="/"
               className="inline-flex items-center gap-2 rounded-xl bg-brand px-6 py-3 font-bold text-white hover:bg-brand-light"
             >
-              Katalogga
+              {t('toCatalog')}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         )}
 
-        {!loading && !err && albumImages.length > 0 && (
+        {!loading && !fetchErr && albumImages.length > 0 && (
           <div
             className="columns-2 gap-3 sm:columns-3 sm:gap-4 lg:columns-4"
             style={{ columnGap: 'clamp(0.75rem, 2vw, 1rem)' }}
           >
             {albumImages.map((img) => {
-              const title = albumImageTitle(img);
+              const title = albumImageTitle(img, language);
               const format = img.format || 'portrait';
               const aspectClass =
                 format === 'square'
@@ -143,7 +143,7 @@ export default function AlbumPage() {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                       <div className="absolute bottom-0 left-0 right-0 translate-y-full p-3 transition-transform duration-300 group-hover:translate-y-0 sm:p-4">
                         <span className="inline-flex items-center gap-1.5 text-xs font-bold text-white sm:text-sm">
-                          Ko‘rish
+                          {t('viewImage')}
                           <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </span>
                       </div>
@@ -172,13 +172,13 @@ export default function AlbumPage() {
           <div className="fixed inset-y-0 right-0 z-50 flex w-full max-h-screen flex-col bg-white shadow-2xl animate-slide-in-right sm:max-w-lg md:max-w-xl lg:max-w-2xl">
             <div className="flex flex-shrink-0 items-center justify-between border-b border-stone-100 p-4">
               <h3 className="truncate pr-2 text-sm font-bold text-stone-900 sm:text-base">
-                {albumImageTitle(selectedImage)}
+                {albumImageTitle(selectedImage, language)}
               </h3>
               <button
                 type="button"
                 onClick={() => setSelectedImage(null)}
                 className="rounded-full p-2 transition-colors hover:bg-stone-100"
-                aria-label="Yopish"
+                aria-label={closeLabel}
               >
                 <X className="h-5 w-5 text-stone-600" />
               </button>
@@ -186,7 +186,9 @@ export default function AlbumPage() {
             <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto p-4">
               <img
                 src={selectedImage.image_url}
-                alt={albumImageTitle(selectedImage) || 'Album'}
+                alt={
+                  albumImageTitle(selectedImage, language) || 'Album'
+                }
                 className="max-h-full max-w-full object-contain"
                 onError={(e) => {
                   e.target.src = PLACEHOLDER;

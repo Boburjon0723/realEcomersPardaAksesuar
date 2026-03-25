@@ -1,5 +1,5 @@
 import { supabase, isSupabaseConfigured } from '../supabaseClient';
-import { getLang } from './lang.js';
+import { normalizeDataLang } from './lang.js';
 
 function ensureClient() {
   if (!isSupabaseConfigured || !supabase) {
@@ -7,31 +7,33 @@ function ensureClient() {
   }
 }
 
-export function categoryLabel(cat) {
+export function categoryLabel(cat, lang) {
   if (!cat) return '';
-  const lang = getLang();
+  const L = normalizeDataLang(lang);
   return (
-    cat[`name_${lang}`] ||
+    cat[`name_${L}`] ||
     cat.name_uz ||
     cat.name ||
     ''
   );
 }
 
-export function productTitle(p) {
-  const lang = getLang();
+export function productTitle(p, lang) {
+  if (!p) return '';
+  const L = normalizeDataLang(lang);
   return (
-    p[`name_${lang}`] ||
+    p[`name_${L}`] ||
     p.name_uz ||
     p.name ||
     ''
   );
 }
 
-export function productDescription(p) {
-  const lang = getLang();
+export function productDescription(p, lang) {
+  if (!p) return '';
+  const L = normalizeDataLang(lang);
   const text =
-    p[`description_${lang}`] ||
+    p[`description_${L}`] ||
     p.description_uz ||
     p.description ||
     '';

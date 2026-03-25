@@ -22,6 +22,11 @@ copy .env.example .env
 
 `VITE_SUPABASE_URL` va `VITE_SUPABASE_ANON_KEY` ni to‘ldiring.
 
+## Tilllar
+
+- **O‘zbek / Русский / English** — header o‘ngidagi tanlovda; tanlov `localStorage` da saqlanadi.
+- Mahsulot va kategoriya nomlari — Supabase dagi `name_uz`, `name_ru`, `name_en` maydonlaridan.
+
 ## Sahifalar
 
 - `/` — mahsulotlar kategoriyalar bo‘yicha (headerda kategoriya tugmalari)

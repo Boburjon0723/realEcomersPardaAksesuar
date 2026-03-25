@@ -1,12 +1,22 @@
 import { Link, useLocation } from 'react-router-dom';
 import { categoryLabel } from '../api/catalog';
+import { useLanguage } from '../contexts/LanguageContext';
 
-const SITE_NAME = import.meta.env.VITE_SITE_NAME || 'Katalog';
+const SITE_NAME = import.meta.env.VITE_SITE_NAME || '';
+
+const LANGS = [
+  { code: 'uz', labelKey: 'langUz' },
+  { code: 'ru', labelKey: 'langRu' },
+  { code: 'en', labelKey: 'langEn' },
+];
 
 export default function HeaderNav({ categories = [] }) {
   const { pathname } = useLocation();
+  const { language, setLanguage, t } = useLanguage();
   const isCatalog = pathname === '/' || pathname === '';
   const isAlbum = pathname === '/album';
+
+  const displayTitle = SITE_NAME.trim() || t('defaultSiteName');
 
   const navBtn =
     'rounded-full px-4 py-2 text-sm font-semibold transition whitespace-nowrap';
@@ -18,22 +28,38 @@ export default function HeaderNav({ categories = [] }) {
       <div className="mx-auto max-w-7xl px-4 py-3 md:px-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Link to="/" className="text-lg font-bold text-brand md:text-xl">
-            {SITE_NAME}
+            {displayTitle}
           </Link>
-          <nav className="flex items-center gap-2">
-            <Link
-              to="/"
-              className={`${navBtn} ${isCatalog ? active : inactive}`}
-            >
-              Katalog
-            </Link>
-            <Link
-              to="/album"
-              className={`${navBtn} ${isAlbum ? active : inactive}`}
-            >
-              Albom
-            </Link>
-          </nav>
+          <div className="flex flex-wrap items-center gap-2">
+            <nav className="flex items-center gap-2">
+              <Link
+                to="/"
+                className={`${navBtn} ${isCatalog ? active : inactive}`}
+              >
+                {t('navCatalog')}
+              </Link>
+              <Link
+                to="/album"
+                className={`${navBtn} ${isAlbum ? active : inactive}`}
+              >
+                {t('navAlbum')}
+              </Link>
+            </nav>
+            <div className="flex items-center rounded-full border border-stone-200 bg-white px-1 py-0.5 text-xs font-semibold text-stone-600">
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="max-w-[7.5rem] cursor-pointer rounded-full bg-transparent py-1.5 pl-2 pr-2 outline-none hover:text-brand sm:max-w-none sm:pr-3"
+                aria-label="Language"
+              >
+                {LANGS.map(({ code, labelKey }) => (
+                  <option key={code} value={code}>
+                    {t(labelKey)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
 
         {categories.length > 0 && (
@@ -42,7 +68,7 @@ export default function HeaderNav({ categories = [] }) {
               to="/"
               className="shrink-0 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-xs font-medium text-stone-600 hover:border-brand/40 hover:text-brand"
             >
-              Barchasi
+              {t('filterAll')}
             </Link>
             {categories.map((cat) => (
               <Link
@@ -50,7 +76,7 @@ export default function HeaderNav({ categories = [] }) {
                 to={`/#cat-${cat.id}`}
                 className="shrink-0 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-xs font-medium text-stone-600 hover:border-brand/40 hover:text-brand"
               >
-                {categoryLabel(cat) || cat.name}
+                {categoryLabel(cat, language) || cat.name}
               </Link>
             ))}
           </div>

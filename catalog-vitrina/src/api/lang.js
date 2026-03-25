@@ -1,14 +1,13 @@
-/** VITE_CATALOG_LANG: uz | ru | en */
-export function getLang() {
-  const key = (import.meta.env.VITE_CATALOG_LANG || 'uz').toLowerCase();
+export function normalizeDataLang(lang) {
+  const key = String(lang || 'uz').toLowerCase();
   if (key === 'ru' || key === 'en') return key;
   return 'uz';
 }
 
-export function albumImageTitle(img) {
-  const lang = getLang();
+export function albumImageTitle(img, lang) {
+  const L = normalizeDataLang(lang);
   return (
-    img[`title_${lang}`] ||
+    img[`title_${L}`] ||
     img.title_uz ||
     img.title_ru ||
     img.title_en ||
