@@ -1,5 +1,18 @@
 import { supabase } from '../../supabaseClient';
 
+/** Prod uchun Vercel/https domeni; bo‘lmasa joriy origin (Supabase Redirect URL bilan mos qo‘ying) */
+export function getPasswordResetRedirectUrl() {
+    const raw = typeof process !== 'undefined' ? process.env.REACT_APP_SITE_URL : undefined;
+    const trimmed = raw != null ? String(raw).trim() : '';
+    if (trimmed && /^https?:\/\//i.test(trimmed)) {
+        return `${trimmed.replace(/\/$/, '')}/`;
+    }
+    if (typeof window !== 'undefined' && window.location?.origin) {
+        return `${window.location.origin}/`;
+    }
+    return undefined;
+}
+
 // Register new user
 export const registerUser = async (password, displayName, phone, country, email) => {
     try {
@@ -85,9 +98,7 @@ export const logoutUser = async () => {
  */
 export const resetPassword = async (email, options = {}) => {
     try {
-        const redirectTo =
-            options.redirectTo ||
-            (typeof window !== 'undefined' ? `${window.location.origin}/` : undefined);
+        const redirectTo = options.redirectTo || getPasswordResetRedirectUrl();
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
             redirectTo,
         });

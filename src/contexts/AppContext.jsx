@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { getSettings } from '../services/supabase/settings';
-import { supabase } from '../supabaseClient';
+import { supabase, isPasswordRecoveryPending, markPasswordRecoveryPending } from '../supabaseClient';
 
 export const AppContext = createContext();
 
@@ -50,6 +50,19 @@ export const AppProvider = ({ children }) => {
                 };
                 setCurrentUser(user);
                 localStorage.setItem('user', JSON.stringify(user));
+                // Zaxira: ba’zi brauzer/holatlarda PASSWORD_RECOVERY hodisasi kechiksa ham hash da type=recovery bo‘ladi
+                if (typeof window !== 'undefined') {
+                    try {
+                        const hashParams = new URLSearchParams(
+                            (window.location.hash || '').replace(/^#/, '')
+                        );
+                        if (hashParams.get('type') === 'recovery') {
+                            setShowPasswordRecovery(true);
+                        }
+                    } catch {
+                        /* ignore */
+                    }
+                }
             } else {
                 // If no session but we have something in localStorage, keep it for UI 
                 // but real auth actions might still fail. 
@@ -64,6 +77,10 @@ export const AppProvider = ({ children }) => {
         // Listen for Supabase auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
             if (event === 'PASSWORD_RECOVERY' && session?.user) {
+                markPasswordRecoveryPending();
+                setShowPasswordRecovery(true);
+            }
+            if (event === 'SIGNED_IN' && session?.user && isPasswordRecoveryPending()) {
                 setShowPasswordRecovery(true);
             }
             if (session?.user) {

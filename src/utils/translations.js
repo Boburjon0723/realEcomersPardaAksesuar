@@ -25,10 +25,16 @@ export const translations = {
         resetPasswordSent:
             "Agar bu email bilan hisob bo'lsa, pochtangizga tiklash havolasi yuborildi. Spam papkasini ham tekshiring.",
         resetPasswordSubmit: "Tiklash havolasini yuborish",
+        recoveryNewPasswordTitle: "Yangi parol o'rnatish",
+        recoveryNewPasswordHint:
+            "Emaildagi havola orqali kirdingiz. Yangi parolni kiriting va saqlang.",
         backToLogin: "Kirishga qaytish",
         sending: "Yuborilmoqda...",
 
         // --- Auth ---
+        changePassword: "Parolni o'zgartirish",
+        newPassword: "Yangi parol",
+        passwordMinLength: "Parol kamida 6 belgidan iborat bo'lishi kerak",
         name: "Ism",
         email: "Email",
         password: "Parol",
@@ -462,10 +468,16 @@ export const translations = {
         resetPasswordSent:
             "Если аккаунт существует, на почту отправлена ссылка. Проверьте папку «Спам».",
         resetPasswordSubmit: "Отправить ссылку",
+        recoveryNewPasswordTitle: "Новый пароль",
+        recoveryNewPasswordHint:
+            "Вы перешли по ссылке из письма. Введите новый пароль и сохраните.",
         backToLogin: "Назад ко входу",
         sending: "Отправка...",
 
         // --- Auth ---
+        changePassword: "Сменить пароль",
+        newPassword: "Новый пароль",
+        passwordMinLength: "Пароль должен быть не короче 6 символов",
         name: "Имя",
         email: "Email",
         password: "Пароль",
@@ -900,10 +912,16 @@ export const translations = {
         resetPasswordSent:
             "If an account exists for this email, we sent a reset link. Check your spam folder.",
         resetPasswordSubmit: "Send reset link",
+        recoveryNewPasswordTitle: "Set a new password",
+        recoveryNewPasswordHint:
+            "You opened the link from your email. Enter a new password and save.",
         backToLogin: "Back to login",
         sending: "Sending...",
 
         // --- Auth ---
+        changePassword: "Change password",
+        newPassword: "New password",
+        passwordMinLength: "Password must be at least 6 characters",
         name: "Name",
         email: "Email",
         password: "Password",

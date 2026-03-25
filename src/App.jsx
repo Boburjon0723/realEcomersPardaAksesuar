@@ -62,6 +62,7 @@ function MainLayout() {
       {showAuth && <AuthModal />}
       {showPasswordRecovery && (
         <ChangePasswordModal
+          variant="recovery"
           onClose={() => setShowPasswordRecovery(false)}
           onSuccess={() => setShowPasswordRecovery(false)}
         />
