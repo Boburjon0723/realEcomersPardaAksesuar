@@ -36,10 +36,10 @@ const ChangePasswordModal = ({ variant = 'profile', onClose, onSuccess }) => {
                 onSuccess?.();
                 onClose();
             } else {
-                setError(res.error || t('common.saveError'));
+                setError(res.error || t('saveError'));
             }
         } catch (err) {
-            setError(err?.message || t('common.saveError'));
+            setError(err?.message || t('saveError'));
         } finally {
             setLoading(false);
         }
@@ -76,7 +76,7 @@ const ChangePasswordModal = ({ variant = 'profile', onClose, onSuccess }) => {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-                            placeholder="••••••••"
+                            placeholder={t('passwordPlaceholder')}
                             minLength={6}
                         />
                     </div>
@@ -87,7 +87,7 @@ const ChangePasswordModal = ({ variant = 'profile', onClose, onSuccess }) => {
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-                            placeholder="••••••••"
+                            placeholder={t('confirmPasswordPlaceholder')}
                         />
                     </div>
                     <div className="flex gap-3 pt-2">
@@ -99,10 +99,10 @@ const ChangePasswordModal = ({ variant = 'profile', onClose, onSuccess }) => {
                             }}
                             className="flex-1 py-3 border border-gray-200 rounded-xl font-bold text-gray-700 hover:bg-gray-50"
                         >
-                            {t('cancel') || 'Bekor'}
+                            {t('cancel')}
                         </button>
                         <button type="submit" disabled={loading} className="flex-1 py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 disabled:opacity-70">
-                            {loading ? '...' : (t('common.save') || "Saqlash")}
+                            {loading ? t('saving') : t('save')}
                         </button>
                     </div>
                 </form>

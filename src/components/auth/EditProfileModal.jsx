@@ -20,10 +20,10 @@ const EditProfileModal = ({ user, onClose, onSuccess }) => {
                 onSuccess?.(res.user);
                 onClose();
             } else {
-                setError(res.error || t('common.saveError'));
+                setError(res.error || t('saveError'));
             }
         } catch (err) {
-            setError(err?.message || t('common.saveError'));
+            setError(err?.message || t('saveError'));
         } finally {
             setLoading(false);
         }
@@ -66,10 +66,10 @@ const EditProfileModal = ({ user, onClose, onSuccess }) => {
                     <p className="text-xs text-gray-500">Email o'zgartirish uchun support bilan bog'laning.</p>
                     <div className="flex gap-3 pt-2">
                         <button type="button" onClick={onClose} className="flex-1 py-3 border border-gray-200 rounded-xl font-bold text-gray-700 hover:bg-gray-50">
-                            {t('cancel') || 'Bekor'}
+                            {t('cancel')}
                         </button>
                         <button type="submit" disabled={loading} className="flex-1 py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 disabled:opacity-70">
-                            {loading ? '...' : (t('common.save') || "Saqlash")}
+                            {loading ? t('saving') : t('save')}
                         </button>
                     </div>
                 </form>

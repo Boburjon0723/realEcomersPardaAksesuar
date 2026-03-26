@@ -18,6 +18,10 @@ export const translations = {
         allCategories: "Barcha kategoriyalar",
         noAccount: "Akkauntingiz yo'qmi? Yaratish",
         haveAccount: "Akkauntingiz bormi? Kirish",
+        authSwitchPromptLogin: "Akkauntingiz yo'qmi?",
+        authSwitchPromptRegister: "Akkauntingiz bormi?",
+        loginSubmitting: "Kirish...",
+        registerSubmitting: "Ro'yxatdan o'tilmoqda...",
         forgotPassword: "Parolni unutdingizmi?",
         resetPasswordTitle: "Parolni tiklash",
         resetPasswordHint:
@@ -89,10 +93,16 @@ export const translations = {
         bangladesh: "Bangladesh",
         philippines: "Filippin",
         enterName: "Ismingizni kiriting",
+        passwordPlaceholder: "Parolni kiriting (kamida 6 belgi)",
+        confirmPasswordPlaceholder: "Parolni qayta kiriting",
         passwordMismatch: "Parollar mos kelmadi",
         loginError: "Kirishda xatolik yuz berdi",
         verifyError: "Hisobingiz tasdiqlanmagan. Iltimos, administratorga bog'laning.",
         invalidCredentials: "Telefon raqam yoki parol noto'g'ri",
+        cancel: "Bekor qilish",
+        save: "Saqlash",
+        saving: "Saqlanmoqda...",
+        saveError: "Saqlashda xatolik",
 
         // --- Home Page ---
         premiumQuality: "Premium Sifat",
@@ -190,6 +200,7 @@ export const translations = {
         shareSuccess: "Muvaffaqiyatli ulashildi!",
         linkCopied: "Havola nusxalandi!",
         quickViewBtn: "Tez ko'rish",
+        productCardImageDotsHint: "Rasm karuseli — rang namunasi emas",
         addToFavorites: "Sevimlilarga qo'shish",
         removeFromFavorites: "Sevimlilardan olib tashlash",
 
@@ -461,6 +472,10 @@ export const translations = {
         allCategories: "Все категории",
         noAccount: "Нет аккаунта? Создать",
         haveAccount: "Есть аккаунт? Войти",
+        authSwitchPromptLogin: "Нет аккаунта?",
+        authSwitchPromptRegister: "Уже есть аккаунт?",
+        loginSubmitting: "Вход...",
+        registerSubmitting: "Регистрация...",
         forgotPassword: "Забыли пароль?",
         resetPasswordTitle: "Восстановление пароля",
         resetPasswordHint:
@@ -532,10 +547,16 @@ export const translations = {
         bangladesh: "Бангладеш",
         philippines: "Филиппины",
         enterName: "Введите ваше имя",
+        passwordPlaceholder: "Введите пароль (мин. 6 символов)",
+        confirmPasswordPlaceholder: "Повторите пароль",
         passwordMismatch: "Пароли не совпадают",
         loginError: "Ошибка при входе",
         verifyError: "Ваш аккаунт не подтвержден. Пожалуйста, свяжитесь с администратором.",
         invalidCredentials: "Неверный номер телефона или пароль",
+        cancel: "Отмена",
+        save: "Сохранить",
+        saving: "Сохранение...",
+        saveError: "Ошибка сохранения",
 
         // --- Home Page ---
         premiumQuality: "Премиум Качество",
@@ -635,6 +656,7 @@ export const translations = {
         shareSuccess: "Успешно отправлено!",
         linkCopied: "Ссылка скопирована!",
         quickViewBtn: "Быстрый просмотр",
+        productCardImageDotsHint: "Карусель фото — не образцы цвета",
         addToFavorites: "В избранное",
         removeFromFavorites: "Убрать из избранного",
 
@@ -905,6 +927,10 @@ export const translations = {
         allCategories: "All categories",
         noAccount: "Don't have an account? Sign up",
         haveAccount: "Have an account? Login",
+        authSwitchPromptLogin: "Don't have an account?",
+        authSwitchPromptRegister: "Already have an account?",
+        loginSubmitting: "Signing in...",
+        registerSubmitting: "Registering...",
         forgotPassword: "Forgot password?",
         resetPasswordTitle: "Reset password",
         resetPasswordHint:
@@ -976,10 +1002,16 @@ export const translations = {
         bangladesh: "Bangladesh",
         philippines: "Philippines",
         enterName: "Enter your name",
+        passwordPlaceholder: "Enter password (min. 6 characters)",
+        confirmPasswordPlaceholder: "Re-enter password",
         passwordMismatch: "Passwords do not match",
         loginError: "Login error",
         verifyError: "Your account is not verified. Please contact administrator.",
         invalidCredentials: "Invalid phone number or password",
+        cancel: "Cancel",
+        save: "Save",
+        saving: "Saving...",
+        saveError: "Could not save",
 
         // --- Home Page ---
         premiumQuality: "Premium Quality",
@@ -1077,6 +1109,7 @@ export const translations = {
         shareSuccess: "Shared successfully!",
         linkCopied: "Link copied!",
         quickViewBtn: "Quick view",
+        productCardImageDotsHint: "Photo carousel — not color swatches",
         addToFavorites: "Add to favorites",
         removeFromFavorites: "Remove from favorites",
 

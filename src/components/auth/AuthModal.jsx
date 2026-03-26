@@ -371,7 +371,7 @@ const AuthModal = () => {
                                 value={formData.password}
                                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                 className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none font-medium"
-                                placeholder="••••••••"
+                                placeholder={t('passwordPlaceholder')}
                             />
                         </div>
                     </div>
@@ -390,7 +390,7 @@ const AuthModal = () => {
                                     value={formData.confirmPassword}
                                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                                     className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none font-medium"
-                                    placeholder="••••••••"
+                                    placeholder={t('confirmPasswordPlaceholder')}
                                 />
                             </div>
                         </div>
@@ -401,7 +401,7 @@ const AuthModal = () => {
                         disabled={loading}
                         className={`w-full bg-primary hover:bg-primary-dark text-white py-4 rounded-lg transition-all shadow-lg hover:shadow-primary/30 font-bold text-lg flex items-center justify-center gap-2 group ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
                     >
-                        {loading ? (isLogin ? 'Kirish...' : 'Ro\'yxatdan o\'tish...') : (isLogin ? t('login') : t('register'))}
+                        {loading ? (isLogin ? t('loginSubmitting') : t('registerSubmitting')) : (isLogin ? t('login') : t('register'))}
                         {!loading && <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
                     </button>
                 </form>
@@ -409,7 +409,9 @@ const AuthModal = () => {
 
                 {!(isLogin && showForgotPassword) && (
                 <div className="mt-8 text-center border-t border-gray-100 pt-6">
-                    <p className="text-gray-500 mb-2">{isLogin ? "Don't have an account?" : "Already have an account?"}</p>
+                    <p className="text-gray-500 mb-2">
+                        {isLogin ? t('authSwitchPromptLogin') : t('authSwitchPromptRegister')}
+                    </p>
                     <button
                         type="button"
                         onClick={() => {
@@ -420,7 +422,7 @@ const AuthModal = () => {
                         }}
                         className="text-primary hover:text-primary-dark font-bold text-lg hover:underline transition-all"
                     >
-                        {isLogin ? t('noAccount') || 'Create Account' : t('haveAccount') || 'Sign In'}
+                        {isLogin ? t('register') : t('login')}
                     </button>
                 </div>
                 )}

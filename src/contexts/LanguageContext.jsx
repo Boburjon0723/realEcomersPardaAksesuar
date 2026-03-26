@@ -10,7 +10,12 @@ const buildColorMap = (colors) => {
     if (!colors) return map;
     const normalize = (s) => (s || '').toLowerCase().replace(/'/g, '').replace(/\s+/g, '');
     colors.forEach((c) => {
-        const entry = { name_uz: c.name_uz || c.name, name_ru: c.name_ru || c.name, name_en: c.name_en || c.name };
+        const entry = {
+            name_uz: c.name_uz || c.name,
+            name_ru: c.name_ru || c.name,
+            name_en: c.name_en || c.name,
+            hex_code: c.hex_code || null
+        };
         [c.name, c.name_uz, c.name_ru, c.name_en].filter(Boolean).forEach((n) => {
             const k = normalize(n);
             if (k) map[k] = entry;
@@ -59,8 +64,22 @@ export const LanguageProvider = ({ children }) => {
         return translated === key ? color : translated;
     };
 
+    /** Chop etish / kartochka: rang namunasi uchun CSS `background` (hex yoki #...) */
+    const swatchColor = (color) => {
+        if (color == null || color === '') return '#d1d5db';
+        const s = String(color).trim();
+        if (/^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(s)) return s;
+        const key = s.toLowerCase().replace(/'/g, '').replace(/\s+/g, '');
+        const dbColor = colorMap[key];
+        if (dbColor?.hex_code) {
+            const h = String(dbColor.hex_code).trim();
+            return h.startsWith('#') ? h : `#${h}`;
+        }
+        return '#d1d5db';
+    };
+
     return (
-        <LanguageContext.Provider value={{ language, changeLanguage, toggleLanguage, t, translateColor, refreshColors: () => getAllColors().then((res) => res.success && res.colors && setColorMap(buildColorMap(res.colors))) }}>
+        <LanguageContext.Provider value={{ language, changeLanguage, toggleLanguage, t, translateColor, swatchColor, refreshColors: () => getAllColors().then((res) => res.success && res.colors && setColorMap(buildColorMap(res.colors))) }}>
             {children}
         </LanguageContext.Provider>
     );

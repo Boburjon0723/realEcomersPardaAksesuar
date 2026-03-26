@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Heart, Star, ShoppingBag, Eye, Box } from 'lucide-react';
 import { useApp } from '../../hooks/useApp';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -6,7 +6,7 @@ import { formatPriceUSD } from '../../utils/price';
 
 const ProductCard = ({ product, onQuickView }) => {
     const { addToCart, setCurrentPage, toggleFavorite, isFavorite } = useApp();
-    const { language, t, translateColor } = useLanguage();
+    const { language, t, translateColor, swatchColor } = useLanguage();
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [isHovered, setIsHovered] = useState(false);
 
@@ -30,6 +30,17 @@ const ProductCard = ({ product, onQuickView }) => {
     const categoryName = product.categories?.[`name_${language}`] || product.categories?.name || product.category || '';
     const productName = product[`name_${language}`] || product.name;
     const displayPrice = formatPriceUSD(product.price);
+
+    /** Bir kartada ko‘rinadigan rang variantlari (swatch) — takrorlarsiz */
+    const variantColors = useMemo(() => {
+        const raw =
+            Array.isArray(product.colors) && product.colors.length > 0
+                ? product.colors
+                : product.color
+                  ? [product.color]
+                  : [];
+        return [...new Set(raw.map((c) => (c == null ? '' : String(c).trim())).filter(Boolean))];
+    }, [product.colors, product.color]);
 
     const handleProductClick = () => {
         setCurrentPage('product', { product });
@@ -136,9 +147,13 @@ const ProductCard = ({ product, onQuickView }) => {
                     </button>
                 </div>
 
-                {/* Image dots (agar bir nechta rasm bo'lsa) */}
+                {/* Rasmlar karuseli indikatori (rang emas — faqat bir nechta rasm bo‘lsa) */}
                 {hasMultipleImages && (
-                    <div className="absolute bottom-16 left-0 right-0 flex justify-center gap-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 z-20 pointer-events-none">
+                    <div
+                        className="absolute bottom-16 left-0 right-0 flex justify-center gap-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 z-20 pointer-events-none"
+                        aria-hidden
+                        title={t('productCardImageDotsHint')}
+                    >
                         {images.map((_, i) => (
                             <div
                                 key={i}
@@ -179,15 +194,25 @@ const ProductCard = ({ product, onQuickView }) => {
                     {productName}
                 </h3>
 
-                {/* Color chip */}
-                {(product.color || (product.colors && product.colors[0])) && (
-                    <div className="flex items-center gap-1.5 mb-2">
-                        <span
-                            className="w-4 h-4 rounded-full border border-gray-200 shadow-inner"
-                            style={{ backgroundColor: (product.color || product.colors[0])?.toLowerCase?.() || '#ccc' }}
-                            title={translateColor(product.color || product.colors[0])}
-                        />
-                        <span className="text-xs text-gray-500">{translateColor(product.color || product.colors[0])}</span>
+                {/* Rang variantlari — dumaloq swatch (product_colors.hex_code bo‘yicha) */}
+                {variantColors.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                        <div className="flex items-center gap-1" role="list" aria-label={t('color') || 'Colors'}>
+                            {variantColors.slice(0, 7).map((c) => (
+                                <span
+                                    key={c}
+                                    role="listitem"
+                                    className="w-4 h-4 shrink-0 rounded-full border border-gray-300/90 shadow-inner ring-1 ring-black/5"
+                                    style={{ backgroundColor: swatchColor(c) }}
+                                    title={translateColor(c)}
+                                />
+                            ))}
+                        </div>
+                        {variantColors.length > 7 ? (
+                            <span className="text-[11px] font-semibold text-gray-500">+{variantColors.length - 7}</span>
+                        ) : variantColors.length === 1 ? (
+                            <span className="text-xs text-gray-500 truncate">{translateColor(variantColors[0])}</span>
+                        ) : null}
                     </div>
                 )}
 
