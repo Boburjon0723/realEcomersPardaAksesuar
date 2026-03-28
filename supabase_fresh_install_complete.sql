@@ -147,10 +147,12 @@ CREATE TABLE IF NOT EXISTS order_items (
     color TEXT,
     size TEXT,
     image_url TEXT,
+    line_index INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items(order_id);
+CREATE INDEX IF NOT EXISTS idx_order_items_order_line ON order_items(order_id, line_index);
 CREATE INDEX IF NOT EXISTS idx_order_items_product ON order_items(product_id);
 
 ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
@@ -232,6 +234,7 @@ CREATE TABLE IF NOT EXISTS settings (
     about_mission_text1 TEXT,
     about_mission_text2 TEXT,
     about_mission_image TEXT,
+    about_mission_images TEXT,
     value1_title TEXT,
     value1_desc TEXT,
     value2_title TEXT,

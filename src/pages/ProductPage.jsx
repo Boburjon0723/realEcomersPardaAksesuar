@@ -503,24 +503,71 @@ const ProductPage = () => {
                                                 <span className="font-bold text-sm">{translateColor(color)}</span>
                                                 <div className="flex items-center border border-gray-200 rounded-lg h-10 overflow-hidden shadow-sm">
                                                     <button
-                                                        onClick={() => setBulkQuantities(prev => ({ ...prev, [color]: Math.max(0, (prev[color] || 0) - 1) }))}
+                                                        onClick={() =>
+                                                            setBulkQuantities((prev) => {
+                                                                const cur =
+                                                                    prev[color] === '' || prev[color] === undefined
+                                                                        ? 0
+                                                                        : Number(prev[color]) || 0;
+                                                                return { ...prev, [color]: Math.max(0, cur - 1) };
+                                                            })
+                                                        }
                                                         className="w-10 h-full flex items-center justify-center hover:bg-gray-50 text-gray-600 transition border-r border-gray-100"
                                                     >
                                                         <Minus className="w-3 h-3" />
                                                     </button>
                                                     <input
-                                                        type="number"
-                                                        min="0"
-                                                        value={bulkQuantities[color] || 0}
+                                                        type="text"
+                                                        inputMode="numeric"
+                                                        autoComplete="off"
+                                                        aria-label={translateColor(color)}
+                                                        value={
+                                                            bulkQuantities[color] === ''
+                                                                ? ''
+                                                                : String(bulkQuantities[color] ?? 0)
+                                                        }
                                                         onChange={(e) => {
-                                                            const val = parseInt(e.target.value);
-                                                            if (!isNaN(val)) setBulkQuantities(prev => ({ ...prev, [color]: val }));
-                                                            else if (e.target.value === '') setBulkQuantities(prev => ({ ...prev, [color]: '' }));
+                                                            const v = e.target.value;
+                                                            if (v === '') {
+                                                                setBulkQuantities((prev) => ({ ...prev, [color]: '' }));
+                                                                return;
+                                                            }
+                                                            const digits = v.replace(/\D/g, '');
+                                                            if (digits === '') {
+                                                                setBulkQuantities((prev) => ({ ...prev, [color]: '' }));
+                                                                return;
+                                                            }
+                                                            const n = parseInt(digits, 10);
+                                                            if (Number.isNaN(n)) return;
+                                                            setBulkQuantities((prev) => ({ ...prev, [color]: n }));
                                                         }}
-                                                        className="w-10 text-center font-bold text-sm outline-none bg-transparent"
+                                                        onFocus={(e) => {
+                                                            const q = bulkQuantities[color];
+                                                            if (q === '' || q === undefined || q === 0) {
+                                                                e.target.select();
+                                                            }
+                                                        }}
+                                                        onBlur={() => {
+                                                            setBulkQuantities((prev) => {
+                                                                const x = prev[color];
+                                                                if (x === '' || x === undefined) {
+                                                                    return { ...prev, [color]: 0 };
+                                                                }
+                                                                return prev;
+                                                            });
+                                                        }}
+                                                        className="min-w-[2.25rem] w-12 text-center font-bold text-sm outline-none bg-transparent"
                                                     />
                                                     <button
-                                                        onClick={() => setBulkQuantities(prev => ({ ...prev, [color]: (parseInt(prev[color]) || 0) + 1 }))}
+                                                        onClick={() =>
+                                                            setBulkQuantities((prev) => {
+                                                                const cur =
+                                                                    prev[color] === '' || prev[color] === undefined
+                                                                        ? 0
+                                                                        : Number(prev[color]) || 0;
+                                                                return { ...prev, [color]: cur + 1 };
+                                                            })
+                                                        }
                                                         className="w-10 h-full flex items-center justify-center hover:bg-gray-50 text-gray-600 transition border-l border-gray-100"
                                                     >
                                                         <Plus className="w-3 h-3" />

@@ -9,6 +9,10 @@
 -- allaqachon mavjud bo'lsa, 7-bo'limdagi INSERT ni o'tkazib yuboring.
 -- ============================================================
 
+-- order_items: chop etish tartibi (CRM buyurtmalar)
+ALTER TABLE order_items ADD COLUMN IF NOT EXISTS line_index INTEGER NOT NULL DEFAULT 0;
+CREATE INDEX IF NOT EXISTS idx_order_items_order_line ON order_items(order_id, line_index);
+
 -- ==================== 1. SETTINGS JADVALI ====================
 -- (Agar settings mavjud bo'lsa, CREATE TABLE o'tkazilmaydi)
 CREATE TABLE IF NOT EXISTS settings (
@@ -59,6 +63,7 @@ ALTER TABLE settings ADD COLUMN IF NOT EXISTS about_mission_title TEXT;
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS about_mission_text1 TEXT;
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS about_mission_text2 TEXT;
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS about_mission_image TEXT;
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS about_mission_images TEXT;
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS value1_title TEXT;
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS value1_desc TEXT;
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS value2_title TEXT;

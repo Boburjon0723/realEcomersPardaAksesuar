@@ -5,10 +5,15 @@ import { useApp } from '../hooks/useApp';
 import PageMeta from '../components/common/PageMeta';
 import aboutLuxuryLivingImage from '../assets/images/hero-luxury-living-room.png';
 import aboutCurtainImage from '../assets/images/about-curtain-accessories.png';
+import MissionImageCarousel from '../components/about/MissionImageCarousel';
+import { getMissionImageUrls } from '../utils/aboutMissionImages';
 
 const AboutPage = () => {
     const { t } = useLanguage();
     const { settings } = useApp();
+
+    const missionUrls = getMissionImageUrls(settings);
+    const missionDisplayUrls = missionUrls.length > 0 ? missionUrls : [aboutCurtainImage];
 
     const stats = [
         { icon: Users, label: settings?.stat1_label || t('happyCustomers') || 'Happy Customers', value: settings?.stat1_value || '10,000+' },
@@ -66,13 +71,10 @@ const AboutPage = () => {
                             {t('aboutCompanyMaterials')}
                         </p>
                     </div>
-                    <div className="relative rounded-2xl overflow-hidden shadow-xl aspect-video">
-                        <img
-                            src={settings?.about_mission_image || aboutCurtainImage}
-                            alt="Nuur Home Collection - Parda aksessuarlari"
-                            className="w-full h-full object-cover"
-                        />
-                    </div>
+                    <MissionImageCarousel
+                        urls={missionDisplayUrls}
+                        alt="Nuur Home Collection - Parda aksessuarlari"
+                    />
                 </div>
 
                 {/* Tajriba va eksport */}
