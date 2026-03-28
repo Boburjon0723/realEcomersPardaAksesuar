@@ -11,9 +11,11 @@ export default function MissionImageCarousel({ urls, alt, className = '' }) {
     const [index, setIndex] = useState(0)
     const [paused, setPaused] = useState(false)
 
+    const urlsDependencyKey = Array.isArray(urls) ? urls.join('|') : ''
+
     useEffect(() => {
         setIndex(0)
-    }, [urls?.join?.('|')])
+    }, [urlsDependencyKey])
 
     const go = useCallback(
         (dir) => {
