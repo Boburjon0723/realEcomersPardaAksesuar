@@ -5,6 +5,7 @@ import PageMeta from '../components/common/PageMeta';
 import ProductGrid from '../components/product/ProductGrid';
 import RecentlyViewedProducts from '../components/product/RecentlyViewedProducts';
 import { getAllProducts } from '../services/supabase/products';
+import { compareProductsCatalog } from '../utils/productSort';
 import { getActiveBanners } from '../services/supabase/banners';
 import { getAllCategories } from '../services/supabase/categories';
 import { getSiteBenefits } from '../services/supabase/siteBenefits';
@@ -117,11 +118,12 @@ const HomePage = () => {
         window.scrollTo(0, 0);
     };
 
-    // Best Sellers: har bir kategoriyadan max 4 ta mahsulot (4 ustunli grid uchun)
+    // Best Sellers: har bir kategoriyadan max 4 ta mahsulot (katalog tartibida)
     const bestSellersByCategory = useMemo(() => {
         const PER_CATEGORY = 4;
+        const ordered = [...products].sort((a, b) => compareProductsCatalog(a, b, language));
         const grouped = {};
-        products.forEach((p) => {
+        ordered.forEach((p) => {
             const key = p.category_id || (typeof p.category === 'object' ? (p.category?.name || p.category?.name_uz) : p.category) || 'uncategorized';
             if (!grouped[key]) grouped[key] = [];
             if (grouped[key].length < PER_CATEGORY) grouped[key].push(p);

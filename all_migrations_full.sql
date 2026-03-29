@@ -13,6 +13,12 @@
 ALTER TABLE order_items ADD COLUMN IF NOT EXISTS line_index INTEGER NOT NULL DEFAULT 0;
 CREATE INDEX IF NOT EXISTS idx_order_items_order_line ON order_items(order_id, line_index);
 
+-- products: vitrinada kategoriya ichidagi tartib (kichik raqam = yuqoriroq)
+ALTER TABLE products ADD COLUMN IF NOT EXISTS sort_order INTEGER NOT NULL DEFAULT 0;
+
+-- products: vitrinada kategoriya ichidagi tartib (kichik raqam = yuqorida)
+ALTER TABLE products ADD COLUMN IF NOT EXISTS sort_order INTEGER NOT NULL DEFAULT 0;
+
 -- ==================== 1. SETTINGS JADVALI ====================
 -- (Agar settings mavjud bo'lsa, CREATE TABLE o'tkazilmaydi)
 CREATE TABLE IF NOT EXISTS settings (

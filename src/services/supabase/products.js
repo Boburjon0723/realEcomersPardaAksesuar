@@ -36,6 +36,7 @@ const mapProductFromDB = (product) => {
         reviews: product.reviews || 0,
         features: product.features || {},
         model_3d_url: product.model_3d_url || null,
+        sort_order: Number(product.sort_order) || 0,
     };
 };
 
@@ -48,6 +49,7 @@ export const getAllProducts = async (onlyActive = false) => {
                 *,
                 categories(name)
             `)
+            .order('sort_order', { ascending: true })
             .order('created_at', { ascending: false });
 
         if (onlyActive) {

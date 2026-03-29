@@ -6,6 +6,7 @@ import ProductGrid from '../components/product/ProductGrid';
 import Sidebar from '../components/layout/Sidebar'; // Reusing existing Sidebar logic but wrapping it
 import { getAllProducts } from '../services/supabase/products';
 import { getAllCategories } from '../services/supabase/categories';
+import { sortProductsForDisplay } from '../utils/productSort';
 import Breadcrumb from '../components/common/Breadcrumb';
 import { Filter, X, Search } from 'lucide-react';
 
@@ -59,37 +60,45 @@ const ShopPage = () => {
     });
 
     const sortedProducts = React.useMemo(() => {
-        let list = [...filteredProducts].sort((a, b) => {
-            if (sortBy === 'price_asc') return (a.price || 0) - (b.price || 0);
-            if (sortBy === 'price_desc') return (b.price || 0) - (a.price || 0);
-            const dateA = new Date(a.created_at || 0).getTime();
-            const dateB = new Date(b.created_at || 0).getTime();
-            return dateB - dateA;
+        if (filteredProducts.length === 0) return [];
+
+        const categoryKeyOf = (p) => p.categories?.name || p.category_id || 'uncategorized';
+
+        // Bitta kategoriya: tartib ichkarida (sort_order → kod → nom → sana/narx)
+        if (selectedCategory) {
+            return sortProductsForDisplay(filteredProducts, sortBy, language);
+        }
+
+        // Barcha mahsulotlar: avval har bir kategoriya ichida tartib, keyin navbatma-navbat aralashtirish
+        const byCategory = {};
+        filteredProducts.forEach((p) => {
+            const key = categoryKeyOf(p);
+            if (!byCategory[key]) byCategory[key] = [];
+            byCategory[key].push(p);
         });
 
-        // Barchasi bo'limida: kategoriyalar aralash turishi (har bir kategoriyadan navbat bilan)
-        if (!selectedCategory && list.length > 0) {
-            const byCategory = {};
-            list.forEach((p) => {
-                const key = p.categories?.name || p.category_id || 'uncategorized';
-                if (!byCategory[key]) byCategory[key] = [];
-                byCategory[key].push(p);
-            });
-            const categoryKeys = Object.keys(byCategory);
-            const interleaved = [];
-            let idx = 0;
-            while (interleaved.length < list.length) {
-                for (const key of categoryKeys) {
-                    if (byCategory[key][idx] != null) {
-                        interleaved.push(byCategory[key][idx]);
-                    }
-                }
-                idx++;
-            }
-            return interleaved;
+        const categoryKeys = Object.keys(byCategory).sort((a, b) =>
+            String(a).localeCompare(String(b), undefined, { sensitivity: 'base' })
+        );
+
+        const sortedByCategory = {};
+        let total = 0;
+        for (const key of categoryKeys) {
+            sortedByCategory[key] = sortProductsForDisplay(byCategory[key], sortBy, language);
+            total += sortedByCategory[key].length;
         }
-        return list;
-    }, [filteredProducts, sortBy, selectedCategory]);
+
+        const interleaved = [];
+        let idx = 0;
+        while (interleaved.length < total) {
+            for (const key of categoryKeys) {
+                const row = sortedByCategory[key];
+                if (row[idx] != null) interleaved.push(row[idx]);
+            }
+            idx++;
+        }
+        return interleaved;
+    }, [filteredProducts, sortBy, selectedCategory, language]);
 
     const categoryDisplayName = selectedCategory
         ? (categories.find(c => c.name === selectedCategory.category)?.[`name_${language}`] || selectedCategory.category)

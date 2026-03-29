@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS products (
     rating NUMERIC(5, 2) DEFAULT 0,
     reviews INTEGER DEFAULT 0,
     model_3d_url TEXT,
+    sort_order INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
