@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
 import { withTimeout } from '@/lib/withTimeout'
 import Header from '@/components/Header'
-import { Plus, Edit, Trash2, Save, X, Search, Image, Eye, EyeOff, Globe, Upload, Loader2, Package, AlertTriangle, Layers, Palette } from 'lucide-react'
+import { Plus, Edit, Trash2, Save, X, Search, Image, Eye, EyeOff, Globe, Upload, Loader2, Package, AlertTriangle, Layers, Palette, ListTree } from 'lucide-react'
 import { useLayout } from '@/context/LayoutContext'
 import { useLanguage } from '@/context/LanguageContext'
 import { useDialog } from '@/context/DialogContext'
@@ -87,6 +87,28 @@ function featuresToPayload(rows) {
             value: String(r.value_en ?? '').trim(),
         })),
     }
+}
+
+/** Buyurtmalar sahifasi bilan bir xil: kodni solishtirish (prob, tire, katta-kichik) */
+function normalizeProductCode(s) {
+    if (s == null) return ''
+    return String(s)
+        .trim()
+        .normalize('NFKC')
+        .replace(/[\u2013\u2014\u2212]/g, '-')
+        .replace(/\s+/g, ' ')
+        .toLowerCase()
+}
+
+function displayProductTitle(p) {
+    if (!p) return '—'
+    return (
+        (p.name_uz && String(p.name_uz).trim()) ||
+        (p.name_ru && String(p.name_ru).trim()) ||
+        (p.name_en && String(p.name_en).trim()) ||
+        (p.name && String(p.name).trim()) ||
+        '—'
+    )
 }
 
 /** Jamoaviy rang: mahsulot qatoridan colors[] (bo'sh bo'lsa legacy color) */
@@ -316,12 +338,71 @@ export default function Mahsulotlar() {
         }
     }
 
+    const productCodeStatus = useMemo(() => {
+        const raw = (form.size || '').trim()
+        if (!raw) return { kind: 'empty' }
+        const norm = normalizeProductCode(raw)
+        const others = products.filter((p) => {
+            const ps = (p.size || '').trim()
+            if (!ps) return false
+            return normalizeProductCode(ps) === norm && String(p.id) !== String(editId || '')
+        })
+        if (others.length === 0) return { kind: 'free', norm }
+        return { kind: 'taken', norm, others }
+    }, [form.size, products, editId])
+
+    async function reportDuplicateProducts() {
+        const groups = new Map()
+        for (const p of products) {
+            const raw = (p.size || '').trim()
+            if (!raw) continue
+            const k = normalizeProductCode(raw)
+            if (!groups.has(k)) groups.set(k, [])
+            groups.get(k).push(p)
+        }
+        const dups = [...groups.entries()].filter(([, arr]) => arr.length > 1)
+        if (!dups.length) {
+            await showAlert(t('products.duplicateReportNone'), {
+                variant: 'success',
+                title: t('products.duplicateReportTitle'),
+            })
+            return
+        }
+        dups.sort((a, b) => b[1].length - a[1].length)
+        let body = `${t('products.duplicateReportIntro')}\n\n`
+        for (const [, arr] of dups) {
+            const codeShow = arr[0].size || ''
+            body += `「${codeShow}」 ×${arr.length}\n`
+            for (const p of arr) {
+                body += `  • ${displayProductTitle(p)} (#${String(p.id).slice(0, 8)}…)\n`
+            }
+            body += '\n'
+        }
+        await showAlert(body, { variant: 'warning', title: t('products.duplicateReportTitle') })
+    }
+
     async function handleSubmit(e) {
         e.preventDefault()
         const hasName = form.name_uz || form.name_ru || form.name_en || form.name;
         if (!hasName || !form.sale_price) {
-            alert(t('products.requiredError') || 'Nom va Narx majburiy!')
+            await showAlert(t('products.requiredError') || 'Nom va Narx majburiy!', { variant: 'warning' })
             return
+        }
+
+        const codeRaw = (form.size || '').trim()
+        if (codeRaw) {
+            const norm = normalizeProductCode(codeRaw)
+            const conflicting = products.filter(
+                (p) => normalizeProductCode(p.size || '') === norm && String(p.id) !== String(editId || '')
+            )
+            if (conflicting.length > 0) {
+                const lines = conflicting.map((p) => `• ${displayProductTitle(p)} (${p.size || ''})`).join('\n')
+                const ok = await showConfirm(`${t('products.duplicateCodeSaveConfirm')}\n\n${lines}`, {
+                    title: t('products.duplicateCodeSaveTitle'),
+                    variant: 'warning',
+                })
+                if (!ok) return
+            }
         }
 
         try {
@@ -394,7 +475,7 @@ export default function Mahsulotlar() {
             loadData()
         } catch (error) {
             console.error('Error saving product:', error)
-            alert(t('common.saveError'))
+            await showAlert(t('common.saveError'), { variant: 'error' })
         }
     }
 
@@ -948,6 +1029,16 @@ export default function Mahsulotlar() {
                         {cleanupInProgress ? 'Tozalanmoqda...' : 'Ranglarni tozalash'}
                     </button>
                     <button
+                        type="button"
+                        onClick={() => reportDuplicateProducts()}
+                        disabled={loading || !products.length}
+                        className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold transition-all border border-violet-200 bg-violet-50 text-violet-800 hover:bg-violet-100 disabled:opacity-50"
+                        title={t('products.duplicateCheckButton')}
+                    >
+                        <ListTree size={18} />
+                        <span className="hidden sm:inline">{t('products.duplicateCheckButton')}</span>
+                    </button>
+                    <button
                         onClick={() => {
                             setEditId(null)
                             setForm({
@@ -1401,7 +1492,7 @@ export default function Mahsulotlar() {
                             <tr className="bg-gray-50/50 border-b border-gray-100 text-xs uppercase tracking-wider text-gray-500 font-bold">
                                 <th className="px-6 py-4 rounded-tl-2xl">{t('products.image')}</th>
                                 <th className="px-6 py-4">{t('products.name')}</th>
-                                <th className="px-6 py-4">Koddi</th>
+                                <th className="px-6 py-4">{t('products.tableCode')}</th>
                                 <th className="px-6 py-4">{t('products.category')}</th>
                                 <th className="px-6 py-4">{t('products.salePrice')}</th>
                                 <th className="px-6 py-4">Rangi</th>
@@ -1513,6 +1604,9 @@ export default function Mahsulotlar() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Basic Fields - Multilingual Names */}
                                 <div className="space-y-4 col-span-2">
+                                    <p className="text-xs text-gray-600 leading-relaxed -mt-1 mb-1">
+                                        {t('products.productCodeHint')}
+                                    </p>
                                     <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <div className="space-y-2">
                                             <label className="block text-xs font-bold text-blue-600 uppercase tracking-wider">Nomi (UZ)</label>
@@ -1670,14 +1764,36 @@ export default function Mahsulotlar() {
 
                                 {/* Stock & Category */}
                                 <div className="space-y-4">
-                                    <label className="block text-sm font-bold text-gray-700">Koddi</label>
+                                    <label className="block text-sm font-bold text-gray-700">{t('products.productCode')}</label>
                                     <input
                                         type="text"
                                         className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                                         value={form.size}
                                         onChange={e => setForm({ ...form, size: e.target.value })}
-                                        placeholder="Masalan: TR-102"
+                                        placeholder="TK-102"
+                                        autoComplete="off"
                                     />
+                                    {productCodeStatus.kind === 'empty' ? (
+                                        <p className="text-xs text-gray-500">{t('products.productCodeOptional')}</p>
+                                    ) : null}
+                                    {productCodeStatus.kind === 'free' ? (
+                                        <p className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">
+                                            {t('products.productCodeFree')}
+                                        </p>
+                                    ) : null}
+                                    {productCodeStatus.kind === 'taken' ? (
+                                        <div className="text-xs font-medium text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 space-y-1">
+                                            <p>{editId ? t('products.productCodeTakenEdit') : t('products.productCodeTaken')}</p>
+                                            <ul className="list-disc list-inside text-amber-950/90">
+                                                {productCodeStatus.others.map((p) => (
+                                                    <li key={p.id}>
+                                                        {displayProductTitle(p)}
+                                                        {p.size ? ` — ${p.size}` : ''}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    ) : null}
                                 </div>
                                 <div className="space-y-4">
                                     <label className="block text-sm font-bold text-gray-700">Vitrinada tartib</label>

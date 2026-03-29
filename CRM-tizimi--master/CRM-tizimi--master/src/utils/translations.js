@@ -260,7 +260,34 @@ export const translations = {
             lineConfirmSort: 'Tayyor',
             lineConfirmSortHint: 'Miqdor va narx tayyor — kategoriya bo‘yicha joylash',
             duplicateProductConfirm:
-                'Bu mahsulot allaqachon buyurtmada bor. Yana shu mahsulotni qo‘shmoqchimisiz?'
+                'Bu mahsulot allaqachon buyurtmada bor. Yana shu mahsulotni qo‘shmoqchimisiz?',
+            mergeHint:
+                'Birlashtirish: ro‘yxatdan kamida 2 ta buyurtmani belgilang, «Birlashtirish» ni bosing — bitta jadvalda umumiy miqdor va narx; yangi buyurtma formasi ochiladi (eski buyurtmalar o‘chmaydi, «Saqlash» bilan yangisini yarating).',
+            mergeSelectColumn: 'Birlashtirish uchun',
+            mergeSelectAll: 'Filtrdagi barcha buyurtmalarni belgilash',
+            mergeButton: 'Birlashtirish',
+            mergeButtonTitle: 'Tanlangan buyurtmalarni bitta mahsulot jadvaliga yig‘ish',
+            mergeClear: 'Tanlovni tozalash',
+            mergeClearTitle: 'Barcha belgilarni olib tashlash',
+            mergeNeedTwo: 'Kamida 2 ta buyurtmani belgilang.',
+            mergeFetchError: 'Buyurtma qatorlarini yuklashda xato.',
+            mergeEmptyLines: 'Tanlangan buyurtmalarda mahsulot qatorlari topilmadi.',
+            mergeNotePrefix: 'Birlashtirilgan buyurtmalar',
+            mergeOpenedForm: 'Birlashtirilgan jadval yangi buyurtma formasiga yuklandi — tekshirib «Saqlash» bosing.',
+            activeList: 'Buyurtmalar',
+            trashBin: 'Karzinka',
+            trashHint:
+                'Bu yerda o‘chirilgan buyurtmalar turadi. «Qaytarish» — asosiy ro‘yxatga; qizil axlat — bazadan butunlay o‘chiradi (qatorlar ham o‘chadi).',
+            trashEmpty: 'Karzinka bo‘sh.',
+            softDeleteConfirm: 'Buyurtmani karzinkaga ko‘chirishni tasdiqlaysizmi? (Asosiy ro‘yxatdan yo‘qoladi, keyin qaytarish mumkin.)',
+            permanentDeleteConfirm:
+                'Butunlay o‘chirish: buyurtma va uning barcha qatorlari bazadan yo‘qoladi. Davom etasizmi?',
+            deletedAtMigrationHint:
+                'Buyurtmalar jadvalida `deleted_at` ustuni yo‘q. Supabase SQL Editor da loyihadagi `add_orders_deleted_at.sql` faylini bir marta ishga tushiring, keyin sahifani yangilang.',
+            restoreOrder: 'Qaytarish',
+            restoreOrderTitle: 'Asosiy ro‘yxatga qaytarish',
+            moveToTrashTitle: 'Karzinkaga ko‘chirish',
+            permanentDeleteTitle: 'Butunlay o‘chirish'
         },
         products: {
             title: 'Mahsulotlar',
@@ -285,7 +312,22 @@ export const translations = {
             successAdd: 'Mahsulot qo\'shildi!',
             successUpdate: 'Mahsulot yangilandi!',
             successDelete: 'Mahsulot o\'chirildi!',
-            requiredError: 'Nomi va Narxi majburiy!'
+            requiredError: 'Nomi va Narxi majburiy!',
+            productCode: 'Mahsulot kodi (SKU)',
+            productCodeHint:
+                'Nom — vitrinadagi nom; kod — buyurtma va qidiruvda ishlatiladi, imkon qadar noyob bo‘lsin (masalan TK-102).',
+            productCodeOptional: 'Kod ixtiyoriy. Kiritilsa, boshqa mahsulot bilan bir xil bo‘lmasligi tavsiya etiladi.',
+            productCodeFree: 'Bu kod bazada yo‘q — yangi mahsulot sifatida saqlash mumkin.',
+            productCodeTaken: 'Bu kod allaqachon ishlatilgan:',
+            productCodeTakenEdit: 'Boshqa mahsulot(lar)da shu kod bor:',
+            duplicateCodeSaveTitle: 'Kod dublikati',
+            duplicateCodeSaveConfirm:
+                'Shu kod bilan boshqa mahsulot(lar) mavjud. Baribir saqlansinmi? (Tavsiya: kodni o‘zgartiring yoki eski mahsulotni o‘chiring.)',
+            duplicateCheckButton: 'Dublikatlarni tekshirish',
+            duplicateReportTitle: 'Takroriy mahsulot kodlari',
+            duplicateReportNone: 'Takroriy kod topilmadi (barcha kiritilgan kodlar noyob yoki kod umuman yo‘q).',
+            duplicateReportIntro: 'Quyidagi kodlar bir nechta mahsulotda takrorlanadi. Bittasini qoldirib, qolganlarini tahrirlang yoki o‘chiring.',
+            tableCode: 'Kod'
         },
         warehouse: {
             title: 'Ombor Boshqaruvi',
@@ -752,7 +794,34 @@ export const translations = {
             lineConfirmSort: 'Готово',
             lineConfirmSortHint: 'Готово — перенести строку в порядок по категории',
             duplicateProductConfirm:
-                'Этот товар уже есть в заказе. Добавить ещё раз такой же товар?'
+                'Этот товар уже есть в заказе. Добавить ещё раз такой же товар?',
+            mergeHint:
+                'Объединение: отметьте минимум 2 заказа в списке и нажмите «Объединить» — одна таблица позиций с суммарным количеством и ценой; откроется форма нового заказа (старые заказы не удаляются, сохраните новый отдельно).',
+            mergeSelectColumn: 'Для объединения',
+            mergeSelectAll: 'Выбрать все заказы в фильтре',
+            mergeButton: 'Объединить',
+            mergeButtonTitle: 'Собрать выбранные заказы в одну таблицу позиций',
+            mergeClear: 'Снять выбор',
+            mergeClearTitle: 'Снять все отметки',
+            mergeNeedTwo: 'Отметьте минимум 2 заказа.',
+            mergeFetchError: 'Ошибка загрузки строк заказов.',
+            mergeEmptyLines: 'В выбранных заказах нет позиций.',
+            mergeNotePrefix: 'Объединённые заказы',
+            mergeOpenedForm: 'Объединённая таблица загружена в форму нового заказа — проверьте и нажмите «Сохранить».',
+            activeList: 'Заказы',
+            trashBin: 'Корзина',
+            trashHint:
+                'Здесь удалённые заказы. «Вернуть» — в основной список; красная корзина — полное удаление из базы (включая строки заказа).',
+            trashEmpty: 'Корзина пуста.',
+            softDeleteConfirm: 'Переместить заказ в корзину? (Исчезнет из основного списка, можно вернуть.)',
+            permanentDeleteConfirm:
+                'Полное удаление: заказ и все его позиции будут удалены из базы. Продолжить?',
+            deletedAtMigrationHint:
+                'В таблице orders нет столбца deleted_at. Выполните один раз SQL из файла add_orders_deleted_at.sql в Supabase SQL Editor и обновите страницу.',
+            restoreOrder: 'Вернуть',
+            restoreOrderTitle: 'Вернуть в основной список',
+            moveToTrashTitle: 'В корзину',
+            permanentDeleteTitle: 'Удалить навсегда'
         },
         products: {
             title: 'Продукты',
@@ -777,7 +846,22 @@ export const translations = {
             successAdd: 'Продукт добавлен!',
             successUpdate: 'Продукт обновлен!',
             successDelete: 'Продукт удален!',
-            requiredError: 'Название и Цена обязательны!'
+            requiredError: 'Название и Цена обязательны!',
+            productCode: 'Код товара (SKU)',
+            productCodeHint:
+                'Название — для витрины; код — для заказов и поиска, по возможности уникальный (например TK-102).',
+            productCodeOptional: 'Код необязателен. Если указан, лучше не дублировать другие товары.',
+            productCodeFree: 'Такого кода в базе нет — можно сохранить как новый товар.',
+            productCodeTaken: 'Этот код уже используется:',
+            productCodeTakenEdit: 'У другого товара(ов) такой же код:',
+            duplicateCodeSaveTitle: 'Дубликат кода',
+            duplicateCodeSaveConfirm:
+                'Этот код уже есть у другого товара. Всё равно сохранить? (Лучше сменить код или удалить дубликат.)',
+            duplicateCheckButton: 'Проверить дубликаты',
+            duplicateReportTitle: 'Повторяющиеся коды товаров',
+            duplicateReportNone: 'Дубликатов кодов не найдено.',
+            duplicateReportIntro: 'Эти коды встречаются у нескольких товаров. Оставьте один и исправьте остальные.',
+            tableCode: 'Код'
         },
         warehouse: {
             title: 'Управление складом',
@@ -1244,7 +1328,34 @@ export const translations = {
             lineConfirmSort: 'Done',
             lineConfirmSortHint: 'Confirm — move this line into category order',
             duplicateProductConfirm:
-                'This product is already on the order. Add the same product again?'
+                'This product is already on the order. Add the same product again?',
+            mergeHint:
+                'Merge: select at least 2 orders in the list, then click Merge — one combined line-items table with summed quantities and weighted average unit price; a new order form opens (original orders stay until you delete them; use Save to create the new one).',
+            mergeSelectColumn: 'Merge',
+            mergeSelectAll: 'Select all orders in current filter',
+            mergeButton: 'Merge',
+            mergeButtonTitle: 'Combine selected orders into one line-items table',
+            mergeClear: 'Clear selection',
+            mergeClearTitle: 'Clear all checkboxes',
+            mergeNeedTwo: 'Select at least 2 orders.',
+            mergeFetchError: 'Could not load order line items.',
+            mergeEmptyLines: 'Selected orders have no line items.',
+            mergeNotePrefix: 'Merged orders',
+            mergeOpenedForm: 'Merged table loaded into the new order form — review and click Save.',
+            activeList: 'Orders',
+            trashBin: 'Trash',
+            trashHint:
+                'Deleted orders appear here. Restore moves them back to the main list; the red trash icon permanently deletes the order and its line items.',
+            trashEmpty: 'Trash is empty.',
+            softDeleteConfirm: 'Move this order to trash? (It leaves the main list; you can restore it later.)',
+            permanentDeleteConfirm:
+                'Permanently delete this order and all its line items from the database? This cannot be undone.',
+            deletedAtMigrationHint:
+                'Column deleted_at is missing on orders. Run the SQL in add_orders_deleted_at.sql once in the Supabase SQL Editor, then refresh.',
+            restoreOrder: 'Restore',
+            restoreOrderTitle: 'Restore to main list',
+            moveToTrashTitle: 'Move to trash',
+            permanentDeleteTitle: 'Delete permanently'
         },
         products: {
             title: 'Products',
@@ -1269,7 +1380,22 @@ export const translations = {
             successAdd: 'Product added!',
             successUpdate: 'Product updated!',
             successDelete: 'Product deleted!',
-            requiredError: 'Name and Price are required!'
+            requiredError: 'Name and Price are required!',
+            productCode: 'Product code (SKU)',
+            productCodeHint:
+                'Name is what customers see; the code is used in orders and search — keep it unique when possible (e.g. TK-102).',
+            productCodeOptional: 'Code is optional. If set, avoid duplicates with other products.',
+            productCodeFree: 'This code is not in the database — safe to save as a new product.',
+            productCodeTaken: 'This code is already used by:',
+            productCodeTakenEdit: 'Another product(s) already use this code:',
+            duplicateCodeSaveTitle: 'Duplicate code',
+            duplicateCodeSaveConfirm:
+                'Another product already uses this code. Save anyway? (Prefer changing the code or removing the duplicate.)',
+            duplicateCheckButton: 'Check duplicate codes',
+            duplicateReportTitle: 'Duplicate product codes',
+            duplicateReportNone: 'No duplicate codes found.',
+            duplicateReportIntro: 'These codes appear on more than one product. Keep one and fix or delete the rest.',
+            tableCode: 'Code'
         },
         warehouse: {
             title: 'Warehouse Management',

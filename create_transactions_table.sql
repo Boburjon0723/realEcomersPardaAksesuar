@@ -44,9 +44,19 @@ CREATE POLICY "Allow authenticated full access to transactions"
 
 CREATE OR REPLACE FUNCTION create_transaction_from_order()
 RETURNS TRIGGER AS $$
+DECLARE
+    new_done boolean;
+    old_done boolean;
 BEGIN
-    -- Only create transaction when order is completed
-    IF NEW.status = 'Completed' AND (OLD.status IS NULL OR OLD.status != 'Completed') THEN
+    -- CRM / sayt: status odatda 'completed' (kichik); INSERTda OLD yo'q — TG_OP tekshiriladi
+    new_done := LOWER(TRIM(COALESCE(NEW.status, ''))) = 'completed';
+    IF TG_OP = 'UPDATE' THEN
+        old_done := LOWER(TRIM(COALESCE(OLD.status, ''))) = 'completed';
+    ELSE
+        old_done := false;
+    END IF;
+
+    IF new_done AND NOT old_done THEN
         INSERT INTO transactions (
             type,
             amount,
@@ -65,7 +75,7 @@ BEGIN
             NEW.id
         );
     END IF;
-    
+
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
