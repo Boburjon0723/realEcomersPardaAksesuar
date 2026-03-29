@@ -16,6 +16,7 @@ export const PAGE_PATHS = {
   faq: '/faq',
   terms: '/terms',
   privacy: '/privacy',
+  adminCatalogOrder: '/admin/catalog-order',
 };
 
 const STATIC_SEGMENTS = new Set([

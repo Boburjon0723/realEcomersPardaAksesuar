@@ -40,23 +40,32 @@ const mapProductFromDB = (product) => {
     };
 };
 
+async function fetchProductsOrdered(onlyActive, useSortOrderColumn) {
+    let q = supabase.from(PRODUCTS_TABLE).select(`
+                *,
+                categories(name)
+            `);
+    if (onlyActive) q = q.eq('is_active', true);
+    if (useSortOrderColumn) {
+        q = q.order('sort_order', { ascending: true }).order('created_at', { ascending: false });
+    } else {
+        q = q.order('created_at', { ascending: false });
+    }
+    return q;
+}
+
 // Get all products
 export const getAllProducts = async (onlyActive = false) => {
     try {
-        let query = supabase
-            .from(PRODUCTS_TABLE)
-            .select(`
-                *,
-                categories(name)
-            `)
-            .order('sort_order', { ascending: true })
-            .order('created_at', { ascending: false });
-
-        if (onlyActive) {
-            query = query.eq('is_active', true);
+        let { data, error } = await fetchProductsOrdered(onlyActive, true);
+        if (error) {
+            const msg = String(error.message || error.details || error).toLowerCase();
+            if (msg.includes('sort_order')) {
+                const second = await fetchProductsOrdered(onlyActive, false);
+                data = second.data;
+                error = second.error;
+            }
         }
-
-        const { data, error } = await query;
         if (error) throw error;
 
         // FALLBACK: If DB is empty, return mock data for demonstration
@@ -266,6 +275,22 @@ export const updateProduct = async (productId, productData, newImageFiles = []) 
         if (error) throw error;
         return { success: true };
     } catch (error) {
+        return { success: false, error: error.message };
+    }
+};
+
+/** Vitrina admin: faqat tartib raqami (kategoriya ichidagi ko‘rinish) */
+export const updateProductSortOrder = async (productId, sortOrder) => {
+    try {
+        const n = Math.max(0, parseInt(Number(sortOrder), 10) || 0);
+        const { error } = await supabase
+            .from(PRODUCTS_TABLE)
+            .update({ sort_order: n })
+            .eq('id', productId);
+        if (error) throw error;
+        return { success: true };
+    } catch (error) {
+        console.error('updateProductSortOrder:', error);
         return { success: false, error: error.message };
     }
 };

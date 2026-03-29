@@ -42,13 +42,15 @@ export function sortProductsForDisplay(items, sortBy, language = 'uz') {
             return compareProductsCatalog(a, b, language);
         });
     } else {
+        // Katalog: sort_order → kod → nom; sana faqat to‘liq teng bo‘lsa
         copy.sort((a, b) => {
             const so = (Number(a?.sort_order) || 0) - (Number(b?.sort_order) || 0);
             if (so !== 0) return so;
+            const sn = compareProductsSizeName(a, b, language);
+            if (sn !== 0) return sn;
             const dateB = new Date(b?.created_at || 0).getTime();
             const dateA = new Date(a?.created_at || 0).getTime();
-            if (dateB !== dateA) return dateB - dateA;
-            return compareProductsSizeName(a, b, language);
+            return dateB - dateA;
         });
     }
     return copy;

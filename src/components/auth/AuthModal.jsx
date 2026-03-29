@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Lock, User as UserIcon, ArrowRight, Phone } from 'lucide-react';
+import { X, Lock, User as UserIcon, ArrowRight, Phone, Eye, EyeOff } from 'lucide-react';
 import { useApp } from '../../hooks/useApp';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { loginUser, registerUser, resetPassword } from '../../services/supabase/auth';
@@ -62,6 +62,8 @@ const AuthModal = () => {
     const [resetLoading, setResetLoading] = useState(false);
     const [showForgotPassword, setShowForgotPassword] = useState(false);
     const [forgotSent, setForgotSent] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [error, setError] = useState('');
     const [formData, setFormData] = useState({
         name: '',
@@ -364,15 +366,25 @@ const AuthModal = () => {
                             )}
                         </div>
                         <div className="relative group">
-                            <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors w-5 h-5" />
+                            <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors w-5 h-5 pointer-events-none" />
                             <input
-                                type="password"
+                                type={showPassword ? 'text' : 'password'}
                                 required
+                                autoComplete={isLogin ? 'current-password' : 'new-password'}
                                 value={formData.password}
                                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none font-medium"
+                                className="w-full pl-12 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none font-medium"
                                 placeholder={t('passwordPlaceholder')}
                             />
+                            <button
+                                type="button"
+                                tabIndex={-1}
+                                onClick={() => setShowPassword((v) => !v)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-gray-500 hover:text-primary hover:bg-gray-100 transition-colors"
+                                aria-label={showPassword ? (t('hidePassword') || 'Parolni yashirish') : (t('showPassword') || 'Parolni ko‘rsatish')}
+                            >
+                                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                            </button>
                         </div>
                     </div>
 
@@ -383,15 +395,25 @@ const AuthModal = () => {
                                 {t('confirmPassword')}
                             </label>
                             <div className="relative group">
-                                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors w-5 h-5" />
+                                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors w-5 h-5 pointer-events-none" />
                                 <input
-                                    type="password"
+                                    type={showConfirmPassword ? 'text' : 'password'}
                                     required
+                                    autoComplete="new-password"
                                     value={formData.confirmPassword}
                                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                                    className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none font-medium"
+                                    className="w-full pl-12 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none font-medium"
                                     placeholder={t('confirmPasswordPlaceholder')}
                                 />
+                                <button
+                                    type="button"
+                                    tabIndex={-1}
+                                    onClick={() => setShowConfirmPassword((v) => !v)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-gray-500 hover:text-primary hover:bg-gray-100 transition-colors"
+                                    aria-label={showConfirmPassword ? (t('hidePassword') || 'Parolni yashirish') : (t('showPassword') || 'Parolni ko‘rsatish')}
+                                >
+                                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                </button>
                             </div>
                         </div>
                     )}
@@ -419,6 +441,8 @@ const AuthModal = () => {
                             setShowForgotPassword(false);
                             setForgotSent(false);
                             setError('');
+                            setShowPassword(false);
+                            setShowConfirmPassword(false);
                         }}
                         className="text-primary hover:text-primary-dark font-bold text-lg hover:underline transition-all"
                     >
