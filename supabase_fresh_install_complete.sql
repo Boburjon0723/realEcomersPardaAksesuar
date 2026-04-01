@@ -184,6 +184,10 @@ CREATE POLICY "Allow update product_colors" ON product_colors FOR UPDATE USING (
 DROP POLICY IF EXISTS "Allow delete product_colors" ON product_colors;
 CREATE POLICY "Allow delete product_colors" ON product_colors FOR DELETE USING (true);
 
+-- DIQQAT: Bu INSERT ni production / mavjud bazada takror ishlatish — o‘chirib tashlangan
+-- standart ranglarni qayta yaratadi (qator yo‘q bo‘lsa yangi INSERT bo‘ladi).
+-- Faqat yangi o‘rnatishda ishlating; deploy pipeline da bu skriptni to‘liq qayta yurgizmang.
+
 INSERT INTO product_colors (name, name_uz, name_ru, name_en, hex_code) VALUES
 ('Oltin', 'Oltin', 'Золотой', 'Gold', '#FFD700'),
 ('Kumush', 'Kumush', 'Серебристый', 'Silver', '#C0C0C0'),

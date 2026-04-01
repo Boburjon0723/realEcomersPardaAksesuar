@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { getSettings } from '../services/supabase/settings';
 import { supabase, isPasswordRecoveryPending, markPasswordRecoveryPending } from '../supabaseClient';
+import { mapAuthUserToAppUser } from '../utils/mapAuthUser';
 
 export const AppContext = createContext();
 
@@ -40,14 +41,7 @@ export const AppProvider = ({ children }) => {
         const getInitialSession = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (session?.user) {
-                // Construct a user object that mimics what the UI expects
-                const user = {
-                    id: session.user.id,
-                    email: session.user.email,
-                    name: session.user.user_metadata?.name || session.user.user_metadata?.display_name || session.user.email?.split('@')[0],
-                    phone: session.user.user_metadata?.phone || '',
-                    ...session.user.user_metadata
-                };
+                const user = mapAuthUserToAppUser(session.user);
                 setCurrentUser(user);
                 localStorage.setItem('user', JSON.stringify(user));
                 // Zaxira: ba’zi brauzer/holatlarda PASSWORD_RECOVERY hodisasi kechiksa ham hash da type=recovery bo‘ladi
@@ -84,13 +78,7 @@ export const AppProvider = ({ children }) => {
                 setShowPasswordRecovery(true);
             }
             if (session?.user) {
-                const user = {
-                    id: session.user.id,
-                    email: session.user.email,
-                    name: session.user.user_metadata?.name || session.user.user_metadata?.display_name || session.user.email?.split('@')[0],
-                    phone: session.user.user_metadata?.phone || '',
-                    ...session.user.user_metadata
-                };
+                const user = mapAuthUserToAppUser(session.user);
                 setCurrentUser(user);
                 localStorage.setItem('user', JSON.stringify(user));
             } else if (event === 'SIGNED_OUT') {

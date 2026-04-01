@@ -1,12 +1,105 @@
-import React from 'react';
-import { ShoppingCart, Minus, Plus, Trash2, ArrowRight, ArrowLeft } from 'lucide-react';
+import React, { useState, useCallback } from 'react';
+import { ShoppingCart, Minus, Plus, Trash2, ArrowRight, ArrowLeft, X, Shield } from 'lucide-react';
 import { useApp } from '../hooks/useApp';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 import PageMeta from '../components/common/PageMeta';
+import { createOrder } from '../services/supabase/orders';
 
 const CartPage = () => {
-    const { cart, removeFromCart, updateQuantity, calculatePrice, getTotalPrice, setCurrentPage, settings } = useApp();
+    const { cart, removeFromCart, updateQuantity, calculatePrice, getTotalPrice, setCurrentPage, settings, currentUser, clearCart } = useApp();
     const { language, t, translateColor } = useLanguage();
+    const { isAdmin } = useAuth();
+
+    const [adminModalOpen, setAdminModalOpen] = useState(false);
+    const [adminSubmitting, setAdminSubmitting] = useState(false);
+    const [adminError, setAdminError] = useState('');
+    const [adminForm, setAdminForm] = useState({
+        name: '',
+        phone: '',
+        address: '',
+        notes: ''
+    });
+
+    const openAdminModal = useCallback(() => {
+        setAdminError('');
+        setAdminForm((prev) => ({
+            ...prev,
+            name: (currentUser?.name || '').trim(),
+            phone: (currentUser?.phone || '').trim(),
+        }));
+        setAdminModalOpen(true);
+    }, [currentUser?.name, currentUser?.phone]);
+
+    const handleAdminQuickOrder = async (e) => {
+        e.preventDefault();
+        setAdminError('');
+        if (!currentUser?.id) {
+            setAdminError(language === 'uz' ? 'Avval tizimga kiring.' : language === 'ru' ? 'Войдите в аккаунт.' : 'Please sign in.');
+            return;
+        }
+        const name = adminForm.name.trim();
+        const phone = adminForm.phone.trim();
+        if (name.length < 2) {
+            setAdminError(t('nameRequired'));
+            return;
+        }
+        if (phone.replace(/\D/g, '').length < 9) {
+            setAdminError(t('phoneRequired'));
+            return;
+        }
+
+        setAdminSubmitting(true);
+        try {
+            const noteHead = t('adminQuickOrderPaymentLabel');
+            const extra = adminForm.notes.trim();
+            const notesCombined = extra ? `${noteHead}\n${extra}` : noteHead;
+
+            const orderData = {
+                userId: currentUser.id,
+                customerInfo: {
+                    name,
+                    phone,
+                    email: currentUser.email || '',
+                    address: (adminForm.address || '').trim() || '—',
+                    notes: notesCombined
+                },
+                products: cart.map((item) => ({
+                    id: item.id,
+                    name: item.name,
+                    price: item.price,
+                    quantity: item.quantity,
+                    image: item.images?.[0] || item.model_3d_url || '',
+                    color: item.selectedColor || item.color,
+                    size: item.size
+                })),
+                totalPrice: getTotalPrice(),
+                status: 'new',
+                payment_status: 'unpaid',
+                paymentMethod: 'admin_quick',
+                paymentMethodDetail: t('adminQuickOrderPaymentLabel'),
+                language,
+                createdAt: new Date(),
+                source: 'website'
+            };
+
+            const orderResult = await createOrder(orderData);
+            if (!orderResult.success) throw new Error(orderResult.error || 'Order failed');
+
+            setAdminModalOpen(false);
+            clearCart();
+            window.alert(t('adminQuickOrderSuccess'));
+            setCurrentPage('home');
+        } catch (err) {
+            if (process.env.NODE_ENV === 'development') {
+                // eslint-disable-next-line no-console
+                console.error('Admin quick order:', err);
+            }
+            setAdminError(err.message || t('orderCreationFailed'));
+        } finally {
+            setAdminSubmitting(false);
+        }
+    };
 
     if (cart.length === 0) {
         return (
@@ -170,13 +263,29 @@ const CartPage = () => {
                             </div>
                         </div>
 
-                        <button
-                            onClick={() => setCurrentPage('checkout')}
-                            className="w-full bg-primary text-white py-4 rounded-lg hover:bg-primary-dark transition-all shadow-lg hover:shadow-primary/30 font-bold text-lg flex justify-center items-center group"
-                        >
-                            {t('checkout')}
-                            <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                        </button>
+                        {isAdmin && currentUser ? (
+                            <>
+                                <p className="text-xs text-amber-900/90 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3">
+                                    {t('adminCheckoutDisabledHint')}
+                                </p>
+                                <button
+                                    type="button"
+                                    onClick={openAdminModal}
+                                    className="w-full bg-amber-600 text-white py-4 rounded-lg hover:bg-amber-700 transition-all shadow-lg font-bold text-lg flex justify-center items-center gap-2"
+                                >
+                                    <Shield className="w-5 h-5 shrink-0" />
+                                    {t('adminQuickOrder')}
+                                </button>
+                            </>
+                        ) : (
+                            <button
+                                onClick={() => setCurrentPage('checkout')}
+                                className="w-full bg-primary text-white py-4 rounded-lg hover:bg-primary-dark transition-all shadow-lg hover:shadow-primary/30 font-bold text-lg flex justify-center items-center group"
+                            >
+                                {t('checkout')}
+                                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                            </button>
+                        )}
 
                         <div className="mt-6 flex items-center justify-center gap-4 text-gray-400 grayscale opacity-70">
                             {/* Small payment icons or trust badges */}
@@ -188,6 +297,91 @@ const CartPage = () => {
                 </div>
             </div>
         </div>
+
+        {adminModalOpen ? (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50" role="dialog" aria-modal="true" aria-labelledby="admin-quick-order-title">
+                <div className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-gray-200">
+                    <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                        <h2 id="admin-quick-order-title" className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                            <Shield className="w-5 h-5 text-amber-600" />
+                            {t('adminQuickOrderTitle')}
+                        </h2>
+                        <button
+                            type="button"
+                            onClick={() => !adminSubmitting && setAdminModalOpen(false)}
+                            className="p-2 rounded-lg text-gray-500 hover:bg-gray-100"
+                            aria-label={t('adminQuickOrderCancel')}
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
+                    <p className="px-5 pt-3 text-sm text-gray-600">{t('adminQuickOrderHint')}</p>
+                    <form onSubmit={handleAdminQuickOrder} className="p-5 space-y-4">
+                        {adminError ? (
+                            <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{adminError}</div>
+                        ) : null}
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">{t('name')}</label>
+                            <input
+                                type="text"
+                                value={adminForm.name}
+                                onChange={(e) => setAdminForm((f) => ({ ...f, name: e.target.value }))}
+                                className="w-full border border-gray-200 rounded-lg px-3 py-2"
+                                autoComplete="name"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">{t('phone')}</label>
+                            <input
+                                type="tel"
+                                value={adminForm.phone}
+                                onChange={(e) => setAdminForm((f) => ({ ...f, phone: e.target.value }))}
+                                className="w-full border border-gray-200 rounded-lg px-3 py-2"
+                                autoComplete="tel"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">{t('address')}</label>
+                            <input
+                                type="text"
+                                value={adminForm.address}
+                                onChange={(e) => setAdminForm((f) => ({ ...f, address: e.target.value }))}
+                                className="w-full border border-gray-200 rounded-lg px-3 py-2"
+                                placeholder="—"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">{t('notes')}</label>
+                            <textarea
+                                value={adminForm.notes}
+                                onChange={(e) => setAdminForm((f) => ({ ...f, notes: e.target.value }))}
+                                rows={3}
+                                className="w-full border border-gray-200 rounded-lg px-3 py-2 resize-y"
+                            />
+                        </div>
+                        <div className="flex gap-3 pt-2">
+                            <button
+                                type="button"
+                                onClick={() => setAdminModalOpen(false)}
+                                disabled={adminSubmitting}
+                                className="flex-1 py-3 rounded-lg border border-gray-200 font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                            >
+                                {t('adminQuickOrderCancel')}
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={adminSubmitting}
+                                className="flex-1 py-3 rounded-lg bg-amber-600 text-white font-bold hover:bg-amber-700 disabled:opacity-50"
+                            >
+                                {adminSubmitting ? t('processing') : t('adminQuickOrderSubmit')}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        ) : null}
         </>
     );
 };

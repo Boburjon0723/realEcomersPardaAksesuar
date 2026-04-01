@@ -13,7 +13,11 @@ export function getPasswordResetRedirectUrl() {
     return undefined;
 }
 
-// Register new user
+/**
+ * Ro‘yxatdan o‘tish: email + parol + metadata (ism, telefon, mamlakat).
+ * Muvaffaqiyat: `{ success: true, user }` — `user` JWT foydalanuvchi (email tasdiq yoqilgan bo‘lsa `user` null bo‘lishi mumkin).
+ * Xatolar: `User already registered`, `Password should be at least 6 characters`, va hok.
+ */
 export const registerUser = async (password, displayName, phone, country, email) => {
     try {
         const { data, error } = await supabase.auth.signUp({
@@ -66,7 +70,13 @@ export const registerUser = async (password, displayName, phone, country, email)
     }
 };
 
-// Login user
+/**
+ * Kirish: faqat email + parol (Supabase `signInWithPassword`).
+ * Xatolar (message qisqacha):
+ * - `Invalid login credentials` — noto‘g‘ri email/parol yoki foydalanuvchi yo‘q
+ * - `Email not confirmed` — email tasdiqlanmagan (Dashboard sozlamasi)
+ * - `400` / validation — noto‘g‘ri email format
+ */
 export const loginUser = async (email, password) => {
     try {
         const { data, error } = await supabase.auth.signInWithPassword({

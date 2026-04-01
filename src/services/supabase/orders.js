@@ -43,7 +43,7 @@ export const createOrder = async (orderData) => {
             payment_status: orderData.payment_status || 'unpaid',
             payment_method_detail: orderData.paymentMethodDetail || null,
             receipt_url: orderData.receiptUrl || null,
-            source: 'website',
+            source: orderData.source || 'website',
             customer_id: userId // Link to customer table
         };
 

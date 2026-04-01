@@ -114,7 +114,7 @@ SET
     name_en = COALESCE(name_en, name)
 WHERE name_uz IS NULL OR name_ru IS NULL OR name_en IS NULL;
 
--- 50+ ranglar katalogi (agar bo'sh bo'lsa)
+-- Ranglar katalogi (yangi DB uchun). Takror ishlatilsa, o‘chirilgan nomlar qayta paydo bo‘lishi mumkin.
 INSERT INTO product_colors (name, name_uz, name_ru, name_en, hex_code) VALUES
 ('Oltin', 'Oltin', 'Золотой', 'Gold', '#FFD700'),
 ('Kumush', 'Kumush', 'Серебристый', 'Silver', '#C0C0C0'),

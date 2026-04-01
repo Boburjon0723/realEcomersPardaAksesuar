@@ -100,7 +100,7 @@ export const translations = {
         hidePassword: "Parolni yashirish",
         loginError: "Kirishda xatolik yuz berdi",
         verifyError: "Hisobingiz tasdiqlanmagan. Iltimos, administratorga bog'laning.",
-        invalidCredentials: "Telefon raqam yoki parol noto'g'ri",
+        invalidCredentials: "Email yoki parol noto‘g‘ri (yoki email hali tasdiqlanmagan).",
         cancel: "Bekor qilish",
         save: "Saqlash",
         saving: "Saqlanmoqda...",
@@ -219,6 +219,17 @@ export const translations = {
         thousand: "k",
         sum: "$",
         billingDetails: "To'lov Ma'lumotlari",
+        adminQuickOrder: "Admin: checkout’siz buyurtma",
+        adminQuickOrderTitle: "Tezkor buyurtma (admin)",
+        adminQuickOrderHint:
+            "To‘lov sahifasisiz buyurtma yaratiladi; ma’lumotlar CRM «Buyurtmalar» ro‘yxatiga veb-manbadagi buyurtmalar bilan bir qatorda tushadi.",
+        adminQuickOrderSubmit: "Buyurtmani yaratish",
+        adminQuickOrderCancel: "Bekor qilish",
+        adminQuickOrderSuccess: "Buyurtma yaratildi. CRM da tekshiring.",
+        adminQuickOrderPaymentLabel: "Sayt admini (checkout’siz)",
+        adminCheckoutDisabledHint:
+            "Admin akkaunt: odatiy to‘lov / chek sahifasi o‘chirilgan. Buyurtmani quyidagi tugma orqali yuboring.",
+        adminCheckoutRedirectMessage: "Siz admin sifatida kirdingiz — sizni savatga yo‘naytirmoqdamiz. Buyurtmani u yerda «Admin» tugmasi bilan bering.",
 
         // --- Checkout ---
         personalInfo: "Shaxsiy Ma'lumotlar",
@@ -291,6 +302,11 @@ export const translations = {
         nameRequired: "Ism kiritilishi shart",
         nameMinLength: "Ism kamida 2 ta belgidan iborat bo'lishi kerak",
         emailRequired: "Email kiritilishi shart",
+        passwordRequired: "Parol kiritilishi shart",
+        loginUseEmailNotPhone:
+            "Kirish faqat email orqali. Telefon raqamingizni «Email» maydoniga emas, ro‘yxatdan o‘tganda bergan email manzilingizni yozing.",
+        loginPasswordNotPhoneHint:
+            "«Parol» maydoniga telefon raqami emas, hisob parolingizni kiriting.",
         emailInvalid: "To'g'ri email kiriting",
         phoneInvalid: "To'g'ri telefon raqam kiriting",
         phoneMinDigits: "To'g'ri telefon raqam kiriting (kamida 9 ta raqam)",
@@ -556,7 +572,7 @@ export const translations = {
         hidePassword: "Скрыть пароль",
         loginError: "Ошибка при входе",
         verifyError: "Ваш аккаунт не подтвержден. Пожалуйста, свяжитесь с администратором.",
-        invalidCredentials: "Неверный номер телефона или пароль",
+        invalidCredentials: "Неверный email или пароль (или email ещё не подтверждён).",
         cancel: "Отмена",
         save: "Сохранить",
         saving: "Сохранение...",
@@ -677,6 +693,18 @@ export const translations = {
         thousand: "тыс.",
         sum: "$",
         billingDetails: "Детали Оплаты",
+        adminQuickOrder: "Админ: заказ без оформления",
+        adminQuickOrderTitle: "Быстрый заказ (админ)",
+        adminQuickOrderHint:
+            "Заказ создаётся без страницы оплаты и попадает в CRM в общий список заказов с сайта.",
+        adminQuickOrderSubmit: "Создать заказ",
+        adminQuickOrderCancel: "Отмена",
+        adminQuickOrderSuccess: "Заказ создан. Проверьте в CRM.",
+        adminQuickOrderPaymentLabel: "Админ сайта (без оформления)",
+        adminCheckoutDisabledHint:
+            "Аккаунт админа: обычная страница оплаты и чека отключена. Оформите заказ кнопкой ниже.",
+        adminCheckoutRedirectMessage:
+            "Вы вошли как администратор — перенаправляем в корзину. Оформите заказ там кнопкой «Админ».",
 
         // --- Checkout ---
         personalInfo: "Личные Данные",
@@ -757,6 +785,11 @@ export const translations = {
         regionRequired: "Выберите область",
         regionManualRequired: "Укажите область / регион",
         emailRequired: "Email обязателен",
+        passwordRequired: "Введите пароль",
+        loginUseEmailNotPhone:
+            "Вход только по email. Не указывайте телефон в поле Email — введите адрес почты, указанный при регистрации.",
+        loginPasswordNotPhoneHint:
+            "В поле «Пароль» нужен пароль аккаунта, а не номер телефона.",
         emailInvalid: "Введите корректный email",
         receiptRequired: "Загрузите чек об оплате",
 
@@ -1013,7 +1046,7 @@ export const translations = {
         hidePassword: "Hide password",
         loginError: "Login error",
         verifyError: "Your account is not verified. Please contact administrator.",
-        invalidCredentials: "Invalid phone number or password",
+        invalidCredentials: "Invalid email or password (or email not confirmed yet).",
         cancel: "Cancel",
         save: "Save",
         saving: "Saving...",
@@ -1132,6 +1165,18 @@ export const translations = {
         thousand: "k",
         sum: "$",
         billingDetails: "Billing Details",
+        adminQuickOrder: "Admin: order without checkout",
+        adminQuickOrderTitle: "Quick order (admin)",
+        adminQuickOrderHint:
+            "Creates the order without the payment page. It appears in CRM with other website orders.",
+        adminQuickOrderSubmit: "Create order",
+        adminQuickOrderCancel: "Cancel",
+        adminQuickOrderSuccess: "Order created. Check in CRM.",
+        adminQuickOrderPaymentLabel: "Site admin (no checkout)",
+        adminCheckoutDisabledHint:
+            "Admin account: the standard payment / receipt checkout is disabled. Use the button below to place the order.",
+        adminCheckoutRedirectMessage:
+            "You are signed in as an admin — redirecting to your cart. Place the order there with the Admin button.",
 
         // --- Checkout ---
         personalInfo: "Personal Information",
@@ -1212,6 +1257,11 @@ export const translations = {
         regionRequired: "Please select a region",
         regionManualRequired: "Enter region",
         emailRequired: "Email is required",
+        passwordRequired: "Password is required",
+        loginUseEmailNotPhone:
+            "Sign-in is email-only. Don’t put your phone in the email field — use the email you registered with.",
+        loginPasswordNotPhoneHint:
+            "Use your account password in the password field, not your phone number.",
         emailInvalid: "Enter a valid email",
         receiptRequired: "Please upload payment receipt",
 

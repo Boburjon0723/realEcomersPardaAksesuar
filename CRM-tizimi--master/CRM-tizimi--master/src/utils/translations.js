@@ -2,6 +2,7 @@ export const translations = {
     uz: {
         common: {
             dashboard: 'Dashboard',
+            mediaLibraryMenu: 'Media fayllar',
             products: 'Mahsulotlar',
             warehouse: 'Ombor',
             orders: 'Buyurtmalar',
@@ -145,6 +146,25 @@ export const translations = {
             successUpdate: 'Mijoz yangilandi!',
             successDelete: 'Mijoz o\'chirildi!'
         },
+        mediaLibrary: {
+            menu: 'Media fayllar',
+            title: 'Media kutubxonasi (Storage)',
+            intro:
+                'Supabase `products` va `models` bucketlaridagi barcha fayllar. O‘chirish: fayl storage dan yo‘qoladi; mahsulot / kategoriya / banner / sozlamalar / albom jadvallarida aynan shu URL bo‘lsa — tozalanadi.',
+            refresh: 'Yangilash',
+            allBuckets: 'Barcha bucketlar',
+            imagesOnly: 'Faqat rasmlar',
+            empty: 'Fayl topilmadi yoki filtering bo‘sh.',
+            loadError: 'Ro‘yxatni yuklashda xatolik:',
+            delete: 'Faylni o‘chirish',
+            deleteConfirmDetail:
+                'Tasdiqlang: fayl butunlay o‘chiriladi. Buyurtma qatorlarida eski rasm havolalari saqlanishi mumkin ( tarix ).',
+            deleted: 'Fayl storage dan o‘chirildi.',
+            dbRowsHint: 'Bazada yangilangan yozuvlar:',
+            copy: 'URL',
+            copied: 'URL nusxalandi.',
+            open: 'Ochish',
+        },
         orders: {
             title: 'Buyurtmalar',
             newOrder: 'Yangi Buyurtma',
@@ -262,7 +282,7 @@ export const translations = {
             duplicateProductConfirm:
                 'Bu mahsulot allaqachon buyurtmada bor. Yana shu mahsulotni qo‘shmoqchimisiz?',
             mergeHint:
-                'Birlashtirish: ro‘yxatdan kamida 2 ta buyurtmani belgilang, «Birlashtirish» ni bosing — bitta jadvalda umumiy miqdor va narx; yangi buyurtma formasi ochiladi (eski buyurtmalar o‘chmaydi, «Saqlash» bilan yangisini yarating).',
+                'Birlashtirish: kamida 2 ta buyurtmani belgilang — bitta mahsulot jadvali ochiladi; pastdagi summa va jami dona har bir buyurtmaning o‘zidagi saqlangan jami va qatorlar miqdoridan qo‘shilib hisoblanadi (yangi buyurtmani «Saqlash» bilan yarating).',
             mergeSelectColumn: 'Birlashtirish uchun',
             mergeSelectAll: 'Filtrdagi barcha buyurtmalarni belgilash',
             mergeButton: 'Birlashtirish',
@@ -274,7 +294,19 @@ export const translations = {
             mergeEmptyLines: 'Tanlangan buyurtmalarda mahsulot qatorlari topilmadi.',
             mergeNotePrefix: 'Birlashtirilgan buyurtmalar',
             mergeOpenedForm: 'Birlashtirilgan jadval yangi buyurtma formasiga yuklandi — tekshirib «Saqlash» bosing.',
+            mergeArchiveSourcesTitle: 'Eski buyurtmalar — karzinka',
+            mergeArchiveSourcesConfirm:
+                'Birlashtirilgan eski buyurtmalar asosiy ro‘yxatdan olib tashlansinmi? «Jami daromad» bitta marta sanaladi (ularni Karzinkadan qaytarish mumkin). «Yo‘q» — uchala buyurtma ham ro‘yxatda qoladi (summa ikki marta qo‘shilishi mumkin).',
+            mergeArchiveSourcesDone: 'Eski buyurtmalar karzinkaga ko‘chirildi.',
+            mergeArchiveSourcesToggle: 'Manba buyurtmalarni karzinkaga ko‘chirish',
+            mergeArchiveSourcesToggleHint: 'Agar olib tashlamasangiz, “Jami daromad” ikki marta sanalib qolishi mumkin.',
+            mergeTotalsHint:
+                'Summa: tanlangan har bir buyurtmaning bazadagi umumiy summasi qo‘shildi (jadval qatorlaridan qayta hisoblanmadi).',
+            mergeQtyHint:
+                'Jami dona: har bir buyurtmadagi mahsulot qatorlari miqdorlari alohida yig‘ilib, keyin qo‘shildi.',
+            mergeTotalQtyLabel: 'Jami miqdor (dona)',
             activeList: 'Buyurtmalar',
+            statsVisibleCount: 'Ko‘rinayotgan buyurtmalar',
             trashBin: 'Karzinka',
             trashHint:
                 'Bu yerda o‘chirilgan buyurtmalar turadi. «Qaytarish» — asosiy ro‘yxatga; qizil axlat — bazadan butunlay o‘chiradi (qatorlar ham o‘chadi).',
@@ -327,7 +359,12 @@ export const translations = {
             duplicateReportTitle: 'Takroriy mahsulot kodlari',
             duplicateReportNone: 'Takroriy kod topilmadi (barcha kiritilgan kodlar noyob yoki kod umuman yo‘q).',
             duplicateReportIntro: 'Quyidagi kodlar bir nechta mahsulotda takrorlanadi. Bittasini qoldirib, qolganlarini tahrirlang yoki o‘chiring.',
-            tableCode: 'Kod'
+            tableCode: 'Kod',
+            deleteBlockedTitle: 'Mahsulotni o‘chirib bo‘lmaydi',
+            deleteBlockedByLinkedRows:
+                'Bu mahsulot bazada boshqa jadvallarga bog‘langan (asosan CRM buyurtmalaridagi mahsulot qatorlari — order_items, ba’zan veb-sayt sharhlari). Shuning uchun PostgreSQL uni o‘chirishga ruxsat bermaydi; bu buyurtma tarixini buzmaslik uchun.\n\nKatalogdan yashirish: mahsulotni «Nofaol» qiling. Butunlay o‘chirish kerak bo‘lsa, avval ushbu mahsulot ishlatilgan buyurtma qatorlarini tahrirlang yoki o‘chiring; sharhlar bo‘lsa — veb-sayt bo‘limidan sharhlarni yo‘qing.',
+            deleteBlockedOrderLines: 'Buyurtma qatorlari (taxminiy soni)',
+            deleteBlockedReviews: 'Veb-sharhlar (taxminiy soni)'
         },
         warehouse: {
             title: 'Ombor Boshqaruvi',
@@ -536,6 +573,7 @@ export const translations = {
     ru: {
         common: {
             dashboard: 'Дашборд',
+            mediaLibraryMenu: 'Медиа файлы',
             products: 'Продукты',
             warehouse: 'Склад',
             orders: 'Заказы',
@@ -679,6 +717,25 @@ export const translations = {
             successUpdate: 'Клиент обновлен!',
             successDelete: 'Клиент удален!'
         },
+        mediaLibrary: {
+            menu: 'Медиа',
+            title: 'Медиатека (Storage)',
+            intro:
+                'Все файлы в bucket `products` и `models`. Удаление убирает файл из хранилища; если этот URL есть в товарах, категориях, баннерах, настройках или альбоме — ссылка очистится.',
+            refresh: 'Обновить',
+            allBuckets: 'Все buckets',
+            imagesOnly: 'Только изображения',
+            empty: 'Файлов нет или фильтр пуст.',
+            loadError: 'Ошибка загрузки списка:',
+            delete: 'Удалить файл',
+            deleteConfirmDetail:
+                'Подтвердите: файл будет удалён навсегда. В строках старых заказов ссылка может остаться.',
+            deleted: 'Файл удалён из хранилища.',
+            dbRowsHint: 'Обновлено записей в БД:',
+            copy: 'URL',
+            copied: 'Ссылка скопирована.',
+            open: 'Открыть',
+        },
         orders: {
             title: 'Заказы',
             newOrder: 'Новый заказ',
@@ -796,7 +853,7 @@ export const translations = {
             duplicateProductConfirm:
                 'Этот товар уже есть в заказе. Добавить ещё раз такой же товар?',
             mergeHint:
-                'Объединение: отметьте минимум 2 заказа в списке и нажмите «Объединить» — одна таблица позиций с суммарным количеством и ценой; откроется форма нового заказа (старые заказы не удаляются, сохраните новый отдельно).',
+                'Объединение: отметьте минимум 2 заказа — откроется одна таблица позиций; сумма и общее количество штук складываются из сохранённых итогов каждого заказа и сумм количеств по строкам (новый заказ — «Сохранить»).',
             mergeSelectColumn: 'Для объединения',
             mergeSelectAll: 'Выбрать все заказы в фильтре',
             mergeButton: 'Объединить',
@@ -808,7 +865,14 @@ export const translations = {
             mergeEmptyLines: 'В выбранных заказах нет позиций.',
             mergeNotePrefix: 'Объединённые заказы',
             mergeOpenedForm: 'Объединённая таблица загружена в форму нового заказа — проверьте и нажмите «Сохранить».',
+            mergeArchiveSourcesTitle: 'Старые заказы в корзину',
+            mergeArchiveSourcesConfirm:
+                'Переместить объединённые старые заказы в корзину? Так общий доход не будет считаться дважды (восстановление из «Корзины»). «Нет» — все заказы останутся в списке (сумма может удвоиться).',
+            mergeArchiveSourcesDone: 'Старые заказы перемещены в корзину.',
+            mergeArchiveSourcesToggle: 'Перемещать исходные заказы в корзину',
+            mergeArchiveSourcesToggleHint: 'Если не перемещать, «Общий доход» может быть посчитан дважды.',
             activeList: 'Заказы',
+            statsVisibleCount: 'Видимые заказы',
             trashBin: 'Корзина',
             trashHint:
                 'Здесь удалённые заказы. «Вернуть» — в основной список; красная корзина — полное удаление из базы (включая строки заказа).',
@@ -861,7 +925,12 @@ export const translations = {
             duplicateReportTitle: 'Повторяющиеся коды товаров',
             duplicateReportNone: 'Дубликатов кодов не найдено.',
             duplicateReportIntro: 'Эти коды встречаются у нескольких товаров. Оставьте один и исправьте остальные.',
-            tableCode: 'Код'
+            tableCode: 'Код',
+            deleteBlockedTitle: 'Товар нельзя удалить',
+            deleteBlockedByLinkedRows:
+                'Этот товар связан с другими таблицами (чаще всего строками заказов в CRM — order_items, иногда отзывами на сайте). PostgreSQL не даёт удалить запись, чтобы не нарушить историю заказов.\n\nСкрыть из каталога: переведите товар в статус «Неактивен». Полное удаление: сначала уберите или измените строки заказов с этим товаром; если есть отзывы — удалите их во вкладке сайта.',
+            deleteBlockedOrderLines: 'Строк в заказах (примерно)',
+            deleteBlockedReviews: 'Отзывов на сайте (примерно)'
         },
         warehouse: {
             title: 'Управление складом',
@@ -1070,6 +1139,7 @@ export const translations = {
     en: {
         common: {
             dashboard: 'Dashboard',
+            mediaLibraryMenu: 'Media library',
             products: 'Products',
             warehouse: 'Warehouse',
             orders: 'Orders',
@@ -1213,6 +1283,25 @@ export const translations = {
             successUpdate: 'Customer updated!',
             successDelete: 'Customer deleted!'
         },
+        mediaLibrary: {
+            menu: 'Media',
+            title: 'Media library (Storage)',
+            intro:
+                'All files in `products` and `models` buckets. Deleting removes the file from storage; exact URL matches in products, categories, banners, settings, or album rows are cleared.',
+            refresh: 'Refresh',
+            allBuckets: 'All buckets',
+            imagesOnly: 'Images only',
+            empty: 'No files or filter is empty.',
+            loadError: 'Failed to load list:',
+            delete: 'Delete file',
+            deleteConfirmDetail:
+                'Confirm: the file will be permanently removed. Old order line image URLs may still point here.',
+            deleted: 'File removed from storage.',
+            dbRowsHint: 'Database rows updated:',
+            copy: 'URL',
+            copied: 'URL copied.',
+            open: 'Open',
+        },
         orders: {
             title: 'Orders',
             newOrder: 'New Order',
@@ -1330,7 +1419,7 @@ export const translations = {
             duplicateProductConfirm:
                 'This product is already on the order. Add the same product again?',
             mergeHint:
-                'Merge: select at least 2 orders in the list, then click Merge — one combined line-items table with summed quantities and weighted average unit price; a new order form opens (original orders stay until you delete them; use Save to create the new one).',
+                'Merge: select at least 2 orders — one combined line-items table opens; the amount and total pieces are each order’s saved total plus summed line quantities (create the new order with Save).',
             mergeSelectColumn: 'Merge',
             mergeSelectAll: 'Select all orders in current filter',
             mergeButton: 'Merge',
@@ -1342,7 +1431,19 @@ export const translations = {
             mergeEmptyLines: 'Selected orders have no line items.',
             mergeNotePrefix: 'Merged orders',
             mergeOpenedForm: 'Merged table loaded into the new order form — review and click Save.',
+            mergeArchiveSourcesTitle: 'Archive merged source orders',
+            mergeArchiveSourcesConfirm:
+                'Move the original merged orders to trash? Dashboard revenue will not double-count them (you can restore from Trash). No — all orders stay in the list (totals may add up twice).',
+            mergeArchiveSourcesDone: 'Source orders moved to trash.',
+            mergeArchiveSourcesToggle: 'Move source orders to trash',
+            mergeArchiveSourcesToggleHint: 'If you don’t move them, dashboard revenue may be double-counted.',
+            mergeTotalsHint:
+                'Amount: sum of each selected order’s stored order total (not recalculated from the table rows).',
+            mergeQtyHint:
+                'Total pieces: line quantities are summed per order, then those sums are added together.',
+            mergeTotalQtyLabel: 'Total quantity (pcs)',
             activeList: 'Orders',
+            statsVisibleCount: 'Visible orders',
             trashBin: 'Trash',
             trashHint:
                 'Deleted orders appear here. Restore moves them back to the main list; the red trash icon permanently deletes the order and its line items.',
@@ -1395,7 +1496,12 @@ export const translations = {
             duplicateReportTitle: 'Duplicate product codes',
             duplicateReportNone: 'No duplicate codes found.',
             duplicateReportIntro: 'These codes appear on more than one product. Keep one and fix or delete the rest.',
-            tableCode: 'Code'
+            tableCode: 'Code',
+            deleteBlockedTitle: 'Cannot delete this product',
+            deleteBlockedByLinkedRows:
+                'This product is linked to other rows in the database (usually order line items in CRM — order_items, sometimes website reviews). PostgreSQL blocks deletion so order history stays consistent.\n\nTo hide it from the catalog, set it to Inactive. To delete it completely, first remove or change order lines that reference it; if there are reviews, delete them in the Website section.',
+            deleteBlockedOrderLines: 'Order line rows (approx.)',
+            deleteBlockedReviews: 'Website reviews (approx.)'
         },
         warehouse: {
             title: 'Warehouse Management',

@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Check, CreditCard, AlertCircle, X, Upload, ArrowLeft, ArrowRight, ShieldCheck, LogIn } from 'lucide-react';
 import { useApp } from '../hooks/useApp';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 import PageMeta from '../components/common/PageMeta';
 import { createOrder, uploadReceipt } from '../services/supabase/orders';
 import { getSettings } from '../services/supabase/settings';
 import { AUTH_RETURN_PATH_KEY } from '../constants/storageKeys';
 import { OTHER_VALUE, UZBEKISTAN_REGIONS, getCitiesForRegion } from '../data/uzbekistanDelivery';
+import { supabase } from '../supabaseClient';
 
 const countryCitiesFlat = {
     uzbekistan: ['tashkent', 'samarkand', 'bukhara', 'andijan', 'namangan', 'fergana', 'nukus', 'karshi'],
@@ -22,6 +24,7 @@ const countryCitiesFlat = {
 const CheckoutPage = () => {
     const { cart, getTotalPrice, clearCart, setCurrentPage, currentUser, setShowAuth, setIsLogin } = useApp();
     const { language, t, translateColor } = useLanguage();
+    const { isAdmin } = useAuth();
     const [paymentMethod, setPaymentMethod] = useState('humo');
     const [orderSuccess, setOrderSuccess] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -39,6 +42,8 @@ const CheckoutPage = () => {
         notes: ''
     });
     const [fieldErrors, setFieldErrors] = useState({});
+    /** `customers.country` JWT da bo‘lmasa ham yetkazib berish rejimini to‘g‘ri tanlash */
+    const [profileCountryFromDb, setProfileCountryFromDb] = useState(null);
 
     useEffect(() => {
         const fetchSettings = async () => {
@@ -51,7 +56,75 @@ const CheckoutPage = () => {
         fetchSettings();
     }, []);
 
-    const userCountry = (currentUser?.country || 'uzbekistan').toLowerCase();
+    /** Sessiya kechiksa yoki ma'lumot `customers`da bo'lsa — formani to'ldirish (birinchi render bo'sh qolmasin) */
+    useEffect(() => {
+        if (!currentUser?.id) {
+            setProfileCountryFromDb(null);
+            return;
+        }
+        setProfileCountryFromDb(null);
+        let cancelled = false;
+
+        const mergeFromProfile = (patch) => {
+            if (cancelled) return;
+            setFormData((prev) => ({
+                ...prev,
+                name: prev.name.trim() ? prev.name : (patch.name || ''),
+                phone: prev.phone.trim() ? prev.phone : (patch.phone || ''),
+                address: prev.address.trim() ? prev.address : (patch.address || ''),
+            }));
+        };
+
+        mergeFromProfile({
+            name: currentUser.name || '',
+            phone: currentUser.phone || '',
+            address: '',
+        });
+
+        (async () => {
+            try {
+                let data = null;
+                const selFull = 'name, phone, address, country';
+                const selBasic = 'name, phone, address';
+                const fetchCustomer = async (col, val) => {
+                    let r = await supabase.from('customers').select(selFull).eq(col, val).maybeSingle();
+                    if (r.error && /column|country|schema/i.test(String(r.error.message || ''))) {
+                        r = await supabase.from('customers').select(selBasic).eq(col, val).maybeSingle();
+                    }
+                    return r;
+                };
+                const byId = await fetchCustomer('id', currentUser.id);
+                if (!byId.error) data = byId.data;
+                if (!data && currentUser.email) {
+                    const byEmail = await fetchCustomer('email', currentUser.email);
+                    if (!byEmail.error) data = byEmail.data;
+                }
+                if (cancelled || !data) return;
+                if (data.country != null && String(data.country).trim() !== '') {
+                    setProfileCountryFromDb(String(data.country).trim().toLowerCase());
+                }
+                mergeFromProfile({
+                    name: data.name || currentUser.name || '',
+                    phone: data.phone || currentUser.phone || '',
+                    address: data.address || '',
+                });
+            } catch {
+                /* ignore */
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [currentUser?.id, currentUser?.email, currentUser?.name, currentUser?.phone]);
+
+    /** Admin uchun checkout ko‘rinmasin — savatdagi tezkor buyurtmaga yo‘naltiramiz */
+    useEffect(() => {
+        if (!currentUser || !isAdmin) return;
+        setCurrentPage('cart');
+    }, [currentUser, isAdmin, setCurrentPage]);
+
+    const userCountry = (currentUser?.country || profileCountryFromDb || 'uzbekistan').toLowerCase();
     const isUzbekistan = userCountry === 'uzbekistan';
 
     const buildDeliveryAddressLine = () => {
@@ -191,6 +264,17 @@ const CheckoutPage = () => {
         setIsLogin(true);
         setShowAuth(true);
     };
+
+    if (currentUser && isAdmin) {
+        return (
+            <>
+                <PageMeta title={t('cart')} description={t('metaDescCart')} siteName={settings?.site_name} />
+                <div className="min-h-[45vh] flex flex-col items-center justify-center px-4 text-center">
+                    <p className="text-gray-600 max-w-md">{t('adminCheckoutRedirectMessage')}</p>
+                </div>
+            </>
+        );
+    }
 
     if (!currentUser) {
         return (

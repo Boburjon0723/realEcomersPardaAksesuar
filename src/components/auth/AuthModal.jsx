@@ -4,6 +4,7 @@ import { useApp } from '../../hooks/useApp';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { loginUser, registerUser, resetPassword } from '../../services/supabase/auth';
 import { AUTH_RETURN_PATH_KEY } from '../../constants/storageKeys';
+import { mapAuthUserToAppUser } from '../../utils/mapAuthUser';
 
 const countries = [
     { id: 'uzbekistan', code: '+998', name: 'uzbekistan' },
@@ -112,28 +113,71 @@ const AuthModal = () => {
             return;
         }
 
+        if (!isLogin && formData.password.length < 6) {
+            setError(t('passwordMinLength'));
+            return;
+        }
+
+        /** Kirish faqat Supabase `signInWithPassword({ email, password })` — telefon bilan kirish yo‘q */
+        if (isLogin) {
+            const emailRaw = (formData.email || '').trim();
+            const passwordRaw = formData.password || '';
+            if (!emailRaw) {
+                setError(t('emailRequired') || 'Email kiriting');
+                return;
+            }
+            const digitsOnlyEmail = emailRaw.replace(/\D/g, '');
+            const looksLikePhoneInEmail =
+                !emailRaw.includes('@') &&
+                (digitsOnlyEmail.length >= 9 || /^\+?\d[\d\s-]{8,}$/.test(emailRaw));
+            if (looksLikePhoneInEmail) {
+                setError(t('loginUseEmailNotPhone'));
+                return;
+            }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw)) {
+                setError(t('emailInvalid'));
+                return;
+            }
+            const passClean = passwordRaw.replace(/[\s-]/g, '');
+            if (passClean.length >= 9 && /^\d+$/.test(passClean) && passClean.length <= 15) {
+                setError(t('loginPasswordNotPhoneHint'));
+                return;
+            }
+            if (!passwordRaw) {
+                setError(t('passwordRequired') || 'Parol kiriting');
+                return;
+            }
+        }
+
         setLoading(true);
         try {
             const fullPhone = formData.phoneCode + formData.phone.replace(/\D/g, '');
             let result;
             if (isLogin) {
-                result = await loginUser(formData.email, formData.password);
+                result = await loginUser(formData.email.trim(), formData.password);
             } else {
                 result = await registerUser(formData.password, formData.name, fullPhone, formData.country, formData.email);
             }
 
             if (result.success) {
-                // Determine user object to save (use returned user or construct one)
-                const user = result.user || { name: formData.name, phone: formData.phone, email: formData.email };
-                // Add extra fields if needed for local state immediately
-                if (!isLogin) {
-                    user.name = formData.name;
-                    user.phone = formData.phone;
-                    user.email = formData.email;
+                if (result.user) {
+                    const appUser = mapAuthUserToAppUser(result.user);
+                    if (appUser) {
+                        setCurrentUser(appUser);
+                        localStorage.setItem('user', JSON.stringify(appUser));
+                    }
+                } else if (!isLogin) {
+                    /** Email tasdiq yoqilgan bo‘lsa `user` bo‘lmasligi mumkin — forma + mamlakat saqlanadi */
+                    const fallback = {
+                        name: formData.name,
+                        phone: fullPhone,
+                        email: formData.email,
+                        country: String(formData.country || 'uzbekistan').toLowerCase(),
+                    };
+                    setCurrentUser(fallback);
+                    localStorage.setItem('user', JSON.stringify(fallback));
                 }
 
-                setCurrentUser(user);
-                localStorage.setItem('user', JSON.stringify(user));
                 setShowAuth(false);
                 try {
                     const returnTo = sessionStorage.getItem(AUTH_RETURN_PATH_KEY);
@@ -264,11 +308,13 @@ const AuthModal = () => {
                             <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors">@</span>
                             <input
                                 type="email"
+                                name="email"
                                 required
                                 value={formData.email}
                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                 className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none font-medium"
                                 placeholder="example@mail.com"
+                                autoComplete={isLogin ? 'username' : 'email'}
                             />
                         </div>
                     </div>
