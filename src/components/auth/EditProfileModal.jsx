@@ -30,8 +30,8 @@ const EditProfileModal = ({ user, onClose, onSuccess }) => {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-scale-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm ui-modal-overlay">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md ui-modal-panel">
                 <div className="flex items-center justify-between p-6 border-b border-gray-100">
                     <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                         <User className="w-5 h-5 text-primary" />

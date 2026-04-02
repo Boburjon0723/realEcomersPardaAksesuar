@@ -170,7 +170,7 @@ const ShopPage = () => {
                 {/* Mobile Filter - pastdan chiqadigan bottom sheet (yondan emas) */}
                 {showMobileFilters && (
                     <div className="fixed inset-0 z-50 md:hidden" onClick={() => setShowMobileFilters(false)}>
-                        <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
+                        <div className="absolute inset-0 bg-black/50 ui-modal-overlay" aria-hidden="true" />
                         <div
                             className="absolute bottom-0 left-0 right-0 max-h-[85vh] bg-white rounded-t-2xl shadow-2xl overflow-y-auto animate-slide-up"
                             onClick={e => e.stopPropagation()}

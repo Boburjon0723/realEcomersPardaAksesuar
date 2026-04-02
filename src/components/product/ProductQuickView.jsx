@@ -26,9 +26,9 @@ const ProductQuickView = ({ product, onClose }) => {
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-[2px] ui-modal-overlay" onClick={onClose}>
             <div
-                className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+                className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto ui-modal-panel"
                 onClick={e => e.stopPropagation()}
             >
                 <div className="flex flex-col md:flex-row">

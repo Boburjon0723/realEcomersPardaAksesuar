@@ -124,10 +124,10 @@ const AlbumPage = () => {
             {selectedImage && (
                 <>
                     <div
-                        className="fixed inset-0 bg-black/30 z-40 animate-fade-in pointer-events-none"
+                        className="fixed inset-0 bg-black/30 z-40 ui-modal-overlay pointer-events-none"
                         aria-hidden="true"
                     />
-                    <div className="fixed inset-y-0 right-0 w-full sm:max-w-lg md:max-w-xl lg:max-w-2xl bg-white z-50 shadow-2xl flex flex-col animate-slide-in-right">
+                    <div className="fixed inset-y-0 right-0 w-full sm:max-w-lg md:max-w-xl lg:max-w-2xl bg-white z-50 shadow-2xl flex flex-col ui-drawer-right">
                         <div className="flex items-center justify-between p-4 border-b border-gray-100 flex-shrink-0">
                             <h3 className="font-bold text-gray-900 text-sm sm:text-base truncate pr-2">
                                 {selectedImage[`title_${language}`] || selectedImage.title_uz || selectedImage.title_ru || selectedImage.title_en || ''}

@@ -4,32 +4,56 @@ const ORDERS_TABLE = 'orders';
 const ORDER_ITEMS_TABLE = 'order_items';
 const RECEIPTS_BUCKET = 'receipts';
 
+function formatDbError(error) {
+    if (error == null) return "Noma'lum xato";
+    if (typeof error === 'string') return error;
+    const msg = error.message || error.msg;
+    const detail = error.details || error.detail;
+    const hint = error.hint;
+    const code = error.code;
+    const parts = [msg, detail, hint, code].filter(Boolean);
+    if (parts.length) return parts.join(' — ');
+    try {
+        return JSON.stringify(error);
+    } catch {
+        return String(error);
+    }
+}
+
+/** CRMda yetkazildi / tugallandi — mijoz saytida ro‘yxatda ko‘rinmasin (bazadan o‘chirilmaydi). */
+function isOrderHiddenFromCustomerList(status) {
+    if (status == null || status === '') return false;
+    const s = String(status).toLowerCase().trim();
+    const hidden = new Set([
+        'completed',
+        'yakunlangan',
+        'tugallandi',
+        'tugallangan',
+        'delivered',
+        'yetkazildi',
+    ]);
+    return hidden.has(s);
+}
+
 // Create new order
 export const createOrder = async (orderData) => {
     console.log('Creating order with data:', orderData);
     try {
         const userId = orderData.userId !== 'guest' ? orderData.userId : null;
 
-        // Ensure customer exists in public.customers if logged in
+        // Kirgan foydalanuvchi: customers qatori (FK) + ba'zi RLS lar user_id ni talab qiladi
         if (userId) {
-            const { data: existingCustomer, error: fetchError } = await supabase
-                .from('customers')
-                .select('id')
-                .eq('id', userId)
-                .maybeSingle();
-
-            if (!existingCustomer && !fetchError) {
-                // If user is logged in but doesn't have a record in customers table, create it
-                await supabase.from('customers').insert([
-                    {
-                        id: userId,
-                        name: orderData.customerInfo.name,
-                        phone: orderData.customerInfo.phone,
-                        email: orderData.customerInfo.email || null,
-                        address: orderData.customerInfo.address || ''
-                    }
-                ]);
-            }
+            const { error: custErr } = await supabase.from('customers').upsert(
+                {
+                    id: userId,
+                    name: orderData.customerInfo.name,
+                    phone: orderData.customerInfo.phone,
+                    email: orderData.customerInfo.email || null,
+                    address: orderData.customerInfo.address || '',
+                },
+                { onConflict: 'id' }
+            );
+            if (custErr) throw custErr;
         }
 
         // 1. Insert into orders table
@@ -44,8 +68,11 @@ export const createOrder = async (orderData) => {
             payment_method_detail: orderData.paymentMethodDetail || null,
             receipt_url: orderData.receiptUrl || null,
             source: orderData.source || 'website',
-            customer_id: userId // Link to customer table
+            customer_id: userId,
         };
+        if (userId) {
+            orderRecord.user_id = userId;
+        }
 
         const { data: order, error: orderError } = await supabase
             .from(ORDERS_TABLE)
@@ -54,10 +81,9 @@ export const createOrder = async (orderData) => {
             .single();
 
         if (orderError) throw orderError;
-        // ... (remaining code unchanged)
 
         // 2. Insert items into order_items table
-        const orderItems = orderData.products.map(item => ({
+        const orderItems = orderData.products.map((item) => ({
             order_id: order.id,
             product_id: item.id,
             product_name: typeof item.name === 'object' ? item.name.uz : item.name,
@@ -66,7 +92,7 @@ export const createOrder = async (orderData) => {
             subtotal: Number(item.price) * Number(item.quantity),
             color: item.color || null,
             size: item.size || null,
-            image_url: item.image || null
+            image_url: item.image || null,
         }));
 
         const { error: itemsError } = await supabase
@@ -81,7 +107,7 @@ export const createOrder = async (orderData) => {
         return { success: true, orderId: order.id };
     } catch (error) {
         console.error('Error creating order:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: formatDbError(error) };
     }
 };
 
@@ -132,8 +158,13 @@ export const getUserOrders = async (userId) => {
 
         if (error) throw error;
 
+        const visible = (data || []).filter((row) => {
+            if (row.deleted_at != null) return false;
+            return !isOrderHiddenFromCustomerList(row.status);
+        });
+
         // Map to expected format
-        const formattedData = data.map(order => ({
+        const formattedData = visible.map((order) => ({
             ...order,
             customerName: order.customer_name,
             totalAmount: Number(order.total),

@@ -230,6 +230,8 @@ export const translations = {
         adminCheckoutDisabledHint:
             "Admin akkaunt: odatiy to‘lov / chek sahifasi o‘chirilgan. Buyurtmani quyidagi tugma orqali yuboring.",
         adminCheckoutRedirectMessage: "Siz admin sifatida kirdingiz — sizni savatga yo‘naytirmoqdamiz. Buyurtmani u yerda «Admin» tugmasi bilan bering.",
+        adminDownloadOrderPdf: "PDF yuklab olish",
+        adminDownloadOrderPdfError: "PDF yaratishda xatolik. Internet yoki brauzer sozlamalarini tekshiring.",
 
         // --- Checkout ---
         personalInfo: "Shaxsiy Ma'lumotlar",
@@ -705,6 +707,8 @@ export const translations = {
             "Аккаунт админа: обычная страница оплаты и чека отключена. Оформите заказ кнопкой ниже.",
         adminCheckoutRedirectMessage:
             "Вы вошли как администратор — перенаправляем в корзину. Оформите заказ там кнопкой «Админ».",
+        adminDownloadOrderPdf: "Скачать PDF",
+        adminDownloadOrderPdfError: "Не удалось создать PDF. Проверьте сеть или настройки браузера.",
 
         // --- Checkout ---
         personalInfo: "Личные Данные",
@@ -1177,6 +1181,8 @@ export const translations = {
             "Admin account: the standard payment / receipt checkout is disabled. Use the button below to place the order.",
         adminCheckoutRedirectMessage:
             "You are signed in as an admin — redirecting to your cart. Place the order there with the Admin button.",
+        adminDownloadOrderPdf: "Download PDF",
+        adminDownloadOrderPdfError: "Could not create PDF. Check your network or browser settings.",
 
         // --- Checkout ---
         personalInfo: "Personal Information",

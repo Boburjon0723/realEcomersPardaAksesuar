@@ -1,10 +1,11 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { ShoppingCart, Minus, Plus, Trash2, ArrowRight, ArrowLeft, X, Shield } from 'lucide-react';
 import { useApp } from '../hooks/useApp';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import PageMeta from '../components/common/PageMeta';
 import { createOrder } from '../services/supabase/orders';
+import { FLASH_ORDER_OK_KEY } from '../constants/storageKeys';
 
 const CartPage = () => {
     const { cart, removeFromCart, updateQuantity, calculatePrice, getTotalPrice, setCurrentPage, settings, currentUser, clearCart } = useApp();
@@ -14,22 +15,72 @@ const CartPage = () => {
     const [adminModalOpen, setAdminModalOpen] = useState(false);
     const [adminSubmitting, setAdminSubmitting] = useState(false);
     const [adminError, setAdminError] = useState('');
+    const [adminLinePrices, setAdminLinePrices] = useState({});
     const [adminForm, setAdminForm] = useState({
         name: '',
         phone: '',
-        address: '',
-        notes: ''
     });
+    const adminErrorRef = useRef(null);
+
+    const parseAdminUnitPrice = useCallback((raw, item) => {
+        if (raw !== undefined && raw !== null && String(raw).trim() !== '') {
+            const n = Number(String(raw).trim().replace(/\s/g, '').replace(',', '.'));
+            if (Number.isFinite(n) && n >= 0) return n;
+        }
+        return Number(calculatePrice(item, item.quantity)) || 0;
+    }, [calculatePrice]);
+
+    useEffect(() => {
+        if (!adminError || !adminModalOpen) return;
+        adminErrorRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }, [adminError, adminModalOpen]);
 
     const openAdminModal = useCallback(() => {
         setAdminError('');
+        setAdminLinePrices((prev) => {
+            const next = { ...prev };
+            for (const item of cart) {
+                if (!(item.cartItemId in next) || next[item.cartItemId] === '') {
+                    const unit = Number(calculatePrice(item, item.quantity)) || 0;
+                    next[item.cartItemId] = String(unit);
+                }
+            }
+            for (const key of Object.keys(next)) {
+                if (!cart.some((i) => i.cartItemId === key)) delete next[key];
+            }
+            return next;
+        });
         setAdminForm((prev) => ({
             ...prev,
             name: (currentUser?.name || '').trim(),
             phone: (currentUser?.phone || '').trim(),
         }));
         setAdminModalOpen(true);
-    }, [currentUser?.name, currentUser?.phone]);
+    }, [calculatePrice, cart, currentUser?.name, currentUser?.phone]);
+
+    useEffect(() => {
+        if (!isAdmin) return;
+        setAdminLinePrices((prev) => {
+            const next = { ...prev };
+            for (const item of cart) {
+                if (!(item.cartItemId in next)) {
+                    const unit = Number(calculatePrice(item, item.quantity)) || 0;
+                    next[item.cartItemId] = String(unit);
+                }
+            }
+            for (const key of Object.keys(next)) {
+                if (!cart.some((i) => i.cartItemId === key)) delete next[key];
+            }
+            return next;
+        });
+    }, [isAdmin, cart, calculatePrice]);
+
+    const adminCartTotal = cart.reduce((sum, item) => {
+        const unit = parseAdminUnitPrice(adminLinePrices[item.cartItemId], item);
+        return sum + unit * Number(item.quantity || 0);
+    }, 0);
+
+    const summaryTotal = isAdmin ? adminCartTotal : getTotalPrice();
 
     const handleAdminQuickOrder = async (e) => {
         e.preventDefault();
@@ -48,12 +99,36 @@ const CartPage = () => {
             setAdminError(t('phoneRequired'));
             return;
         }
+        for (const item of cart) {
+            if (item.id == null || item.id === '') {
+                setAdminError(
+                    language === 'uz'
+                        ? 'Savatda mahsulot ID yo‘q. Sahifani yangilab, qayta qo‘shing.'
+                        : language === 'ru'
+                          ? 'У товара нет ID. Обновите страницу и добавьте снова.'
+                          : 'Cart item has no product id. Refresh and re-add the product.'
+                );
+                return;
+            }
+        }
+        const parsedLinePrices = {};
+        for (const item of cart) {
+            parsedLinePrices[item.cartItemId] = parseAdminUnitPrice(adminLinePrices[item.cartItemId], item);
+        }
 
         setAdminSubmitting(true);
         try {
-            const noteHead = t('adminQuickOrderPaymentLabel');
-            const extra = adminForm.notes.trim();
-            const notesCombined = extra ? `${noteHead}\n${extra}` : noteHead;
+            const notesCombined = t('adminQuickOrderPaymentLabel');
+            const productsForOrder = cart.map((item) => ({
+                id: item.id,
+                name: item.name,
+                price: parsedLinePrices[item.cartItemId],
+                quantity: item.quantity,
+                image: item.images?.[0] || item.model_3d_url || '',
+                color: item.selectedColor || item.color,
+                size: item.size
+            }));
+            const totalForOrder = productsForOrder.reduce((sum, p) => sum + (Number(p.price) * Number(p.quantity)), 0);
 
             const orderData = {
                 userId: currentUser.id,
@@ -61,19 +136,11 @@ const CartPage = () => {
                     name,
                     phone,
                     email: currentUser.email || '',
-                    address: (adminForm.address || '').trim() || '—',
+                    address: '—',
                     notes: notesCombined
                 },
-                products: cart.map((item) => ({
-                    id: item.id,
-                    name: item.name,
-                    price: item.price,
-                    quantity: item.quantity,
-                    image: item.images?.[0] || item.model_3d_url || '',
-                    color: item.selectedColor || item.color,
-                    size: item.size
-                })),
-                totalPrice: getTotalPrice(),
+                products: productsForOrder,
+                totalPrice: totalForOrder,
                 status: 'new',
                 payment_status: 'unpaid',
                 paymentMethod: 'admin_quick',
@@ -87,15 +154,21 @@ const CartPage = () => {
             if (!orderResult.success) throw new Error(orderResult.error || 'Order failed');
 
             setAdminModalOpen(false);
-            clearCart();
-            window.alert(t('adminQuickOrderSuccess'));
-            setCurrentPage('home');
+            try {
+                sessionStorage.setItem(FLASH_ORDER_OK_KEY, '1');
+            } catch {
+                /* ignore */
+            }
+            setCurrentPage('orders');
+            window.setTimeout(() => clearCart(), 0);
         } catch (err) {
             if (process.env.NODE_ENV === 'development') {
                 // eslint-disable-next-line no-console
                 console.error('Admin quick order:', err);
             }
-            setAdminError(err.message || t('orderCreationFailed'));
+            const msg = err?.message || t('orderCreationFailed');
+            setAdminError(msg);
+            window.alert(msg);
         } finally {
             setAdminSubmitting(false);
         }
@@ -133,8 +206,14 @@ const CartPage = () => {
                 {/* Cart Items */}
                 <div className="lg:col-span-2 space-y-6">
                     {cart.map(item => {
-                        const itemPrice = calculatePrice(item, item.quantity);
-                        const discount = Math.round((1 - itemPrice / item.price) * 100);
+                        const catalogUnit = calculatePrice(item, item.quantity);
+                        const displayUnit = isAdmin
+                            ? parseAdminUnitPrice(adminLinePrices[item.cartItemId], item)
+                            : catalogUnit;
+                        const discount =
+                            !isAdmin && item.price > 0
+                                ? Math.round((1 - catalogUnit / item.price) * 100)
+                                : 0;
 
                         return (
                             <div key={item.cartItemId} className="group bg-white rounded-xl p-4 md:p-6 flex gap-6 border border-gray-100 hover:border-gray-200 transition-colors shadow-sm">
@@ -217,9 +296,30 @@ const CartPage = () => {
 
                                         <div className="text-right">
                                             <div className="flex items-center gap-2 justify-end">
-                                                <span className="text-xl font-bold text-primary">
-                                                    ${itemPrice.toLocaleString()}
-                                                </span>
+                                                {isAdmin ? (
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="text-lg font-bold text-primary">$</span>
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            step="0.01"
+                                                            inputMode="decimal"
+                                                            value={adminLinePrices[item.cartItemId] ?? ''}
+                                                            onChange={(e) =>
+                                                                setAdminLinePrices((prev) => ({
+                                                                    ...prev,
+                                                                    [item.cartItemId]: e.target.value,
+                                                                }))
+                                                            }
+                                                            className="w-20 sm:w-24 text-right text-xl font-bold text-primary border border-amber-200 rounded-lg px-2 py-1 bg-amber-50/50 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                                                            aria-label={t('total')}
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-xl font-bold text-primary">
+                                                        ${displayUnit.toLocaleString()}
+                                                    </span>
+                                                )}
                                             </div>
                                             {discount > 0 && (
                                                 <div className="text-sm text-green-600 font-medium">
@@ -250,7 +350,7 @@ const CartPage = () => {
                         <div className="space-y-4 mb-6 pt-2">
                             <div className="flex justify-between text-gray-600">
                                 <span>{t('subtotal') || 'Jami summa'}</span>
-                                <span className="font-medium">${getTotalPrice().toLocaleString()}</span>
+                                <span className="font-medium">${summaryTotal.toLocaleString()}</span>
                             </div>
                         </div>
 
@@ -258,7 +358,7 @@ const CartPage = () => {
                             <div className="flex justify-between items-end">
                                 <span className="text-lg font-bold text-gray-900">{t('total')}:</span>
                                 <span className="text-3xl font-display font-bold text-primary">
-                                    ${getTotalPrice().toLocaleString()}
+                                    ${summaryTotal.toLocaleString()}
                                 </span>
                             </div>
                         </div>
@@ -299,8 +399,8 @@ const CartPage = () => {
         </div>
 
         {adminModalOpen ? (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50" role="dialog" aria-modal="true" aria-labelledby="admin-quick-order-title">
-                <div className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-gray-200">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-[2px] ui-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="admin-quick-order-title">
+                <div className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-gray-200 ui-modal-panel">
                     <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                         <h2 id="admin-quick-order-title" className="text-lg font-bold text-gray-900 flex items-center gap-2">
                             <Shield className="w-5 h-5 text-amber-600" />
@@ -317,9 +417,6 @@ const CartPage = () => {
                     </div>
                     <p className="px-5 pt-3 text-sm text-gray-600">{t('adminQuickOrderHint')}</p>
                     <form onSubmit={handleAdminQuickOrder} className="p-5 space-y-4">
-                        {adminError ? (
-                            <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{adminError}</div>
-                        ) : null}
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-1">{t('name')}</label>
                             <input
@@ -342,25 +439,43 @@ const CartPage = () => {
                                 required
                             />
                         </div>
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">{t('address')}</label>
-                            <input
-                                type="text"
-                                value={adminForm.address}
-                                onChange={(e) => setAdminForm((f) => ({ ...f, address: e.target.value }))}
-                                className="w-full border border-gray-200 rounded-lg px-3 py-2"
-                                placeholder="—"
-                            />
+                        <div className="space-y-2">
+                            <p className="text-xs text-gray-500 leading-relaxed">
+                                {language === 'uz'
+                                    ? 'Mahsulot va miqdorni tekshiring. Narxlar shu modaldan ko‘rsatilmaydi (savatda belgilanadi).'
+                                    : language === 'ru'
+                                      ? 'Проверьте товары и количество. Цены здесь не показываются (задаются в корзине).'
+                                      : 'Check products and quantities. Prices are not shown here (set on the cart).'}
+                            </p>
+                            <div className="max-h-56 overflow-auto rounded-lg bg-gray-50 px-3 py-2 space-y-2">
+                                {cart.map((item) => (
+                                    <div
+                                        key={item.cartItemId}
+                                        className="text-sm text-gray-800 border-b border-gray-200/80 last:border-0 last:pb-0 pb-2"
+                                    >
+                                        <div className="font-medium text-gray-900 truncate">
+                                            {item[`name_${language}`] || item.name || ''}
+                                        </div>
+                                        <div className="text-xs text-gray-500">
+                                            {language === 'uz'
+                                                ? `Miqdor: ${item.quantity}`
+                                                : language === 'ru'
+                                                  ? `Кол-во: ${item.quantity}`
+                                                  : `Qty: ${item.quantity}`}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">{t('notes')}</label>
-                            <textarea
-                                value={adminForm.notes}
-                                onChange={(e) => setAdminForm((f) => ({ ...f, notes: e.target.value }))}
-                                rows={3}
-                                className="w-full border border-gray-200 rounded-lg px-3 py-2 resize-y"
-                            />
-                        </div>
+                        {adminError ? (
+                            <div
+                                ref={adminErrorRef}
+                                role="alert"
+                                className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2"
+                            >
+                                {adminError}
+                            </div>
+                        ) : null}
                         <div className="flex gap-3 pt-2">
                             <button
                                 type="button"

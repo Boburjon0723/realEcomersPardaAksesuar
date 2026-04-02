@@ -1,15 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Calendar, ArrowLeft, ShoppingBag, ExternalLink } from 'lucide-react';
+import { Package, Calendar, ArrowLeft, ShoppingBag, ExternalLink, Download } from 'lucide-react';
 import { useApp } from '../hooks/useApp';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 import PageMeta from '../components/common/PageMeta';
 import { getUserOrders } from '../services/supabase/orders';
+import { downloadOrderPdf } from '../utils/orderPdf';
+import { FLASH_ORDER_OK_KEY } from '../constants/storageKeys';
 
 const MyOrdersPage = () => {
     const { currentUser, setCurrentPage, language, settings } = useApp();
     const { t, translateColor } = useLanguage();
+    const { isAdmin } = useAuth();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [pdfLoadingId, setPdfLoadingId] = useState(null);
+    const [showOrderPlacedFlash, setShowOrderPlacedFlash] = useState(false);
+
+    useEffect(() => {
+        try {
+            if (sessionStorage.getItem(FLASH_ORDER_OK_KEY) === '1') {
+                sessionStorage.removeItem(FLASH_ORDER_OK_KEY);
+                setShowOrderPlacedFlash(true);
+            }
+        } catch {
+            /* ignore */
+        }
+    }, []);
 
     useEffect(() => {
         if (!currentUser) {
@@ -53,6 +70,26 @@ const MyOrdersPage = () => {
         });
     };
 
+    const handleAdminDownloadPdf = async (order) => {
+        setPdfLoadingId(order.id);
+        try {
+            await downloadOrderPdf(order, {
+                language,
+                siteName: settings?.site_name,
+                translateColor,
+                statusLabel: t(order.status?.toLowerCase()) || order.status,
+            });
+        } catch (err) {
+            if (process.env.NODE_ENV === 'development') {
+                // eslint-disable-next-line no-console
+                console.error('Order PDF:', err);
+            }
+            window.alert(t('adminDownloadOrderPdfError'));
+        } finally {
+            setPdfLoadingId(null);
+        }
+    };
+
     if (loading) {
         return (
             <div className="min-h-[60vh] flex items-center justify-center">
@@ -72,6 +109,23 @@ const MyOrdersPage = () => {
                 <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
                 {t('backToShop') || 'Back to Shop'}
             </button>
+
+            {showOrderPlacedFlash ? (
+                <div
+                    className="mb-6 flex items-start justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-950"
+                    role="status"
+                >
+                    <p className="text-sm font-semibold leading-snug">{t('adminQuickOrderSuccess')}</p>
+                    <button
+                        type="button"
+                        onClick={() => setShowOrderPlacedFlash(false)}
+                        className="shrink-0 rounded-lg px-2 py-1 text-lg leading-none text-emerald-800 hover:bg-emerald-100/80"
+                        aria-label={language === 'uz' ? 'Yopish' : language === 'ru' ? 'Закрыть' : 'Dismiss'}
+                    >
+                        ×
+                    </button>
+                </div>
+            ) : null}
 
             <div className="flex items-center justify-between mb-10">
                 <h1 className="text-3xl md:text-4xl font-display font-bold text-gray-900 flex items-center">
@@ -154,22 +208,35 @@ const MyOrdersPage = () => {
                                     </div>
                                 </div>
 
-                                <div className="flex items-center justify-between">
+                                <div className="flex flex-wrap items-end justify-between gap-4">
                                     <div>
                                         <div className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-1">{t('total') || 'Total'}</div>
                                         <div className="text-2xl font-black text-primary">${order.totalAmount.toLocaleString()}</div>
                                     </div>
-                                    {order.receipt_url && (
-                                        <a
-                                            href={order.receipt_url || '#'}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex items-center text-xs font-bold text-secondary hover:text-primary transition-colors bg-gray-50 px-4 py-2 rounded-lg"
-                                        >
-                                            <ExternalLink className="w-4 h-4 mr-2" />
-                                            {language === 'uz' ? "To'lov cheki" : language === 'ru' ? 'Чек оплаты' : "Payment Receipt"}
-                                        </a>
-                                    )}
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        {isAdmin && (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleAdminDownloadPdf(order)}
+                                                disabled={pdfLoadingId === order.id}
+                                                className="flex items-center text-xs font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 border border-amber-300 px-4 py-2 rounded-lg transition-colors disabled:opacity-60"
+                                            >
+                                                <Download className="w-4 h-4 mr-2 shrink-0" />
+                                                {pdfLoadingId === order.id ? t('processing') : t('adminDownloadOrderPdf')}
+                                            </button>
+                                        )}
+                                        {order.receipt_url && (
+                                            <a
+                                                href={order.receipt_url || '#'}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center text-xs font-bold text-secondary hover:text-primary transition-colors bg-gray-50 px-4 py-2 rounded-lg"
+                                            >
+                                                <ExternalLink className="w-4 h-4 mr-2" />
+                                                {language === 'uz' ? "To'lov cheki" : language === 'ru' ? 'Чек оплаты' : 'Payment Receipt'}
+                                            </a>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>

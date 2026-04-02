@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ShoppingCart, User, Search, Menu, X, Globe, LogOut, Package, ChevronDown } from 'lucide-react';
 import { useApp } from '../../hooks/useApp';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -45,6 +45,21 @@ const Header = () => {
         privacy: t('privacy')
     }[currentPage];
     const [mobileMenu, setMobileMenu] = useState(false);
+    const [mobileMenuExiting, setMobileMenuExiting] = useState(false);
+
+    const closeMobileMenu = useCallback(() => {
+        if (!mobileMenu || mobileMenuExiting) return;
+        setMobileMenuExiting(true);
+        window.setTimeout(() => {
+            setMobileMenu(false);
+            setMobileMenuExiting(false);
+        }, 280);
+    }, [mobileMenu, mobileMenuExiting]);
+
+    const openMobileMenu = useCallback(() => {
+        setMobileMenuExiting(false);
+        setMobileMenu(true);
+    }, []);
 
     return (
         <header className="sticky top-0 bg-white shadow-sm z-50 border-b border-gray-100">
@@ -112,7 +127,7 @@ const Header = () => {
                                 <ChevronDown className={`w-4 h-4 md:w-3.5 md:h-3.5 text-gray-400 transition-transform shrink-0 hidden md:block ${showLangDropdown ? 'rotate-180' : ''}`} />
                             </button>
                             {showLangDropdown && (
-                                <div className="absolute right-0 mt-2 w-48 min-w-[180px] bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50 md:w-40 md:min-w-0">
+                                <div className="absolute right-0 mt-2 w-48 min-w-[180px] bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50 md:w-40 md:min-w-0 origin-top-right ui-dropdown-animate">
                                     {LANGUAGES.map(({ code, label }) => (
                                         <button
                                             key={code}
@@ -151,7 +166,7 @@ const Header = () => {
                                 </button>
 
                                 {/* Dropdown Menu */}
-                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                                <div className="absolute right-0 mt-2 w-48 origin-top-right bg-white rounded-lg shadow-lg border border-gray-100 opacity-0 invisible scale-95 -translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:scale-100 group-hover:translate-y-0 transition-all duration-200 ease-out">
                                     <div className="p-3 border-b border-gray-100">
                                         <p className="text-sm font-bold text-gray-900 truncate">{currentUser.name}</p>
                                         <p className="text-xs text-secondary font-bold truncate">{currentUser.phone}</p>
@@ -199,7 +214,7 @@ const Header = () => {
                         {/* Mobile Menu Toggle */}
                         <button
                             className="md:hidden p-2 text-gray-700 hover:text-primary transition-colors"
-                            onClick={() => setMobileMenu(true)}
+                            onClick={openMobileMenu}
                         >
                             <Menu className="w-5 h-5" />
                         </button>
@@ -212,16 +227,17 @@ const Header = () => {
                 <div className="fixed inset-0 z-[60] md:hidden">
                     {/* Backdrop */}
                     <div
-                        className="absolute inset-0 bg-black/50 animate-mobile-backdrop-in"
-                        onClick={() => setMobileMenu(false)}
+                        className={`absolute inset-0 bg-black/50 ${mobileMenuExiting ? 'animate-mobile-backdrop-out' : 'animate-mobile-backdrop-in'}`}
+                        onClick={closeMobileMenu}
                     />
 
                     {/* Menu Panel */}
-                    <div className="absolute right-0 top-0 bottom-0 w-[280px] max-w-[85vw] bg-white shadow-2xl animate-mobile-menu-in">
+                    <div className={`absolute right-0 top-0 bottom-0 w-[280px] max-w-[85vw] bg-white shadow-2xl ${mobileMenuExiting ? 'animate-mobile-menu-out' : 'animate-mobile-menu-in'}`}
+                    >
                         {/* Header */}
                         <div className="flex items-center justify-between p-4 border-b">
                             <h3 className="text-lg font-bold">Menu</h3>
-                            <button onClick={() => setMobileMenu(false)} className="p-2">
+                            <button onClick={closeMobileMenu} className="p-2">
                                 <X className="w-6 h-6" />
                             </button>
                         </div>
@@ -254,7 +270,7 @@ const Header = () => {
                                                 setSelectedCategory(null);
                                                 setSearchQuery('');
                                             }
-                                            setMobileMenu(false);
+                                            closeMobileMenu();
                                         }}
                                         className={`w-full text-left px-4 py-3 rounded-lg capitalize ${isNavActive(page)
                                             ? 'bg-primary/10 text-primary font-semibold'
@@ -273,7 +289,7 @@ const Header = () => {
                                     <button
                                         onClick={() => {
                                             setCurrentPage('profile');
-                                            setMobileMenu(false);
+                                            closeMobileMenu();
                                         }}
                                         className="w-full py-2 bg-white border border-gray-200 text-gray-800 rounded-lg text-sm mb-2 font-bold"
                                     >
@@ -282,7 +298,7 @@ const Header = () => {
                                     <button
                                         onClick={() => {
                                             setCurrentPage('orders');
-                                            setMobileMenu(false);
+                                            closeMobileMenu();
                                         }}
                                         className="w-full py-2 bg-white border border-gray-200 text-gray-800 rounded-lg text-sm mb-2 font-bold"
                                     >
@@ -293,7 +309,7 @@ const Header = () => {
                                             logoutUser();
                                             setCurrentUser(null);
                                             localStorage.removeItem('user');
-                                            setMobileMenu(false);
+                                            closeMobileMenu();
                                             window.location.reload();
                                         }}
                                         className="w-full py-2 bg-red-500 text-white rounded-lg text-sm"
@@ -306,7 +322,7 @@ const Header = () => {
                                     onClick={() => {
                                         setIsLogin(false);
                                         setShowAuth(true);
-                                        setMobileMenu(false);
+                                        closeMobileMenu();
                                     }}
                                     className="w-full py-3 bg-primary text-white rounded-lg font-bold mb-4"
                                 >
@@ -324,7 +340,7 @@ const Header = () => {
                                     {LANGUAGES.map(({ code, label }) => (
                                         <button
                                             key={code}
-                                            onClick={() => { changeLanguage(code); setMobileMenu(false); }}
+                                            onClick={() => { changeLanguage(code); closeMobileMenu(); }}
                                             className={`w-full text-left px-4 py-3 rounded-lg text-sm ${language === code ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-gray-100 text-gray-700'}`}
                                         >
                                             {label}
