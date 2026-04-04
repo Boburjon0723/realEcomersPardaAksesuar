@@ -33,3 +33,7 @@ catalog-vitrina/.git/
 /CRM-tizimi--master/**/node_modules/
 /CRM-tizimi--master/**/.next/
 /CRM-tizimi--master/**/.vercel/
+
+# Telegram finance bot (ichki loyiha)
+telegram-finance-bot/node_modules/
+telegram-finance-bot/.env

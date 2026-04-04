@@ -12,5 +12,12 @@ ADD COLUMN IF NOT EXISTS images TEXT[] DEFAULT '{}';
 ALTER TABLE products 
 ADD COLUMN IF NOT EXISTS original_price NUMERIC DEFAULT 0;
 
+-- 4. stock / min_stock: CRM ombor, buyurtmalar va moliya integratsiyasi (supabase_fresh_install_complete.sql bilan mos)
+ALTER TABLE products
+ADD COLUMN IF NOT EXISTS stock INTEGER DEFAULT 0;
+
+ALTER TABLE products
+ADD COLUMN IF NOT EXISTS min_stock INTEGER DEFAULT 0;
+
 -- Optional: Add detailed description if needed (description is already there but maybe we want specific sections)
 -- ALTER TABLE products ADD COLUMN IF NOT EXISTS specs JSONB DEFAULT '{}';
