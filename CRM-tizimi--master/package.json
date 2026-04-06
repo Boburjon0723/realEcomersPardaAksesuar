@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "npm run dev --prefix ./CRM-tizimi--master",
     "dev:fresh": "npm run dev:fresh --prefix ./CRM-tizimi--master",
+    "dev:poll": "npm run dev:poll --prefix ./CRM-tizimi--master",
     "dev:clean": "npm run dev:clean --prefix ./CRM-tizimi--master",
     "build": "npm run build --prefix ./CRM-tizimi--master",
     "start": "npm run start --prefix ./CRM-tizimi--master",

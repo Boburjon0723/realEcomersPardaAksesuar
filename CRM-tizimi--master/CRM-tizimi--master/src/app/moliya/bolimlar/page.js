@@ -1,6 +1,6 @@
 'use client'
 
-import { Fragment, useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
 import Header from '@/components/Header'
 import MoliyaTopNav from '@/components/MoliyaTopNav'
@@ -22,6 +22,22 @@ function deptPathLabels(stack, departments, language) {
         const d = departments.find((x) => x.id === id)
         return d ? pickLocalizedName(d, language) : ''
     })
+}
+
+/** O‘g‘il bo‘limlar idlari (fizik o‘chirish material_movements RESTRICT sabab 409 beradi — nofaollashtirish uchun). */
+function collectDepartmentSubtreeIds(rootId, allDepts) {
+    const ids = new Set([rootId])
+    let growing = true
+    while (growing) {
+        growing = false
+        for (const d of allDepts) {
+            if (d?.id && d.parent_id != null && ids.has(d.parent_id) && !ids.has(d.id)) {
+                ids.add(d.id)
+                growing = true
+            }
+        }
+    }
+    return [...ids]
 }
 
 export default function MoliyaBolimlarPage() {
@@ -50,7 +66,7 @@ export default function MoliyaBolimlarPage() {
     const [expEditId, setExpEditId] = useState(null)
     const [expForm, setExpForm] = useState({
         material_name: '',
-        quantity: '',
+        quantity: '1',
         amount: '',
         currency: 'UZS',
         expense_date: new Date().toISOString().split('T')[0],
@@ -215,29 +231,19 @@ export default function MoliyaBolimlarPage() {
         return { UZS: uz, USD: us }
     }, [expenseEntries])
 
-    const groupedExpenseEntries = useMemo(() => {
-        const toEpoch = (e) => {
-            const base = String(e.expense_date || '')
-            const time = e.created_at ? new Date(e.created_at).toTimeString().slice(0, 8) : '00:00:00'
-            const dt = new Date(`${base}T${time}`)
-            const t = dt.getTime()
-            return Number.isNaN(t) ? 0 : t
+    /** Eng yangi sana yuqorida; bir kunda oxirgi kiritilgan yozuv yuqorida. */
+    const sortedExpenseEntries = useMemo(() => {
+        const ymd = (e) => String(e?.expense_date ?? '').trim().slice(0, 10)
+        const createdMs = (e) => {
+            const t = e?.created_at ? new Date(e.created_at).getTime() : 0
+            return Number.isFinite(t) ? t : 0
         }
-
-        const groupsMap = {}
-        for (const en of expenseEntries) {
-            const label = rawMaterialById[en.raw_material_id] ? pickLocalizedName(rawMaterialById[en.raw_material_id], language) : '—'
-            if (!groupsMap[label]) groupsMap[label] = []
-            groupsMap[label].push(en)
-        }
-
-        const groups = Object.entries(groupsMap).map(([material, rows]) => {
-            const sortedRows = [...rows].sort((a, b) => toEpoch(b) - toEpoch(a))
-            return { material, rows: sortedRows, latest: sortedRows[0] ? toEpoch(sortedRows[0]) : 0 }
+        return [...expenseEntries].sort((a, b) => {
+            const cmp = ymd(b).localeCompare(ymd(a))
+            if (cmp !== 0) return cmp
+            return createdMs(b) - createdMs(a)
         })
-
-        return groups.sort((a, b) => b.latest - a.latest)
-    }, [expenseEntries, rawMaterialById, language])
+    }, [expenseEntries])
 
     const parentIdForNewDept = currentDeptId
 
@@ -279,14 +285,21 @@ export default function MoliyaBolimlarPage() {
     async function deleteDepartment(id) {
         if (!(await showConfirm(t('finances.departmentDeleteConfirm'), { variant: 'warning' }))) return
         try {
-            const { error } = await supabase.from('departments').delete().eq('id', id)
+            const ids = collectDepartmentSubtreeIds(id, departments)
+            const { error } = await supabase.from('departments').update({ is_active: false }).in('id', ids)
             if (error) throw error
-            setStack((s) => s.filter((x) => x !== id))
+            setStack((s) => s.filter((x) => !ids.includes(x)))
             const loadedDepts = await loadDepartments()
             await refreshDeptTotals(loadedDepts)
+            if (currentDeptId && ids.includes(currentDeptId)) setExpenseEntries([])
+            await showAlert(t('finances.departmentHiddenSuccess'), { variant: 'success' })
         } catch (err) {
             console.error(err)
-            await showAlert(t('common.deleteError'), { variant: 'error' })
+            const msg = err?.message || String(err)
+            const hint = /409|RESTRICT|foreign key|violate/i.test(msg)
+                ? `\n\n${t('finances.departmentDeleteConflictHint')}`
+                : ''
+            await showAlert(`${t('common.deleteError')}${hint}`, { variant: 'error' })
         }
     }
 
@@ -304,15 +317,15 @@ export default function MoliyaBolimlarPage() {
         e.preventDefault()
         if (!currentDeptId) return
 
-        const qty = parseFloat(expForm.quantity)
         const amt = parseFloat(expForm.amount)
         const materialName = (expForm.material_name || '').trim()
+        const qtyParsed = parseFloat(expForm.quantity)
+        const qty =
+            expEditId && Number.isFinite(qtyParsed) && qtyParsed > 0
+                ? qtyParsed
+                : 1
 
         if (!materialName) {
-            await showAlert(t('common.saveError'), { variant: 'warning' })
-            return
-        }
-        if (Number.isNaN(qty) || qty <= 0) {
             await showAlert(t('common.saveError'), { variant: 'warning' })
             return
         }
@@ -381,7 +394,7 @@ export default function MoliyaBolimlarPage() {
             setExpEditId(null)
             setExpForm({
                 material_name: '',
-                quantity: '',
+                quantity: '1',
                 amount: '',
                 currency: 'UZS',
                 expense_date: new Date().toISOString().split('T')[0],
@@ -495,7 +508,18 @@ export default function MoliyaBolimlarPage() {
                         </div>
                         <button
                             type="button"
-                            onClick={() => setExpenseModalOpen(true)}
+                            onClick={() => {
+                                setExpEditId(null)
+                                setExpForm({
+                                    material_name: '',
+                                    quantity: '1',
+                                    amount: '',
+                                    currency: 'UZS',
+                                    expense_date: new Date().toISOString().split('T')[0],
+                                    note: '',
+                                })
+                                setExpenseModalOpen(true)
+                            }}
                             className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs sm:text-sm font-semibold hover:bg-emerald-700 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-emerald-600 shrink-0"
                         >
                             <Plus size={16} />
@@ -536,64 +560,61 @@ export default function MoliyaBolimlarPage() {
                                 </tr>
                             </thead>
                             <tbody className="bg-white">
-                                {groupedExpenseEntries.length === 0 && (
+                                {sortedExpenseEntries.length === 0 && (
                                     <tr>
                                         <td colSpan={7} className="px-3 py-10 text-center text-gray-400">
                                             {t('finances.noExpenseEntries')}
                                         </td>
                                     </tr>
                                 )}
-                                {groupedExpenseEntries.map((group) => (
-                                    <Fragment key={`grp-${group.material}`}>
-                                        <tr className="border-t border-gray-200 bg-blue-50/60">
-                                            <td colSpan={7} className="px-3 py-2.5 font-semibold text-blue-900">
-                                                {group.material}
+                                {sortedExpenseEntries.map((en) => {
+                                    const mat =
+                                        en.raw_material_id && rawMaterialById[en.raw_material_id]
+                                            ? pickLocalizedName(rawMaterialById[en.raw_material_id], language)
+                                            : '—'
+                                    return (
+                                        <tr key={en.id} className="border-t border-gray-100 hover:bg-gray-50/80 transition-colors">
+                                            <td className="px-3 py-2.5 whitespace-nowrap">{en.expense_date}</td>
+                                            <td className="px-3 py-2.5 whitespace-nowrap text-gray-600">
+                                                {en.created_at
+                                                    ? new Date(en.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                                    : '—'}
+                                            </td>
+                                            <td className="px-3 py-2.5 text-gray-900 max-w-[260px] truncate" title={mat}>
+                                                {mat}
+                                            </td>
+                                            <td className="px-3 py-2.5 font-medium tabular-nums">{Number(en.quantity || 0).toLocaleString()}</td>
+                                            <td className="px-3 py-2.5 font-medium tabular-nums whitespace-nowrap">
+                                                {formatFinAmount(en.amount, en.currency)}
+                                            </td>
+                                            <td className="px-3 py-2.5 text-gray-600 max-w-[200px] sm:max-w-[280px] truncate" title={en.note || ''}>
+                                                {en.note || '—'}
+                                            </td>
+                                            <td className="px-3 py-2.5">
+                                                <div className="flex items-center gap-1">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => startEditExpenseEntry(en)}
+                                                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                                                        title={t('common.edit')}
+                                                        aria-label={t('common.edit')}
+                                                    >
+                                                        <Pencil size={14} />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => deleteExpenseEntry(en.id)}
+                                                        className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+                                                        title={t('common.delete')}
+                                                        aria-label={t('common.delete')}
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
-                                        {group.rows.map((en) => (
-                                            <tr key={en.id} className="border-t border-gray-100 hover:bg-gray-50/80 transition-colors">
-                                                <td className="px-3 py-2.5 whitespace-nowrap">{en.expense_date}</td>
-                                                <td className="px-3 py-2.5 whitespace-nowrap text-gray-600">
-                                                    {en.created_at
-                                                        ? new Date(en.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                                                        : '—'}
-                                                </td>
-                                                <td className="px-3 py-2.5 text-gray-900 max-w-[260px] truncate" title={group.material}>
-                                                    {group.material}
-                                                </td>
-                                                <td className="px-3 py-2.5 font-medium tabular-nums">{Number(en.quantity || 0).toLocaleString()}</td>
-                                                <td className="px-3 py-2.5 font-medium tabular-nums whitespace-nowrap">
-                                                    {formatFinAmount(en.amount, en.currency)}
-                                                </td>
-                                                <td className="px-3 py-2.5 text-gray-600 max-w-[200px] sm:max-w-[280px] truncate" title={en.note || ''}>
-                                                    {en.note || '—'}
-                                                </td>
-                                                <td className="px-3 py-2.5">
-                                                    <div className="flex items-center gap-1">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => startEditExpenseEntry(en)}
-                                                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
-                                                            title={t('common.edit')}
-                                                            aria-label={t('common.edit')}
-                                                        >
-                                                            <Pencil size={14} />
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => deleteExpenseEntry(en.id)}
-                                                            className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
-                                                            title={t('common.delete')}
-                                                            aria-label={t('common.delete')}
-                                                        >
-                                                            <Trash2 size={14} />
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </Fragment>
-                                ))}
+                                    )
+                                })}
                             </tbody>
                         </table>
                     </div>
@@ -798,37 +819,22 @@ export default function MoliyaBolimlarPage() {
                             {expEditId ? t('common.edit') : t('finances.addExpenseTitle')}
                         </h3>
                         <form onSubmit={saveExpenseEntry} className="space-y-4">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-600 mb-1">{t('finances.materialLabel')}</label>
-                                    <input
-                                        list="material-suggestions"
-                                        value={expForm.material_name}
-                                        onChange={(e) => setExpForm((f) => ({ ...f, material_name: e.target.value }))}
-                                        className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none text-sm"
-                                        placeholder={t('finances.selectPlaceholder')}
-                                        required
-                                    />
-                                    <datalist id="material-suggestions">
-                                        {rawMaterials.map((rm) => (
-                                            <option key={rm.id} value={pickLocalizedName(rm, language)} />
-                                        ))}
-                                    </datalist>
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-600 mb-1">{t('finances.quantityLabel')}</label>
-                                    <input
-                                        type="number"
-                                        step="any"
-                                        min="0"
-                                        autoFocus
-                                        className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none"
-                                        value={expForm.quantity}
-                                        onChange={(e) => setExpForm((f) => ({ ...f, quantity: e.target.value }))}
-                                        required
-                                    />
-                                </div>
+                            <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">{t('finances.materialLabel')}</label>
+                                <input
+                                    list="material-suggestions"
+                                    value={expForm.material_name}
+                                    onChange={(e) => setExpForm((f) => ({ ...f, material_name: e.target.value }))}
+                                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none text-sm"
+                                    placeholder={t('finances.selectPlaceholder')}
+                                    autoFocus
+                                    required
+                                />
+                                <datalist id="material-suggestions">
+                                    {rawMaterials.map((rm) => (
+                                        <option key={rm.id} value={pickLocalizedName(rm, language)} />
+                                    ))}
+                                </datalist>
                             </div>
                             <div>
                                 <label className="block text-xs font-medium text-gray-600 mb-1">{t('finances.currencyLabel')}</label>

@@ -177,6 +177,33 @@ function monthBoundsLocal() {
     return { from, to, label: `${pad(m + 1)}.${y}` }
 }
 
+/** Avans/oylik sanasi — server UTC emas, bot ishlayotgan mashinaning mahalliy kuni (CRM bilan mos). */
+function todayYmdLocal() {
+    const d = new Date()
+    const y = d.getFullYear()
+    const mo = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${y}-${mo}-${day}`
+}
+
+/** DATE ustuni: "YYYY-MM-DD..." — boshidagi 10 belgi kalendar sanasi (vaqt zonasi siljishisiz). */
+function calendarYmdForFilter(value) {
+    if (value == null || value === '') return ''
+    const s = String(value).trim()
+    const head = s.length >= 10 ? s.slice(0, 10) : ''
+    if (/^\d{4}-\d{2}-\d{2}$/.test(head)) return head
+    const d = new Date(s)
+    if (Number.isNaN(d.getTime())) return ''
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${y}-${m}-${day}`
+}
+
+function rowInMonthRange(ymdLocal, from, to) {
+    return ymdLocal.length === 10 && ymdLocal >= from && ymdLocal <= to
+}
+
 async function getEmployees() {
     const { data, error } = await supabase
         .from('employees')
@@ -201,8 +228,8 @@ async function getAdvancesGroupedForMonth() {
     const { data, error } = await supabase
         .from('employee_advances')
         .select('employee_id, amount, advance_date')
-        .gte('advance_date', from)
-        .lte('advance_date', to)
+        .order('advance_date', { ascending: false })
+        .limit(2000)
     if (error) {
         const m = String(error.message || '')
         if (
@@ -216,7 +243,9 @@ async function getAdvancesGroupedForMonth() {
     }
     const byEmp = {}
     for (const r of data || []) {
-        const id = r.employee_id
+        const ymd = calendarYmdForFilter(r.advance_date)
+        if (!rowInMonthRange(ymd, from, to)) continue
+        const id = r.employee_id != null ? String(r.employee_id) : ''
         if (!id) continue
         if (!byEmp[id]) byEmp[id] = { total: 0, rows: [] }
         const amt = Number(r.amount) || 0
@@ -235,9 +264,8 @@ async function advancesMonthDetail(employeeId) {
         .from('employee_advances')
         .select('amount, advance_date')
         .eq('employee_id', employeeId)
-        .gte('advance_date', from)
-        .lte('advance_date', to)
         .order('advance_date', { ascending: false })
+        .limit(500)
     if (error) {
         const m = String(error.message || '')
         if (
@@ -249,7 +277,9 @@ async function advancesMonthDetail(employeeId) {
         }
         throw error
     }
-    const rows = data || []
+    const rows = (data || []).filter((r) =>
+        rowInMonthRange(calendarYmdForFilter(r.advance_date), from, to)
+    )
     const total = rows.reduce((a, r) => a + (Number(r.amount) || 0), 0)
     return { total, rows, tableMissing: false }
 }
@@ -260,9 +290,8 @@ async function salaryPaymentsMonthDetail(employeeId) {
         .from('employee_salary_payments')
         .select('amount, payment_date')
         .eq('employee_id', employeeId)
-        .gte('payment_date', from)
-        .lte('payment_date', to)
         .order('payment_date', { ascending: false })
+        .limit(500)
     if (error) {
         const m = String(error.message || '')
         if (
@@ -274,7 +303,9 @@ async function salaryPaymentsMonthDetail(employeeId) {
         }
         throw error
     }
-    const rows = data || []
+    const rows = (data || []).filter((r) =>
+        rowInMonthRange(calendarYmdForFilter(r.payment_date), from, to)
+    )
     const total = rows.reduce((a, r) => a + (Number(r.amount) || 0), 0)
     return { total, rows, tableMissing: false }
 }
@@ -285,7 +316,7 @@ async function saveEmployeeAdvance({ user, employeeId, amount, note }) {
         {
             employee_id: employeeId,
             amount,
-            advance_date: new Date().toISOString().slice(0, 10),
+            advance_date: todayYmdLocal(),
             note: cleanNote,
             source: 'telegram',
             recorded_by_phone: user.phone || null,
@@ -309,7 +340,7 @@ async function saveEmployeeSalaryPayment({ user, employeeId, amount, note }) {
         {
             employee_id: employeeId,
             amount,
-            payment_date: new Date().toISOString().slice(0, 10),
+            payment_date: todayYmdLocal(),
             note: cleanNote,
             source: 'telegram',
             recorded_by_phone: user.phone || null,
@@ -408,7 +439,7 @@ async function sendEmployeeList(chatId, s) {
     ]
     for (let i = 0; i < list.length; i++) {
         const e = list[i]
-        const pack = advByEmp[e.id]
+        const pack = advByEmp[String(e.id)]
         const total = pack ? pack.total : 0
         lines.push(`${i + 1}. ${e.name} — ${total.toLocaleString('uz-UZ')} so'm`)
     }

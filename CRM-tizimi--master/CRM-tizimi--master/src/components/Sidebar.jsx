@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import { Package, Users, ShoppingCart, UserCircle, DollarSign, Home, LogOut, Settings, Globe, X, BarChart3, Warehouse, MessageSquare, ChevronDown, Image as ImageIcon } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { EMPLOYEES_SECTION_UNLOCK_KEY } from '@/lib/employeesSectionPin'
 import { useLayout } from '@/context/LayoutContext'
 import { useLanguage } from '@/context/LanguageContext'
 import { useDialog } from '@/context/DialogContext'
@@ -66,6 +67,11 @@ export default function Sidebar({ isOpen: propIsOpen, setIsOpen: propSetIsOpen }
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut()
     if (!error) {
+      try {
+        sessionStorage.removeItem(EMPLOYEES_SECTION_UNLOCK_KEY)
+      } catch (_) {
+        /* ignore */
+      }
       router.push('/login')
     } else {
       await showAlert(t('common.logoutError'), { variant: 'error' })
@@ -86,7 +92,14 @@ export default function Sidebar({ isOpen: propIsOpen, setIsOpen: propSetIsOpen }
         <div className="flex justify-between items-center mb-8 flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center shadow-lg backdrop-blur-sm border border-white/10">
-              <img src="/favicon.svg" alt="CRM Logo" className="w-8 h-8 object-contain" />
+              <img
+                src="/favicon.svg"
+                alt="CRM Logo"
+                className="h-8 w-8 rounded-full object-cover object-center ring-1 ring-white/20"
+                width={32}
+                height={32}
+                decoding="async"
+              />
             </div>
             <div className="min-w-0">
               <h1 className="text-xl font-bold tracking-tight truncate">{siteName}</h1>
