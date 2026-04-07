@@ -41,7 +41,6 @@ const STEP = {
     MAIN_MENU: 'MAIN_MENU',
     PICK_DEPARTMENT: 'PICK_DEPARTMENT',
     PICK_MATERIAL: 'PICK_MATERIAL',
-    ENTER_QUANTITY: 'ENTER_QUANTITY',
     ENTER_AMOUNT: 'ENTER_AMOUNT',
     ENTER_NOTE: 'ENTER_NOTE',
     EMP_MENU: 'EMP_MENU',
@@ -49,13 +48,17 @@ const STEP = {
     EMP_ADV_AMOUNT: 'EMP_ADV_AMOUNT',
     EMP_ADV_NOTE: 'EMP_ADV_NOTE',
     EMP_SAL_AMOUNT: 'EMP_SAL_AMOUNT',
+    EMP_SAL_AMOUNT: 'EMP_SAL_AMOUNT',
     EMP_SAL_NOTE: 'EMP_SAL_NOTE',
+    PICK_MONTH: 'PICK_MONTH',
 }
 
 const UI_EMP = {
     ADV: '💰 Avans kiritish',
     SAL: '💵 Oylik berish',
     LIST: "📋 Ro'yxat",
+    MONTH: '📅 Oyni tanlash',
+    SUMMARY: '📊 Oylik hisobot',
 }
 
 function normalizePhone(value) {
@@ -166,15 +169,66 @@ async function resolveOrCreateMaterialByName(name) {
     return inserted
 }
 
-function monthBoundsLocal() {
-    const now = new Date()
-    const y = now.getFullYear()
-    const m = now.getMonth()
+function monthBoundsLocal(periodYm) {
+    let y, m
+    if (periodYm && /^\d{4}-\d{2}$/.test(periodYm)) {
+        const parts = periodYm.split('-')
+        y = parseInt(parts[0], 10)
+        m = parseInt(parts[1], 10) - 1
+    } else {
+        const now = new Date()
+        y = now.getFullYear()
+        m = now.getMonth()
+    }
     const pad = (n) => String(n).padStart(2, '0')
     const from = `${y}-${pad(m + 1)}-01`
     const lastDay = new Date(y, m + 1, 0).getDate()
     const to = `${y}-${pad(m + 1)}-${pad(lastDay)}`
-    return { from, to, label: `${pad(m + 1)}.${y}` }
+
+    const monthNames = [
+        'Yanvar',
+        'Fevral',
+        'Mart',
+        'Aprel',
+        'May',
+        'Iyun',
+        'Iyul',
+        'Avgust',
+        'Sentyabr',
+        'Oktyabr',
+        'Noyabr',
+        'Dekabr',
+    ]
+    const label = `${monthNames[m]} ${y}`
+    return { from, to, label, ym: `${y}-${pad(m + 1)}` }
+}
+
+function getMonthOptions() {
+    const options = []
+    const now = new Date()
+    for (let i = 0; i < 6; i++) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+        const y = d.getFullYear()
+        const m = d.getMonth()
+        const pad = (n) => String(n).padStart(2, '0')
+        const ym = `${y}-${pad(m + 1)}`
+        const monthNames = [
+            'Yanvar',
+            'Fevral',
+            'Mart',
+            'Aprel',
+            'May',
+            'Iyun',
+            'Iyul',
+            'Avgust',
+            'Sentyabr',
+            'Oktyabr',
+            'Noyabr',
+            'Dekabr',
+        ]
+        options.push({ label: `${monthNames[m]} ${y}`, ym })
+    }
+    return options
 }
 
 /** Avans/oylik sanasi — server UTC emas, bot ishlayotgan mashinaning mahalliy kuni (CRM bilan mos). */
@@ -223,8 +277,8 @@ function formatDdMmYyyy(iso) {
 }
 
 /** Shu oy: barcha xodimlar bo'yicha avans yig'indisi + qatorlar (ro'yxat uchun) */
-async function getAdvancesGroupedForMonth() {
-    const { from, to } = monthBoundsLocal()
+async function getAdvancesGroupedForMonth(periodYm) {
+    const { from, to } = monthBoundsLocal(periodYm)
     const { data, error } = await supabase
         .from('employee_advances')
         .select('employee_id, amount, advance_date')
@@ -258,8 +312,8 @@ async function getAdvancesGroupedForMonth() {
     return { byEmp, tableMissing: false }
 }
 
-async function advancesMonthDetail(employeeId) {
-    const { from, to } = monthBoundsLocal()
+async function advancesMonthDetail(employeeId, periodYm) {
+    const { from, to } = monthBoundsLocal(periodYm)
     const { data, error } = await supabase
         .from('employee_advances')
         .select('amount, advance_date')
@@ -284,8 +338,8 @@ async function advancesMonthDetail(employeeId) {
     return { total, rows, tableMissing: false }
 }
 
-async function salaryPaymentsMonthDetail(employeeId) {
-    const { from, to } = monthBoundsLocal()
+async function salaryPaymentsMonthDetail(employeeId, periodYm) {
+    const { from, to } = monthBoundsLocal(periodYm)
     const { data, error } = await supabase
         .from('employee_salary_payments')
         .select('amount, payment_date')
@@ -388,6 +442,7 @@ function employeeListKeyboard(list) {
         }
         rows.push(row)
     }
+    rows.push([{ text: UI_EMP.MONTH }, { text: UI_EMP.SUMMARY }])
     rows.push([{ text: '⬅️ Orqaga' }])
     return {
         reply_markup: {
@@ -407,17 +462,76 @@ function findEmployeeByMenuText(list, text) {
     return null
 }
 
-function employeeActionKeyboard() {
+function monthPickerKeyboard() {
+    const options = getMonthOptions()
+    const rows = []
+    for (let i = 0; i < options.length; i += 2) {
+        const row = [{ text: options[i].label }]
+        if (options[i + 1]) row.push({ text: options[i + 1].label })
+        rows.push(row)
+    }
+    rows.push([{ text: '⬅️ Orqaga' }])
     return {
         reply_markup: {
-            keyboard: [
-                [{ text: UI_EMP.ADV }, { text: UI_EMP.SAL }],
-                [{ text: UI_EMP.LIST }],
-                [{ text: '⬅️ Orqaga' }],
-            ],
+            keyboard: rows,
             resize_keyboard: true,
         },
     }
+}
+
+async function sendMonthPicker(chatId, s) {
+    s.step = STEP.PICK_MONTH
+    await bot.sendMessage(chatId, "Hisobot oyini tanlang:", monthPickerKeyboard())
+}
+
+async function sendMonthlySummary(chatId, s) {
+    const periodYm = s.reportPeriodYm
+    const { label } = monthBoundsLocal(periodYm)
+    const list = await getEmployees()
+    const { byEmp: advByEmp } = await getAdvancesGroupedForMonth(periodYm)
+
+    // Oylik to'lovlarini ham yig'amiz
+    const salByEmp = {}
+    for (const e of list) {
+        const { total } = await salaryPaymentsMonthDetail(e.id, periodYm)
+        salByEmp[String(e.id)] = total
+    }
+
+    const lines = [
+        `📊 Oylik hisobot: ${label}`,
+        '',
+        `Xodimlar soni: ${list.length}`,
+        '--------------------------------',
+    ]
+
+    let totalAdv = 0
+    let totalSal = 0
+
+    for (const e of list) {
+        const id = String(e.id)
+        const adv = advByEmp[id]?.total || 0
+        const sal = salByEmp[id] || 0
+        totalAdv += adv
+        totalSal += sal
+
+        if (adv > 0 || sal > 0) {
+            lines.push(`👤 ${e.name}:`)
+            lines.push(`   💰 Avans: ${adv.toLocaleString('uz-UZ')} so'm`)
+            lines.push(`   💸 Oylik: ${sal.toLocaleString('uz-UZ')} so'm`)
+            lines.push(`   ✅ Jami: ${(adv + sal).toLocaleString('uz-UZ')} so'm`)
+            lines.push('')
+        }
+    }
+
+    lines.push('--------------------------------')
+    lines.push(`💰 Jami Avans: ${totalAdv.toLocaleString('uz-UZ')} so'm`)
+    lines.push(`💸 Jami Oylik: ${totalSal.toLocaleString('uz-UZ')} so'm`)
+    lines.push(`✨ Umumiy to'lov: ${(totalAdv + totalSal).toLocaleString('uz-UZ')} so'm`)
+
+    let msg = lines.join('\n')
+    if (msg.length > 4000) msg = msg.slice(0, 3980) + '\n…'
+
+    await bot.sendMessage(chatId, msg)
 }
 
 async function sendEmployeeList(chatId, s) {
@@ -427,15 +541,16 @@ async function sendEmployeeList(chatId, s) {
         await bot.sendMessage(chatId, "Hozircha CRMda xodimlar yo'q. Avval CRM → Xodimlar bo'limida qo'shing.", mainMenuKeyboard())
         return
     }
-    const { byEmp: advByEmp, tableMissing: advTableMissing } = await getAdvancesGroupedForMonth()
+    const periodYm = s.reportPeriodYm
+    const { byEmp: advByEmp, tableMissing: advTableMissing } = await getAdvancesGroupedForMonth(periodYm)
     s.payload.empList = list
     s.step = STEP.EMP_MENU
 
-    const { label } = monthBoundsLocal()
+    const { label } = monthBoundsLocal(periodYm)
     const lines = [
-        `Xodimlar (${list.length}). Shu oy: ${label}`,
+        `Xodimlar (${list.length}). Oy: ${label}`,
         '',
-        "📊 Shu oy avanslari (har bir xodim):",
+        "📊 Ushbu oydagi avanslar:",
     ]
     for (let i = 0; i < list.length; i++) {
         const e = list[i]
@@ -444,10 +559,10 @@ async function sendEmployeeList(chatId, s) {
         lines.push(`${i + 1}. ${e.name} — ${total.toLocaleString('uz-UZ')} so'm`)
     }
     lines.push('')
-    lines.push("Xodimni tanlang (tugma yoki 1–N raqam). Batafsil: xodimni oching.")
+    lines.push("Xodimni tanlang, oyni o'zgartiring yoki umumiy hisobotni ko'ring.")
     if (advTableMissing) {
         lines.push('')
-        lines.push("⚠️ `employee_advances` jadvali yo'q — yuqorida hammasi 0. add_employee_advances.sql ni ishga tushiring.")
+        lines.push("⚠️ `employee_advances` jadvali yo'q.")
     }
 
     let msg = lines.join('\n')
@@ -463,8 +578,9 @@ async function sendEmployeeActionMenu(chatId, s) {
         await sendEmployeeList(chatId, s)
         return
     }
-    const adv = await advancesMonthDetail(emp.id)
-    const salPay = await salaryPaymentsMonthDetail(emp.id)
+    const periodYm = s.reportPeriodYm
+    const adv = await advancesMonthDetail(emp.id, periodYm)
+    const salPay = await salaryPaymentsMonthDetail(emp.id, periodYm)
     const crmMonthly =
         (Number(emp.monthly_salary) || 0) + (Number(emp.bonus_percent) || 0)
 
@@ -513,16 +629,17 @@ async function sendEmployeeActionMenu(chatId, s) {
         )
     }
 
+    const { label } = monthBoundsLocal(periodYm)
     const body = [
         `👤 ${emp.name}`,
         `💼 ${emp.position || '—'}`,
         '',
         `💵 CRM bo'yicha oylik+jami bonus: ${crmMonthly.toLocaleString('uz-UZ')} so'm`,
         '',
-        `📅 Shu oy avanslari jami: ${adv.total.toLocaleString('uz-UZ')} so'm`,
+        `📅 ${label} avanslari jami: ${adv.total.toLocaleString('uz-UZ')} so'm`,
         ...advLines,
         '',
-        `💸 Shu oy oylik to'lovlari jami: ${salPay.total.toLocaleString('uz-UZ')} so'm`,
+        `💸 ${label} oylik to'lovlari jami: ${salPay.total.toLocaleString('uz-UZ')} so'm`,
         ...salLines,
         warns.join(''),
         '',
@@ -536,14 +653,13 @@ async function sendEmployeeActionMenu(chatId, s) {
     await bot.sendMessage(chatId, text, employeeActionKeyboard())
 }
 
-async function saveMovement({ user, departmentId, materialName, quantity, amount, note }) {
+async function saveMovement({ user, departmentId, materialName, amount, note }) {
     const material = await resolveOrCreateMaterialByName(materialName)
-    const qty = Number(quantity)
+    const qty = 1
     const total = Number(amount)
-    if (!Number.isFinite(qty) || qty <= 0) throw new Error('Invalid quantity')
     if (!Number.isFinite(total) || total < 0) throw new Error('Invalid amount')
 
-    const unitPrice = qty > 0 ? total / qty : 0
+    const unitPrice = total
     const auditNote = `${note || ''}\n\n[telegram]\nuser: ${user.full_name || 'Unknown'}\nphone: ${user.phone || '-'}`
 
     const { error } = await supabase.from('material_movements').insert([
@@ -562,15 +678,36 @@ async function saveMovement({ user, departmentId, materialName, quantity, amount
 
 function getSession(chatId) {
     if (!sessions.has(chatId)) {
-        sessions.set(chatId, { step: STEP.WAIT_PHONE, authUser: null, payload: {} })
+        sessions.set(chatId, {
+            step: STEP.WAIT_PHONE,
+            authUser: null,
+            reportPeriodYm: null,
+            payload: {},
+        })
     }
     return sessions.get(chatId)
+}
+
+function employeeActionKeyboard() {
+    return {
+        reply_markup: {
+            keyboard: [
+                [{ text: UI_EMP.ADV }, { text: UI_EMP.SAL }],
+                [{ text: UI_EMP.LIST }],
+                [{ text: '⬅️ Orqaga' }],
+            ],
+            resize_keyboard: true,
+        },
+    }
 }
 
 function mainMenuKeyboard() {
     return {
         reply_markup: {
-            keyboard: [[{ text: 'Moliya' }, { text: 'Xodimlar' }]],
+            keyboard: [
+                [{ text: 'Moliya' }, { text: 'Xodimlar' }],
+                [{ text: 'Moliya ro\'yxati' }]
+            ],
             resize_keyboard: true,
         },
     }
@@ -626,6 +763,42 @@ async function sendMaterialStep(chatId, s) {
     )
 }
 
+async function sendRecentMovements(chatId) {
+    const { data, error } = await supabase
+        .from('material_movements')
+        .select(`
+            id,
+            total_cost,
+            movement_date,
+            raw_materials (name_uz),
+            departments (name_uz)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(15)
+
+    if (error) {
+        console.error('Fetch movements error:', error)
+        await bot.sendMessage(chatId, "Ro'yxatni olishda xatolik yuz berdi.")
+        return
+    }
+
+    if (!data || data.length === 0) {
+        await bot.sendMessage(chatId, "Hozircha harajatlar yo'q.")
+        return
+    }
+
+    const lines = ["📊 Oxirgi 15 ta harajat:", ""]
+    data.forEach((m, i) => {
+        const material = m.raw_materials?.name_uz || 'Material'
+        const department = m.departments?.name_uz || 'Bo\'lim'
+        const date = formatDdMmYyyy(m.movement_date)
+        const cost = Number(m.total_cost).toLocaleString('uz-UZ')
+        lines.push(`${i + 1}. ${date} | ${material} (${department}): ${cost} so'm`)
+    })
+
+    await bot.sendMessage(chatId, lines.join('\n'))
+}
+
 async function goBack(chatId, s) {
     if (s.step === STEP.EMP_SAL_NOTE) {
         s.step = STEP.EMP_SAL_AMOUNT
@@ -665,18 +838,17 @@ async function goBack(chatId, s) {
         await sendDepartmentStep(chatId, s)
         return
     }
-    if (s.step === STEP.ENTER_QUANTITY) {
-        await sendMaterialStep(chatId, s)
-        return
-    }
     if (s.step === STEP.ENTER_AMOUNT) {
-        s.step = STEP.ENTER_QUANTITY
-        await bot.sendMessage(chatId, 'Miqdor kiriting:')
+        await sendMaterialStep(chatId, s)
         return
     }
     if (s.step === STEP.ENTER_NOTE) {
         s.step = STEP.ENTER_AMOUNT
         await bot.sendMessage(chatId, 'Summa kiriting:')
+        return
+    }
+    if (s.step === STEP.PICK_MONTH) {
+        await sendEmployeeList(chatId, s)
         return
     }
     s.payload = {}
@@ -714,6 +886,11 @@ bot.on('message', async (msg) => {
 
         if (s.authUser && text === 'Xodimlar') {
             await sendEmployeeList(chatId, s)
+            return
+        }
+
+        if (s.authUser && text === 'Moliya ro\'yxati') {
+            await sendRecentMovements(chatId)
             return
         }
 
@@ -813,7 +990,28 @@ bot.on('message', async (msg) => {
             return
         }
 
+        if (s.step === STEP.PICK_MONTH) {
+            const options = getMonthOptions()
+            const chosen = options.find((o) => o.label === text)
+            if (!chosen) {
+                await bot.sendMessage(chatId, "Iltimos, menyudagi oylardan birini tanlang.")
+                return
+            }
+            s.reportPeriodYm = chosen.ym
+            await bot.sendMessage(chatId, `✅ Hisobot davri o'zgartirildi: ${chosen.label}`)
+            await sendEmployeeList(chatId, s)
+            return
+        }
+
         if (s.step === STEP.EMP_MENU) {
+            if (text === UI_EMP.MONTH) {
+                await sendMonthPicker(chatId, s)
+                return
+            }
+            if (text === UI_EMP.SUMMARY) {
+                await sendMonthlySummary(chatId, s)
+                return
+            }
             const list = s.payload.empList || []
             const chosen = findEmployeeByMenuText(list, text)
             if (!chosen) {
@@ -871,13 +1069,6 @@ bot.on('message', async (msg) => {
                 return
             }
             s.payload.materialName = text
-            s.step = STEP.ENTER_QUANTITY
-            await bot.sendMessage(chatId, 'Miqdor kiriting:')
-            return
-        }
-
-        if (s.step === STEP.ENTER_QUANTITY) {
-            s.payload.quantity = text
             s.step = STEP.ENTER_AMOUNT
             await bot.sendMessage(chatId, 'Summa kiriting:')
             return
@@ -895,7 +1086,6 @@ bot.on('message', async (msg) => {
                 user: s.authUser,
                 departmentId: s.payload.departmentId,
                 materialName: s.payload.materialName,
-                quantity: s.payload.quantity,
                 amount: s.payload.amount,
                 note: text === '-' ? '' : text,
             })

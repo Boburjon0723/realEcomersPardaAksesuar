@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, ShoppingBag } from 'lucide-react';
 import { useApp } from '../../hooks/useApp';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { formatPriceUSD } from '../../utils/price';
+import { formatPriceUSDWithUnit } from '../../utils/price';
 
 const ProductQuickView = ({ product, onClose }) => {
     const { addToCart, setCurrentPage } = useApp();
@@ -13,7 +13,7 @@ const ProductQuickView = ({ product, onClose }) => {
 
     const images = product.images && product.images.length > 0 ? product.images : (product.image_url ? [product.image_url] : []);
     const productName = product[`name_${language}`] || product.name || '';
-    const displayPrice = formatPriceUSD(product.price);
+    const displayPrice = formatPriceUSDWithUnit(product.price, Boolean(product.is_kg));
 
     const handleAddToCart = () => {
         addToCart(product, 1, selectedColor);

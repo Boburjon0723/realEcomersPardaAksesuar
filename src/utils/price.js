@@ -7,3 +7,9 @@ export const formatPriceUSD = (price) => {
     }
     return `$${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
+
+// Kg mahsulotlar uchun "$10.00 / kg" ko'rinishida chiqarish
+export const formatPriceUSDWithUnit = (price, isKg) => {
+    const base = formatPriceUSD(price);
+    return isKg ? `${base} / kg` : base;
+};
