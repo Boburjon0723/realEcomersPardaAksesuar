@@ -223,7 +223,7 @@ const ProductCard = ({ product, onQuickView }) => {
                         </span>
                         {product.oldPrice && (
                             <span className="text-sm text-gray-400 line-through">
-                                {formatPriceUSD(product.oldPrice)}
+                                {formatPriceUSDWithUnit(product.oldPrice, Boolean(product.is_kg))}
                             </span>
                         )}
                     </div>
