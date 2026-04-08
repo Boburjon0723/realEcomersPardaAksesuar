@@ -10,7 +10,7 @@ import ThreeSixtyViewer from '../components/product/ThreeSixtyViewer';
 import { getAllColors, getProductById } from '../services/supabase/products';
 import { supabase } from '../supabaseClient';
 import { getShareableUrl } from '../utils/siteUrl';
-import { formatPriceUSDWithUnit } from '../utils/price';
+import { formatProductPriceDisplay } from '../utils/price';
 import { Box } from 'lucide-react';
 
 const applyColorTo3DModel = (modelViewer, selectedColor, colorMap) => {
@@ -467,11 +467,11 @@ const ProductPage = () => {
                         <div className="mb-8 p-6 bg-gray-50 rounded-xl border border-gray-100">
                             <div className="flex items-end gap-3 mb-2">
                                 <div className="text-4xl font-bold text-gray-900">
-                                    {formatPriceUSDWithUnit(priceWithDiscount, Boolean(selectedProduct.is_kg))}
+                                    {formatProductPriceDisplay(priceWithDiscount, selectedProduct)}
                                 </div>
                                 {discount > 0 && (
                                     <div className="text-xl text-gray-400 line-through mb-1">
-                                        {formatPriceUSDWithUnit(selectedProduct.price, Boolean(selectedProduct.is_kg))}
+                                        {formatProductPriceDisplay(selectedProduct.price, selectedProduct)}
                                     </div>
                                 )}
                             </div>

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Heart, Star, ShoppingBag, Eye, Box } from 'lucide-react';
 import { useApp } from '../../hooks/useApp';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { formatPriceUSDWithUnit } from '../../utils/price';
+import { formatProductPriceDisplay } from '../../utils/price';
 
 const ProductCard = ({ product, onQuickView }) => {
     const { addToCart, setCurrentPage, toggleFavorite, isFavorite } = useApp();
@@ -29,7 +29,7 @@ const ProductCard = ({ product, onQuickView }) => {
         : 0;
     const categoryName = product.categories?.[`name_${language}`] || product.categories?.name || product.category || '';
     const productName = product[`name_${language}`] || product.name;
-    const displayPrice = formatPriceUSDWithUnit(product.price, Boolean(product.is_kg));
+    const displayPrice = formatProductPriceDisplay(product.price, product);
 
     /** Bir kartada ko‘rinadigan rang variantlari (swatch) — takrorlarsiz */
     const variantColors = useMemo(() => {
@@ -223,7 +223,7 @@ const ProductCard = ({ product, onQuickView }) => {
                         </span>
                         {product.oldPrice && (
                             <span className="text-sm text-gray-400 line-through">
-                                {formatPriceUSDWithUnit(product.oldPrice, Boolean(product.is_kg))}
+                                {formatProductPriceDisplay(product.oldPrice, product)}
                             </span>
                         )}
                     </div>
