@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import BottomNav from './components/BottomNav'
 import DashboardView from './views/DashboardView'
+import OrdersView from './views/OrdersView'
 import StatsView from './views/StatsView'
 import EmployeesView from './views/EmployeesView'
 import FinanceView from './views/FinanceView'
@@ -24,7 +25,9 @@ export default function MobilePage() {
     const renderView = () => {
         switch (activeTab) {
             case 'dashboard':
-                return <DashboardView role={role} />
+                return <DashboardView role={role} setActiveTab={setActiveTab} />
+            case 'orders':
+                return <OrdersView />
             case 'stats':
                 return <StatsView />
             case 'employees':

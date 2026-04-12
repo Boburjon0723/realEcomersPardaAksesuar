@@ -5,6 +5,7 @@ import { NotificationProvider } from '@/context/NotificationContext'
 import { DialogProvider } from '@/context/DialogContext'
 import { ThemeProvider } from '@/context/ThemeContext'
 import AuthWrapper from '@/components/AuthWrapper'
+import ReactQueryProvider from '@/components/ReactQueryProvider'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -16,6 +17,7 @@ export const viewport = {
 /** Brauzer yorlig‘i, PWA va Apple — barchasi yangi ERP `favicon.svg` */
 export const metadata = {
     title: 'Nuur_Home_Collection',
+    manifest: '/manifest.json',
     icons: {
         icon: [{ url: '/favicon.svg', type: 'image/svg+xml', sizes: 'any' }],
         shortcut: '/favicon.svg',
@@ -23,8 +25,8 @@ export const metadata = {
     },
     appleWebApp: {
         capable: true,
-        statusBarStyle: 'default',
-        title: 'Nuur_Home_Collection',
+        statusBarStyle: 'black-translucent',
+        title: 'Nuur Home CRM',
     },
 }
 
@@ -32,17 +34,19 @@ export default function RootLayout({ children }) {
     return (
         <html lang="uz">
             <body className={inter.className}>
-                <LanguageProvider>
-                    <ThemeProvider>
-                        <LayoutProvider>
-                            <NotificationProvider>
-                                <DialogProvider>
-                                    <AuthWrapper>{children}</AuthWrapper>
-                                </DialogProvider>
-                            </NotificationProvider>
-                        </LayoutProvider>
-                    </ThemeProvider>
-                </LanguageProvider>
+                <ReactQueryProvider>
+                    <LanguageProvider>
+                        <ThemeProvider>
+                            <LayoutProvider>
+                                <NotificationProvider>
+                                    <DialogProvider>
+                                        <AuthWrapper>{children}</AuthWrapper>
+                                    </DialogProvider>
+                                </NotificationProvider>
+                            </LayoutProvider>
+                        </ThemeProvider>
+                    </LanguageProvider>
+                </ReactQueryProvider>
             </body>
         </html>
     )

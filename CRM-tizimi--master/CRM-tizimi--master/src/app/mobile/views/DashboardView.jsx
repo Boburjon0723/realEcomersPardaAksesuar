@@ -2,15 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { TrendingUp, Users, Wallet, ShoppingCart, MessageCircle, MoreHorizontal, Loader2 } from 'lucide-react'
+import { TrendingUp, Users, Wallet, ShoppingCart, MessageCircle, MoreHorizontal, Loader2, Clock, Timer, CheckCircle, XCircle } from 'lucide-react'
 
-export default function DashboardView({ role }) {
+export default function DashboardView({ role, setActiveTab }) {
     const [loading, setLoading] = useState(true)
     const [data, setData] = useState({
-        revenue: 0,
-        ordersCount: 0,
         employeesCount: 0,
-        balance: 0,
+        statusStats: { new: 0, pending: 0, completed: 0, cancelled: 0 },
         recentActivities: []
     })
 
@@ -24,61 +22,68 @@ export default function DashboardView({ role }) {
     useEffect(() => {
         async function fetchData() {
             try {
-                setLoading(true)
-                const today = new Date().toISOString().split('T')[0]
+                // setLoading(true) // do not set loading true on background refetch
                 
-                // 1. Daily Revenue (Inflows today)
-                const { data: transToday } = await supabase
-                    .from('transactions')
-                    .select('amount, type')
-                    .eq('date', today)
-                
-                const dailyRev = (transToday || [])
-                    .filter(t => t.type === 'inflow')
-                    .reduce((sum, t) => sum + (Number(t.amount) || 0), 0)
-
-                // 2. New Orders today
-                const { count: ordersCount } = await supabase
+                // 1. Orders by Status
+                let ordersData = null
+                const resOrders = await supabase
                     .from('orders')
-                    .select('*', { count: 'exact', head: true })
-                    .gte('created_at', `${today}T00:00:00`)
-                    .lte('created_at', `${today}T23:59:59`)
+                    .select('status')
+                    .is('deleted_at', null)
+                
+                if (resOrders.error && resOrders.error.message.includes('deleted_at')) {
+                    const fallback = await supabase.from('orders').select('status')
+                    ordersData = fallback.data
+                } else if (resOrders.data) {
+                    ordersData = resOrders.data
+                }
 
-                // 3. Employees Total
+                const statusStats = { new: 0, pending: 0, completed: 0, cancelled: 0 }
+                if (ordersData) {
+                    ordersData.forEach(o => {
+                        if (o.status === 'Yangi' || o.status === 'new') statusStats.new++
+                        if (o.status === 'Jarayonda' || o.status === 'pending') statusStats.pending++
+                        if (o.status === 'Tugallangan' || o.status === 'completed') statusStats.completed++
+                        if (o.status === 'Bekor qilingan' || o.status === 'cancelled') statusStats.cancelled++
+                    })
+                }
+
+                // 2. Employees Total
                 const { count: empCount } = await supabase
                     .from('employees')
                     .select('*', { count: 'exact', head: true })
 
-                // 4. Finance Balance
-                const { data: allTrans } = await supabase
-                    .from('transactions')
-                    .select('amount, type')
-                
-                const balance = (allTrans || []).reduce((sum, t) => {
-                    const amt = Number(t.amount) || 0
-                    return t.type === 'inflow' ? sum + amt : sum - amt
-                }, 0)
-
-                // 5. Recent Activities (Last 5 orders)
-                const { data: recentOrders } = await supabase
+                // 3. Recent Activities (Last 5 orders)
+                let recentOrdersData = null
+                const resRecentOrders = await supabase
                     .from('orders')
-                    .select('id, total_amount, created_at, customers(name)')
+                    .select('*, customers(name)')
+                    .is('deleted_at', null)
                     .order('created_at', { ascending: false })
                     .limit(5)
 
-                const activities = (recentOrders || []).map(o => ({
-                    title: `Buyurtma #${o.id.toString().slice(-4)}`,
+                if (resRecentOrders.error && resRecentOrders.error.message.includes('deleted_at')) {
+                    const fallback = await supabase
+                        .from('orders')
+                        .select('*, customers(name)')
+                        .order('created_at', { ascending: false })
+                        .limit(5)
+                    recentOrdersData = fallback.data
+                } else if (resRecentOrders.data) {
+                    recentOrdersData = resRecentOrders.data
+                }
+
+                const activities = (recentOrdersData || []).map(o => ({
+                    title: `Buyurtma #${String(o.id).slice(0, 8)}`,
                     time: new Date(o.created_at).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' }),
-                    desc: `Mijoz: ${o.customers?.name || 'Noma\'lum'}`,
+                    desc: `Mijoz: ${o.customer_name || o.customers?.name || 'Noma\'lum'}`,
                     icon: ShoppingCart,
                     color: 'text-indigo-400'
                 }))
 
                 setData({
-                    revenue: dailyRev,
-                    ordersCount: ordersCount || 0,
                     employeesCount: empCount || 0,
-                    balance: balance,
+                    statusStats: statusStats,
                     recentActivities: activities
                 })
             } catch (error) {
@@ -89,13 +94,25 @@ export default function DashboardView({ role }) {
         }
 
         fetchData()
+
+        const channel = supabase
+            .channel('mobile_dashboard_updates')
+            .on('postgres_changes',
+                { event: '*', schema: 'public', table: 'orders' },
+                () => fetchData()
+            )
+            .subscribe()
+
+        return () => {
+            supabase.removeChannel(channel)
+        }
     }, [])
 
     const stats = [
-        { label: 'Kunlik tushum', value: data.revenue.toLocaleString(), change: 'Bugun', icon: TrendingUp, color: 'bg-emerald-500/10 text-emerald-500' },
-        { label: 'Yangi buyurtmalar', value: data.ordersCount.toString(), change: 'Bugun', icon: ShoppingCart, color: 'bg-indigo-500/10 text-indigo-500' },
-        { label: 'Xodimlar', value: `${data.employeesCount} kishi`, change: 'Aktiv', icon: Users, color: 'bg-sky-500/10 text-sky-500' },
-        { label: 'Moliya balansi', value: data.balance.toLocaleString(), change: 'Umumiy', icon: Wallet, color: 'bg-amber-500/10 text-amber-500' },
+        { label: 'Yangi buyurtmalar', value: data.statusStats.new.toString(), change: 'Yangi', icon: Clock, color: 'bg-blue-500/10 text-blue-500' },
+        { label: 'Jarayonda', value: data.statusStats.pending.toString(), change: 'Jarayonda', icon: Timer, color: 'bg-amber-500/10 text-amber-500' },
+        { label: 'Tugallangan', value: data.statusStats.completed.toString(), change: 'Tugallangan', icon: CheckCircle, color: 'bg-emerald-500/10 text-emerald-500' },
+        { label: 'Bekor qilingan', value: data.statusStats.cancelled.toString(), change: 'Bekor qilingan', icon: XCircle, color: 'bg-rose-500/10 text-rose-500' },
     ]
 
     if (loading) {
@@ -145,7 +162,11 @@ export default function DashboardView({ role }) {
                 <div className="space-y-3">
                     {data.recentActivities.length > 0 ? (
                         data.recentActivities.map((activity, idx) => (
-                            <div key={idx} className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                            <div 
+                                key={idx} 
+                                onClick={() => setActiveTab && setActiveTab('orders')}
+                                className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors cursor-pointer active:scale-[0.98]"
+                            >
                                 <div className={`w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center ${activity.color} shrink-0`}>
                                     <activity.icon size={22} />
                                 </div>
@@ -164,3 +185,4 @@ export default function DashboardView({ role }) {
         </div>
     )
 }
+
