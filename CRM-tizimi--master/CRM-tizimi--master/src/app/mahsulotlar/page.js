@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { withTimeout } from '@/lib/withTimeout'
+import { mergeProductInventoryRow } from '@/lib/productInventoryMerge'
 import Header from '@/components/Header'
 import {
     Plus,
@@ -371,12 +372,22 @@ export default function Mahsulotlar() {
                     if (eCat) throw eCat
                     setCategories(catData || [])
 
-                    const { data, error: eProd } = await supabase
+                    const prInv = await supabase
                         .from('products')
-                        .select('*, categories(name)')
+                        .select(
+                            '*, categories(name), product_inventory(quantity, stock_by_color, status)'
+                        )
                         .order('created_at', { ascending: false })
-                    if (eProd) throw eProd
-                    setProducts(data || [])
+                    if (prInv.error) {
+                        const prFb = await supabase
+                            .from('products')
+                            .select('*, categories(name)')
+                            .order('created_at', { ascending: false })
+                        if (prFb.error) throw prFb.error
+                        setProducts(prFb.data || [])
+                    } else {
+                        setProducts((prInv.data || []).map(mergeProductInventoryRow))
+                    }
 
                     const { data: colorData, error: eCol } = await supabase
                         .from('product_colors')
@@ -1958,9 +1969,22 @@ export default function Mahsulotlar() {
                             {filteredProducts.map((item) => (
                                 <tr key={item.id} className="hover:bg-blue-50/30 transition-colors group">
                                     <td className="px-6 py-4">
-                                        <div className="w-12 h-12 rounded-xl bg-gray-100 overflow-hidden border border-gray-100">
+                                        <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl border border-gray-100 bg-gray-50">
                                             {item.images?.[0] ? (
-                                                <img src={item.images[0]} alt="" className="w-full h-full object-cover" />
+                                                <a
+                                                    href={item.images[0]}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex h-full w-full items-center justify-center"
+                                                    title="Rasmni to‘liq ochish"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <img
+                                                        src={item.images[0]}
+                                                        alt=""
+                                                        className="max-h-full max-w-full object-contain"
+                                                    />
+                                                </a>
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center text-gray-300">
                                                     <Package size={20} />
@@ -2501,8 +2525,20 @@ export default function Mahsulotlar() {
                                 <label className="block text-sm font-bold text-gray-700 mb-2">Rasmlar</label>
                                 <div className="flex flex-wrap gap-4">
                                     {form.images.map((img, index) => (
-                                        <div key={index} className="relative w-24 h-24 group">
-                                            <img src={img} alt="" className="w-full h-full object-cover rounded-lg shadow-sm" />
+                                        <div key={index} className="relative h-28 w-28 group sm:h-24 sm:w-24">
+                                            <a
+                                                href={img}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex h-full w-full items-center justify-center overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-gray-200"
+                                                title="To‘liq rasmni alohida ochish"
+                                            >
+                                                <img
+                                                    src={img}
+                                                    alt=""
+                                                    className="max-h-full max-w-full object-contain"
+                                                />
+                                            </a>
                                             <button
                                                 type="button"
                                                 onClick={() => handleRemoveImage(index)}
