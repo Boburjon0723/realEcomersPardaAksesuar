@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
+import { normalizeRole, resolveUserRole } from '../utils/authRole';
 
 const AuthContext = createContext();
 
@@ -14,6 +15,13 @@ function getAdminEmailSet() {
 }
 
 function userIsAdmin(user) {
+    const directRole = normalizeRole(
+        user?.user_metadata?.nuur_role ||
+        user?.user_metadata?.role ||
+        user?.app_metadata?.nuur_role ||
+        user?.app_metadata?.role
+    );
+    if (directRole === 'admin') return true;
     const email = user?.email?.toLowerCase().trim();
     if (!email) return false;
     return getAdminEmailSet().has(email);
@@ -23,6 +31,7 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
+    const [role, setRole] = useState('user');
 
     useEffect(() => {
         // Get initial session
@@ -31,7 +40,11 @@ export const AuthProvider = ({ children }) => {
             const currentUser = session?.user || null;
             setUser(currentUser);
             if (currentUser) {
-                setIsAdmin(userIsAdmin(currentUser));
+                const resolvedRole = await resolveUserRole(currentUser);
+                setRole(resolvedRole);
+                setIsAdmin(resolvedRole === 'admin' || userIsAdmin(currentUser));
+            } else {
+                setRole('user');
             }
             setLoading(false);
         };
@@ -39,12 +52,15 @@ export const AuthProvider = ({ children }) => {
         getInitialSession();
 
         // Listen for auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
             const currentUser = session?.user || null;
             setUser(currentUser);
             if (currentUser) {
-                setIsAdmin(userIsAdmin(currentUser));
+                const resolvedRole = await resolveUserRole(currentUser);
+                setRole(resolvedRole);
+                setIsAdmin(resolvedRole === 'admin' || userIsAdmin(currentUser));
             } else {
+                setRole('user');
                 setIsAdmin(false);
             }
         });
@@ -55,7 +71,8 @@ export const AuthProvider = ({ children }) => {
     const value = {
         user,
         loading,
-        isAdmin
+        isAdmin,
+        role,
     };
 
     return (

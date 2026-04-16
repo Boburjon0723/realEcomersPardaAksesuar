@@ -1,4 +1,5 @@
 import { supabase } from '../../supabaseClient';
+import { canAccessEcommerce, resolveUserRole } from '../../utils/authRole';
 
 /** Prod uchun Vercel/https domeni; bo‘lmasa joriy origin (Supabase Redirect URL bilan mos qo‘ying) */
 export function getPasswordResetRedirectUrl() {
@@ -29,7 +30,8 @@ export const registerUser = async (password, displayName, phone, country, email)
                     name: displayName,
                     phone: phone,
                     country: country,
-                    email: email
+                    email: email,
+                    nuur_role: 'user',
                 }
             }
         });
@@ -84,7 +86,12 @@ export const loginUser = async (email, password) => {
             password
         });
         if (error) throw error;
-        return { success: true, user: data.user };
+        const role = await resolveUserRole(data.user);
+        if (!canAccessEcommerce(role)) {
+            await supabase.auth.signOut();
+            return { success: false, error: "Bu akkaunt faqat ichki bo'limlar uchun. E-commercega user roli kerak." };
+        }
+        return { success: true, user: data.user, role };
     } catch (error) {
         return { success: false, error: error.message };
     }

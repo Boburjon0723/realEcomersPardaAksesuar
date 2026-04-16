@@ -27,5 +27,11 @@ export function mapAuthUserToAppUser(authUser) {
         name,
         phone,
         country,
+        role:
+            meta.nuur_role ||
+            meta.role ||
+            authUser.app_metadata?.nuur_role ||
+            authUser.app_metadata?.role ||
+            'user',
     };
 }
