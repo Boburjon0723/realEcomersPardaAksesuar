@@ -663,7 +663,8 @@ const CheckoutPage = () => {
                                     <div className="flex-1">
                                         <div className="text-sm font-bold text-gray-900 line-clamp-1">{item.name[language]}</div>
                                         <div className="text-xs text-gray-500">
-                                            ${item.price?.toLocaleString()} x {item.quantity}
+                                            ${item.price?.toLocaleString()} × {item.quantity}
+                                            {item.is_kg ? ' kg' : ''}
                                             {(item.selectedColor || item.color) && (
                                                 <span className="ml-2 px-1.5 py-0.5 bg-gray-100 rounded text-secondary font-bold uppercase tracking-tighter">
                                                     {translateColor(item.selectedColor || item.color)}

@@ -266,28 +266,44 @@ const CartPage = () => {
                                         </div>
                                     </div>
 
+                                    {item.is_kg && (
+                                        <p className="text-[11px] text-blue-700 font-semibold w-full -mt-2 mb-0">
+                                            {language === 'ru' ? 'Наряд за 1 kg' : language === 'en' ? 'Price per 1 kg' : 'Narx 1 kg uchun'}
+                                        </p>
+                                    )}
                                     <div className="flex flex-wrap items-end justify-between gap-4">
                                         <div className="flex items-center border border-gray-200 rounded-lg bg-gray-50 overflow-hidden">
                                             <button
-                                                onClick={() => updateQuantity(item.cartItemId, item.quantity - 1)}
+                                                type="button"
+                                                onClick={() => {
+                                                    const step = item.is_kg ? 0.5 : 1;
+                                                    const min = item.is_kg ? 0.001 : 1;
+                                                    const next = item.quantity - step;
+                                                    updateQuantity(item.cartItemId, Math.max(min, next));
+                                                }}
                                                 className="p-2 hover:bg-white text-gray-600 rounded-l-lg transition-colors border-r border-gray-200"
                                             >
                                                 <Minus className="w-4 h-4" />
                                             </button>
                                             <input
                                                 type="number"
-                                                min="1"
+                                                min={item.is_kg ? 0.001 : 1}
+                                                step={item.is_kg ? 0.001 : 1}
                                                 value={item.quantity}
                                                 onChange={(e) => {
-                                                    const val = parseInt(e.target.value);
-                                                    if (!isNaN(val)) {
+                                                    const val = Number(String(e.target.value).replace(',', '.'));
+                                                    if (Number.isFinite(val)) {
                                                         updateQuantity(item.cartItemId, val);
                                                     }
                                                 }}
-                                                className="w-12 text-center font-bold text-gray-900 bg-transparent outline-none"
+                                                className={`${item.is_kg ? 'w-20' : 'w-12'} text-center font-bold text-gray-900 bg-transparent outline-none`}
                                             />
                                             <button
-                                                onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)}
+                                                type="button"
+                                                onClick={() => {
+                                                    const step = item.is_kg ? 0.5 : 1;
+                                                    updateQuantity(item.cartItemId, item.quantity + step);
+                                                }}
                                                 className="p-2 hover:bg-white text-gray-600 rounded-r-lg transition-colors border-l border-gray-200"
                                             >
                                                 <Plus className="w-4 h-4" />
@@ -458,10 +474,10 @@ const CartPage = () => {
                                         </div>
                                         <div className="text-xs text-gray-500">
                                             {language === 'uz'
-                                                ? `Miqdor: ${item.quantity}`
+                                                ? `Miqdor: ${item.quantity}${item.is_kg ? ' kg' : ''}`
                                                 : language === 'ru'
-                                                  ? `Кол-во: ${item.quantity}`
-                                                  : `Qty: ${item.quantity}`}
+                                                  ? `Кол-во: ${item.quantity}${item.is_kg ? ' kg' : ''}`
+                                                  : `Qty: ${item.quantity}${item.is_kg ? ' kg' : ''}`}
                                         </div>
                                     </div>
                                 ))}

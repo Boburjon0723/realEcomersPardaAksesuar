@@ -19,6 +19,20 @@ ALTER TABLE products ADD COLUMN IF NOT EXISTS sort_order INTEGER NOT NULL DEFAUL
 -- products: vitrinada kategoriya ichidagi tartib (kichik raqam = yuqorida)
 ALTER TABLE products ADD COLUMN IF NOT EXISTS sort_order INTEGER NOT NULL DEFAULT 0;
 
+-- products: narx 1 kg bo'yicha (CRM is_kg; og'irlik features JSONB da)
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS is_kg BOOLEAN NOT NULL DEFAULT false;
+
+-- products: rang bo'yicha zaxira (ombor)
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS stock_by_color JSONB DEFAULT '{}'::jsonb;
+
+-- order_items: miqdor kg yoki dona (kasr)
+ALTER TABLE public.order_items
+  ALTER COLUMN quantity TYPE NUMERIC(12, 3)
+  USING (ROUND(quantity::numeric, 3));
+ALTER TABLE public.order_items DROP CONSTRAINT IF EXISTS order_items_quantity_check;
+ALTER TABLE public.order_items
+  ADD CONSTRAINT order_items_quantity_check CHECK (quantity > 0);
+
 -- ==================== 1. SETTINGS JADVALI ====================
 -- (Agar settings mavjud bo'lsa, CREATE TABLE o'tkazilmaydi)
 CREATE TABLE IF NOT EXISTS settings (

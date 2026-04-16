@@ -55,6 +55,8 @@ CREATE TABLE IF NOT EXISTS products (
     reviews INTEGER DEFAULT 0,
     model_3d_url TEXT,
     sort_order INTEGER NOT NULL DEFAULT 0,
+    is_kg BOOLEAN NOT NULL DEFAULT false,
+    stock_by_color JSONB DEFAULT '{}'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -145,7 +147,7 @@ CREATE TABLE IF NOT EXISTS order_items (
     order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
     product_id UUID REFERENCES products(id) ON DELETE SET NULL,
     product_name TEXT,
-    quantity INTEGER NOT NULL CHECK (quantity > 0),
+    quantity NUMERIC(12, 3) NOT NULL CHECK (quantity > 0),
     price NUMERIC(12, 2) NOT NULL,
     subtotal NUMERIC(12, 2),
     color TEXT,
@@ -367,6 +369,7 @@ CREATE TABLE IF NOT EXISTS reviews (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     product_id UUID REFERENCES products(id) ON DELETE CASCADE,
     user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    author_display_name TEXT,
     rating INTEGER CHECK (rating >= 1 AND rating <= 5),
     comment TEXT,
     status TEXT DEFAULT 'pending',
@@ -509,11 +512,8 @@ DROP POLICY IF EXISTS "Public can upload models" ON storage.objects;
 CREATE POLICY "Public can upload models"
 ON storage.objects FOR INSERT TO public WITH CHECK (bucket_id = 'models');
 
--- ==================== 18. AUTH USERS VIEW (CRM sharhlar uchun) ====================
-CREATE OR REPLACE VIEW public.auth_users AS
-SELECT id, email FROM auth.users;
-
-GRANT SELECT ON public.auth_users TO anon, authenticated;
+-- ==================== 18. SHARHLAR: auth.users VIEW YO'Q ====================
+-- Email o'rniga author_display_name clientda yoziladi (Supabase auth_users_exposed xavfisizligi).
 
 -- ==================== TUGADI ====================
 -- Keyingi qadam: .env da yangi Supabase URL va ANON KEY ni qo'ying.

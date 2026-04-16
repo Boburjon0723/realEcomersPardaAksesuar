@@ -144,12 +144,15 @@ export const AppProvider = ({ children }) => {
     }, []);
 
     const updateQuantity = useCallback((cartItemId, quantity) => {
-        if (quantity < 1) return;
-        setCart(prev =>
-            prev.map(item =>
-                item.cartItemId === cartItemId ? { ...item, quantity } : item
-            )
-        );
+        setCart((prev) => {
+            const item = prev.find((i) => i.cartItemId === cartItemId);
+            const min = item?.is_kg ? 0.001 : 1;
+            const q = Number(quantity);
+            if (!Number.isFinite(q) || q < min) return prev;
+            return prev.map((it) =>
+                it.cartItemId === cartItemId ? { ...it, quantity: q } : it
+            );
+        });
     }, []);
 
     const clearCart = useCallback(() => {

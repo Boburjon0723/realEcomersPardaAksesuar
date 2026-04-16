@@ -19,5 +19,9 @@ ADD COLUMN IF NOT EXISTS stock INTEGER DEFAULT 0;
 ALTER TABLE products
 ADD COLUMN IF NOT EXISTS min_stock INTEGER DEFAULT 0;
 
+-- 5. is_kg: CRM da kg narxi rejimi (og'irlik features JSONB ichida)
+ALTER TABLE public.products
+ADD COLUMN IF NOT EXISTS is_kg BOOLEAN NOT NULL DEFAULT false;
+
 -- Optional: Add detailed description if needed (description is already there but maybe we want specific sections)
 -- ALTER TABLE products ADD COLUMN IF NOT EXISTS specs JSONB DEFAULT '{}';

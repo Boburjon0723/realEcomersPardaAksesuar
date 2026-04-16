@@ -9,6 +9,7 @@
     "dev:clean": "npm run dev:clean --prefix ./CRM-tizimi--master",
     "build": "npm run build --prefix ./CRM-tizimi--master",
     "start": "npm run start --prefix ./CRM-tizimi--master",
-    "install:all": "npm install --prefix ./CRM-tizimi--master"
+    "install:all": "npm install --prefix ./CRM-tizimi--master",
+    "postinstall": "npm run install:all"
   }
 }

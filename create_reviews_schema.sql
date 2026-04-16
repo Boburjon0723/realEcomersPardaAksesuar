@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS reviews (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS author_display_name TEXT;
+
 -- RLS Policies
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 

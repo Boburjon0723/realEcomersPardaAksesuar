@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { MapPin, Phone, Mail, Clock, Send, MessageSquare, ExternalLink } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, Send, MessageSquare, ExternalLink, QrCode, Copy, Check } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useApp } from '../hooks/useApp';
 import PageMeta from '../components/common/PageMeta';
@@ -21,6 +21,19 @@ const ContactPage = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [fieldErrors, setFieldErrors] = useState({});
+    const [copied, setCopied] = useState(false);
+    const websiteUrl = 'https://nuur-home-collection.vercel.app/';
+    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=640x640&data=${encodeURIComponent(websiteUrl)}`;
+
+    const handleCopyLink = async () => {
+        try {
+            await navigator.clipboard.writeText(websiteUrl);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1600);
+        } catch (_) {
+            setCopied(false);
+        }
+    };
 
     const validateContactForm = () => {
         const errs = {};
@@ -158,6 +171,56 @@ const ContactPage = () => {
                                 {t('openInMaps')}
                             </a>
                         )}
+                    </div>
+
+                    {/* Website QR Card */}
+                    <div className="relative overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-cyan-50 p-5 sm:p-6 shadow-sm">
+                        <div className="pointer-events-none absolute -top-14 -right-10 h-36 w-36 rounded-full bg-emerald-100/70 blur-2xl" />
+                        <div className="pointer-events-none absolute -bottom-12 -left-10 h-36 w-36 rounded-full bg-cyan-100/70 blur-2xl" />
+                        <div className="relative z-10 grid sm:grid-cols-[1fr_auto] gap-5 items-center">
+                            <div>
+                                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white/80 px-3 py-1 text-[11px] font-bold text-emerald-700">
+                                    <QrCode className="w-3.5 h-3.5" />
+                                    E-Commerce QR
+                                </div>
+                                <h3 className="mt-3 text-xl font-bold text-gray-900">
+                                    Saytga tez kirish uchun QR kod
+                                </h3>
+                                <p className="mt-1 text-sm text-gray-600 leading-relaxed">
+                                    Mijoz telefonidan skaner qilib, katalogga bir zumda o‘tadi.
+                                </p>
+                                <div className="mt-4 flex flex-wrap gap-2">
+                                    <a
+                                        href={websiteUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-700 transition-colors"
+                                    >
+                                        <ExternalLink className="w-4 h-4" />
+                                        Saytni ochish
+                                    </a>
+                                    <button
+                                        type="button"
+                                        onClick={handleCopyLink}
+                                        className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+                                    >
+                                        {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                                        {copied ? 'Nusxalandi' : 'Linkni nusxalash'}
+                                    </button>
+                                </div>
+                                <p className="mt-3 text-xs text-gray-500 break-all">{websiteUrl}</p>
+                            </div>
+                            <div className="relative mx-auto sm:mx-0">
+                                <div className="rounded-2xl border border-white bg-white p-3 shadow-lg">
+                                    <img
+                                        src={qrImageUrl}
+                                        alt="Nuur Home Collection QR"
+                                        className="h-40 w-40 sm:h-44 sm:w-44 rounded-lg object-cover"
+                                        loading="lazy"
+                                    />
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

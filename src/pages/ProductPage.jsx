@@ -13,6 +13,16 @@ import { getShareableUrl } from '../utils/siteUrl';
 import { formatProductPriceDisplay } from '../utils/price';
 import { Box } from 'lucide-react';
 
+/** Sharhda ko'rinadigan ism — bazaga yoziladi, auth.users ochiq view talab qilmaydi */
+function reviewerPublicName(user) {
+    if (!user) return 'Foydalanuvchi'
+    const meta = user.user_metadata?.full_name || user.user_metadata?.name
+    if (meta && String(meta).trim()) return String(meta).trim().slice(0, 120)
+    const em = user.email
+    if (em && String(em).includes('@')) return String(em).split('@')[0].slice(0, 120)
+    return 'Foydalanuvchi'
+}
+
 const applyColorTo3DModel = (modelViewer, selectedColor, colorMap) => {
     if (!modelViewer?.model?.materials || !selectedColor || !colorMap[selectedColor]) return;
     const hexColor = colorMap[selectedColor];
@@ -133,23 +143,12 @@ const ProductPage = () => {
             return;
         }
         const idStr = String(pid);
-        // Avvalo auth_users bog'lanishi bilan (agar Supabase FK/embed ishlamasa — xato beradi)
-        let { data, error } = await supabase
+        const { data, error } = await supabase
             .from('reviews')
-            .select('*, auth_users(email)')
+            .select('*')
             .eq('product_id', idStr)
             .eq('status', 'approved')
             .order('created_at', { ascending: false });
-        if (error) {
-            const fallback = await supabase
-                .from('reviews')
-                .select('*')
-                .eq('product_id', idStr)
-                .eq('status', 'approved')
-                .order('created_at', { ascending: false });
-            data = fallback.data;
-            error = fallback.error;
-        }
         if (error) {
             console.error('[reviews] fetch', error);
             setReviews([]);
@@ -218,6 +217,7 @@ const ProductPage = () => {
             {
                 product_id: String(selectedProduct.id),
                 user_id: currentUser.id,
+                author_display_name: reviewerPublicName(currentUser),
                 rating: reviewForm.rating,
                 comment: reviewForm.comment,
                 status: 'approved' // Set to approved by default as requested
@@ -756,7 +756,7 @@ const ProductPage = () => {
                                             <div key={review.id} className="bg-gray-50 p-6 rounded-xl">
                                                 <div className="flex items-center justify-between mb-2">
                                                     <div className="font-bold text-gray-900">
-                                                        {review.auth_users?.email?.split('@')[0] || 'Foydalanuvchi'}
+                                                        {review.author_display_name?.trim() || 'Foydalanuvchi'}
                                                     </div>
                                                     <span className="text-sm text-gray-500">
                                                         {new Date(review.created_at).toLocaleDateString()}

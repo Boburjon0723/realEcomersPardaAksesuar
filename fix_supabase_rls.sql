@@ -30,10 +30,9 @@ ON public.reviews FOR SELECT
 USING (true);
 
 
--- 3. CREATE AUTH_USERS VIEW (To link reviews with user emails)
--- This allows the front-end to join reviews with a public view of user emails
-CREATE OR REPLACE VIEW public.auth_users AS
-SELECT id, email FROM auth.users;
+-- 3. Ommaviy auth_users view OLIB TASHLANSIN (xavfsizlik). Sharhlar uchun:
+--    reviews.author_display_name — buni supabase_remove_auth_users_view.sql bilan qo'shing.
+ALTER TABLE public.reviews
+  ADD COLUMN IF NOT EXISTS author_display_name TEXT;
 
--- Allow public read of this specific view
-GRANT SELECT ON public.auth_users TO anon, authenticated;
+DROP VIEW IF EXISTS public.auth_users CASCADE;

@@ -83,17 +83,21 @@ export const createOrder = async (orderData) => {
         if (orderError) throw orderError;
 
         // 2. Insert items into order_items table
-        const orderItems = orderData.products.map((item) => ({
-            order_id: order.id,
-            product_id: item.id,
-            product_name: typeof item.name === 'object' ? item.name.uz : item.name,
-            quantity: item.quantity,
-            price: item.price,
-            subtotal: Number(item.price) * Number(item.quantity),
-            color: item.color || null,
-            size: item.size || null,
-            image_url: item.image || null,
-        }));
+        const orderItems = orderData.products.map((item) => {
+            const qty = Number(item.quantity);
+            const q = Number.isFinite(qty) && qty > 0 ? qty : 1;
+            return {
+                order_id: order.id,
+                product_id: item.id,
+                product_name: typeof item.name === 'object' ? item.name.uz : item.name,
+                quantity: q,
+                price: item.price,
+                subtotal: Number(item.price) * q,
+                color: item.color || null,
+                size: item.size || null,
+                image_url: item.image || null,
+            };
+        });
 
         const { error: itemsError } = await supabase
             .from(ORDER_ITEMS_TABLE)
