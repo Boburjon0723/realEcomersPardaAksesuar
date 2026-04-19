@@ -37,6 +37,7 @@ import {
 import { useLayout } from '@/context/LayoutContext'
 import { useLanguage } from '@/context/LanguageContext'
 import { isDeletedAtMissingError } from '@/lib/orderTrash'
+import CrmAiInsightsPanel from '@/components/CrmAiInsightsPanel'
 
 const LS_MODE = 'crm_stat_date_mode'
 const LS_DAYS = 'crm_stat_filter_days'
@@ -734,6 +735,63 @@ export default function StatistikaPage() {
         [customerAnalyticsRows]
     )
 
+    /** Google Gemini API ga yuboriladigan yig‘ma (shaxsiy telefon yo‘q) */
+    const crmAiSummary = useMemo(
+        () => ({
+            periodLabel,
+            orderStatusFilter,
+            dateMode,
+            filterRange,
+            monthValue,
+            rangeFrom,
+            rangeTo,
+            ordersInPeriod: filteredOrders.length,
+            completedInPeriod: completedOrdersInPeriod.length,
+            totalSalesUsd: Math.round(Number(totalSales) * 100) / 100,
+            totalIncomeCompletedUsd: Math.round(Number(totalIncomeFromCompletedOrders) * 100) / 100,
+            totalExpenseUsd: Math.round(Number(totalExpense) * 100) / 100,
+            revenueFromOrderLinesUsd: Math.round(Number(revenueFromOrderLines) * 100) / 100,
+            topCategories: categoryAnalyticsRows.slice(0, 6).map((r) => ({
+                name: r.name,
+                qty: Math.round(r.qty * 1000) / 1000,
+                revenue: Math.round(r.revenue * 100) / 100,
+            })),
+            topProducts: productAnalyticsRows
+                .filter((r) => r.qty > 0)
+                .slice(0, 6)
+                .map((r) => ({
+                    name: r.name,
+                    qty: Math.round(r.qty * 1000) / 1000,
+                    revenue: Math.round(r.revenue * 100) / 100,
+                })),
+            topCustomers: customerAnalyticsRows.slice(0, 6).map((c) => ({
+                name: c.name,
+                orders: c.orders,
+                totalUsd: Math.round(Number(c.total) * 100) / 100,
+            })),
+            unsoldCatalogProducts: unsoldCount,
+        }),
+        [
+            periodLabel,
+            orderStatusFilter,
+            dateMode,
+            filterRange,
+            monthValue,
+            rangeFrom,
+            rangeTo,
+            filteredOrders.length,
+            completedOrdersInPeriod.length,
+            totalSales,
+            totalIncomeFromCompletedOrders,
+            totalExpense,
+            revenueFromOrderLines,
+            categoryAnalyticsRows,
+            productAnalyticsRows,
+            customerAnalyticsRows,
+            unsoldCount,
+        ]
+    )
+
     const exportFileBase = useMemo(
         () => `stat-${periodFileStamp(periodStart, periodEnd)}-${orderStatusFilter}`,
         [periodStart, periodEnd, orderStatusFilter]
@@ -1079,6 +1137,10 @@ export default function StatistikaPage() {
                     )
                 </span>
             </div>
+
+            {!loadError ? (
+                <CrmAiInsightsPanel t={t} language={language} summary={crmAiSummary} />
+            ) : null}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-2xl shadow-lg shadow-blue-200">

@@ -28,6 +28,7 @@ export const translations = {
             notifyBotMaterialFallback: 'Yangi yozuv',
             notifyBotAdvanceTitle: 'Telegram: xodim avansi',
             notifyBotSalaryTitle: 'Telegram: oylik to‘lovi',
+            notifyBotLeaveTitle: 'Telegram: dam olish so‘rovi',
             loading: 'Yuklanmoqda...',
             save: 'Saqlash',
             cancel: 'Bekor qilish',
@@ -665,6 +666,14 @@ export const translations = {
             bonusPlaceholder: 'Bonus miqdori',
             workedDays: 'Ishlagan kunlar',
             restDays: 'Dam olgan kunlar',
+            approvedLeaveDatesLabel: 'Dam (tasdiqlangan):',
+            daysScheduleHint:
+                'Tanlangan hisobot oyidagi kalendar kunlari: {{n}}. Dam kunlari oyiga 2 kun (oylikdan tashqari), qolgani ishlagan kunga tushadi.',
+            restDaysLimitWarn: 'Dam kunlari oyiga {{n}} kundan oshmasligi kerak.',
+            phoneLabel: 'Telefon (Telegram / bot)',
+            phonePlaceholder: 'masalan 90 123 45 67 yoki 998901234567',
+            phoneInvalidWarn:
+                'Telefon noto‘g‘ri. To‘liq 12 raqam kiriting (masalan 998901234567) yoki 9 raqam — 90… (998 avtomatik qo‘shiladi). «99896…» deb 9 ta qoldirmang — to‘liq yozing.',
             work: 'Ish',
             rest: 'Dam',
             totalPayment: 'Jami To\'lov',
@@ -1113,7 +1122,7 @@ export const translations = {
             categoryShare: 'Kategoriyalar bo\'yicha ulush',
             categoryQtyAnalytics: 'Kategoriya bo\'yicha sotuv (dona va summa)',
             categoryTableHint:
-                'Diagramma — kategoriyalar ulushi ($); pastdagi jadval — har bir kategoriyadan sotilgan mahsulot donasi va qatorlar summasi.',
+                'Diagramma va jadval — mahsulot qatorlari (narx × dona). Pastdagi «Jami» va yuqoridagi «Jami Savdo» / «Kirim» kartochkalari shu asosda (buyurtma «total» maydoni emas).',
             categoryOther: 'Boshqa',
             colCategory: 'Kategoriya',
             exportCategoriesCsv: 'Kategoriyalar CSV',
@@ -1159,7 +1168,25 @@ export const translations = {
             topProductsBar: 'Top mahsulotlar (dona)',
             topCustomersBar: 'Top mijozlar (summa)',
             chartQtyShort: 'Dona',
-            chartRevenueShort: '$'
+            chartRevenueShort: '$',
+            loadErrorOrders:
+                'Buyurtmalar yuklanmadi — grafik va jadvallar buyurtmalar bo‘yicha ko‘rinmaydi.',
+            loadErrorGeneric: 'Ma’lumotlarni yuklashda xato.',
+            loadPartialFinance: 'Moliya yozuvlari (transactions) yuklanmadi.',
+            loadPartialProducts: 'Mahsulotlar ro‘yxati yuklanmadi.',
+            refreshData: 'Ma’lumotlarni yangilash',
+            categoryFooterTotal: 'Jami (barcha kategoriyalar)',
+            aiPanelTitle: 'AI hisobot (OpenRouter / Gemini)',
+            aiPanelHint:
+                'Yig‘ma raqamlar server orqali yuboriladi (OpenRouter yoki Google Gemini); kalit faqat .env da. Telefon raqamlar matnda takrorlanmaydi.',
+            aiGenerate: 'Hisobot olish',
+            aiLoading: 'AI yozmoqda…',
+            aiError: 'AI javobini olishda xato. Model yoki tarmoqni tekshiring.',
+            aiErrorKey:
+                'AI kalit sozlanmagan. OpenRouter (openrouter.ai) yoki Google AI Studio kalitini server .env ga qo‘shing (OPENROUTER_API_KEY yoki GEMINI_API_KEY).',
+            aiNet: 'Tarmoq xatosi — qayta urinib ko‘ring.',
+            aiQuotaError:
+                'Google Gemini bepul limiti tugagan yoki vaqtinchalik to‘ldi. Bir necha soatdan keyin qayta urinib ko‘ring yoki Google Cloud loyihangizda Gemini API uchun billing yoqing (https://ai.google.dev/pricing).',
         },
         website: {
             title: 'Web Sayt Boshqaruvi',
@@ -1302,6 +1329,12 @@ export const translations = {
             markAllRead: 'Отметить все как прочитанные',
             viewAllOrders: 'Посмотреть все заказы',
             viewAllMessages: 'Все сообщения',
+            viewMoliyaDepartments: 'Финансы / склад',
+            notifyBotMaterialTitle: 'Telegram: движение материала',
+            notifyBotMaterialFallback: 'Новая запись',
+            notifyBotAdvanceTitle: 'Telegram: аванс сотрудника',
+            notifyBotSalaryTitle: 'Telegram: выплата зарплаты',
+            notifyBotLeaveTitle: 'Telegram: запрос на отпуск',
             loading: 'Загрузка...',
             save: 'Сохранить',
             cancel: 'Отмена',
@@ -1931,6 +1964,14 @@ export const translations = {
             bonusPlaceholder: 'Сумма бонуса',
             workedDays: 'Отработанные дни',
             restDays: 'Дни отдыха',
+            approvedLeaveDatesLabel: 'Отдых (одобр.):',
+            daysScheduleHint:
+                'Календарные дни выбранного месяца: {{n}}. Дни отдыха — до 2 в месяц (вне оклада), остальные считаются рабочими.',
+            restDaysLimitWarn: 'Дни отдыха не должны превышать {{n}} в месяц.',
+            phoneLabel: 'Телефон (Telegram / бот)',
+            phonePlaceholder: 'например 90 123 45 67 или 998901234567',
+            phoneInvalidWarn:
+                'Неверный телефон. Полный номер 12 цифр (998901234567) или 9 цифр 90… Не обрывайте на «998…».',
             work: 'Раб',
             rest: 'Отд',
             totalPayment: 'Итого к выплате',
@@ -2367,7 +2408,7 @@ export const translations = {
             categoryShare: 'Доля по категориям',
             categoryQtyAnalytics: 'Продажи по категориям (шт. и сумма)',
             categoryTableHint:
-                'Диаграмма — доля по сумме ($); таблица ниже — проданные штуки и сумма по строкам заказа.',
+                'Диаграмма и таблица — по строкам заказа (цена × кол-во). Строка «Итого» и карточки продаж/дохода используют ту же основу (не поле total заказа).',
             categoryOther: 'Прочее',
             colCategory: 'Категория',
             exportCategoriesCsv: 'Категории CSV',
@@ -2413,7 +2454,25 @@ export const translations = {
             topProductsBar: 'Топ товаров (шт.)',
             topCustomersBar: 'Топ клиентов (сумма)',
             chartQtyShort: 'Шт.',
-            chartRevenueShort: '$'
+            chartRevenueShort: '$',
+            loadErrorOrders:
+                'Не удалось загрузить заказы — графики и таблицы по заказам будут пустыми.',
+            loadErrorGeneric: 'Ошибка загрузки данных.',
+            loadPartialFinance: 'Не загружены финансовые записи (transactions).',
+            loadPartialProducts: 'Не загружен список товаров.',
+            refreshData: 'Обновить данные',
+            categoryFooterTotal: 'Итого (все категории)',
+            aiPanelTitle: 'AI-отчёт (OpenRouter / Gemini)',
+            aiPanelHint:
+                'Сводные цифры отправляются через сервер (OpenRouter или Google Gemini); ключ только в .env. Телефоны в тексте не повторяются.',
+            aiGenerate: 'Получить отчёт',
+            aiLoading: 'AI пишет…',
+            aiError: 'Не удалось получить ответ AI. Проверьте модель или сеть.',
+            aiErrorKey:
+                'Не задан ключ AI. Добавьте OPENROUTER_API_KEY (openrouter.ai) или GEMINI_API_KEY в .env на сервере.',
+            aiNet: 'Ошибка сети — попробуйте снова.',
+            aiQuotaError:
+                'Исчерпан бесплатный лимит Google Gemini или временная блокировка. Попробуйте позже или включите биллинг для Gemini API в Google Cloud (https://ai.google.dev/pricing).',
         },
         website: {
             title: 'Управление веб-сайтом',
@@ -2561,6 +2620,7 @@ export const translations = {
             notifyBotMaterialFallback: 'New entry',
             notifyBotAdvanceTitle: 'Telegram: employee advance',
             notifyBotSalaryTitle: 'Telegram: salary payment',
+            notifyBotLeaveTitle: 'Telegram: leave request',
             loading: 'Loading...',
             save: 'Save',
             cancel: 'Cancel',
@@ -3195,6 +3255,14 @@ export const translations = {
             bonusPlaceholder: 'Bonus amount',
             workedDays: 'Worked Days',
             restDays: 'Rest Days',
+            approvedLeaveDatesLabel: 'Rest (approved):',
+            daysScheduleHint:
+                'Calendar days in selected month: {{n}}. Rest days are limited to 2 per month (outside salary), the rest is counted as worked days.',
+            restDaysLimitWarn: 'Rest days cannot exceed {{n}} per month.',
+            phoneLabel: 'Phone (Telegram / bot)',
+            phonePlaceholder: 'e.g. 90 123 45 67 or 998901234567',
+            phoneInvalidWarn:
+                'Invalid phone. Enter 12 digits (998901234567) or 9 digits (90…). Do not stop after 998.',
             work: 'Work',
             rest: 'Rest',
             totalPayment: 'Total Payment',
@@ -3642,7 +3710,7 @@ export const translations = {
             categoryShare: 'Share by Categories',
             categoryQtyAnalytics: 'Sales by category (units and amount)',
             categoryTableHint:
-                'Chart — share by revenue ($); table — units sold per category and line totals.',
+                'Chart and table use order lines (price × qty). The footer total and the sales/income cards use the same basis (not the order total field).',
             categoryOther: 'Other',
             colCategory: 'Category',
             exportCategoriesCsv: 'Categories CSV',
@@ -3688,7 +3756,25 @@ export const translations = {
             topProductsBar: 'Top products (units)',
             topCustomersBar: 'Top customers (amount)',
             chartQtyShort: 'Units',
-            chartRevenueShort: '$'
+            chartRevenueShort: '$',
+            loadErrorOrders:
+                'Orders could not be loaded — charts and tables based on orders will be empty.',
+            loadErrorGeneric: 'Error loading data.',
+            loadPartialFinance: 'Finance records (transactions) could not be loaded.',
+            loadPartialProducts: 'Product list could not be loaded.',
+            refreshData: 'Refresh data',
+            categoryFooterTotal: 'Total (all categories)',
+            aiPanelTitle: 'AI report (OpenRouter / Gemini)',
+            aiPanelHint:
+                'Aggregates are sent via your server (OpenRouter or Google Gemini); the API key stays in .env. Phone numbers are not repeated in the text.',
+            aiGenerate: 'Get report',
+            aiLoading: 'AI is writing…',
+            aiError: 'Could not get an AI response. Check the model or network.',
+            aiErrorKey:
+                'No AI key set. Add OPENROUTER_API_KEY (openrouter.ai) or GEMINI_API_KEY to server .env (e.g. Vercel).',
+            aiNet: 'Network error — try again.',
+            aiQuotaError:
+                'Google Gemini free quota is exceeded or rate-limited. Try again later, or enable billing for the Gemini API in Google Cloud (https://ai.google.dev/pricing).',
         },
         website: {
             title: 'Web Site Management',
