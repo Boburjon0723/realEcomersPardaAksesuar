@@ -374,7 +374,6 @@ export const translations = {
         contactMapFallback: "Xarita uchun sozlamalarda koordinata yoki manzilni kiriting.",
         openInMaps: "Xaritada ochish",
         workingHours: "Ish vaqti",
-        contactSubtitle: "Savollaringiz bormi? Biz sizga yordam berishga tayyormiz.",
 
         // --- Services ---
         needHelp: "Yordam kerakmi?",
@@ -858,7 +857,6 @@ export const translations = {
         contactMapFallback: "Укажите координаты или адрес в настройках, чтобы показать карту.",
         openInMaps: "Открыть на карте",
         workingHours: "Режим работы",
-        contactSubtitle: "У вас есть вопросы? Мы готовы помочь вам.",
 
         // --- Services ---
         needHelp: "Нужна помощь?",
@@ -1340,7 +1338,6 @@ export const translations = {
         contactMapFallback: "Add coordinates or address in site settings to show the map.",
         openInMaps: "Open in maps",
         workingHours: "Working Hours",
-        contactSubtitle: "Have questions? We are here to help.",
 
         // --- Services ---
         needHelp: "Need Help?",
