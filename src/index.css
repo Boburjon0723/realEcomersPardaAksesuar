@@ -672,6 +672,50 @@ input[type=number] {
    PRINT STYLES
    ============================================ */
 
+/* aspect-ratio fallbacks for older browsers (e.g., Safari <15) */
+@supports not (aspect-ratio: 1 / 1) {
+    .aspect-square {
+        position: relative;
+        padding-bottom: 100%;
+    }
+    .aspect-square > * {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+    }
+    .aspect-\[4\/5\] {
+        position: relative;
+        padding-bottom: 125%;
+    }
+    .aspect-\[4\/5\] > * {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+    }
+    .aspect-\[3\/2\] {
+        position: relative;
+        padding-bottom: 66.66%;
+    }
+    .aspect-\[3\/2\] > * {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+    }
+    .aspect-\[16\/9\] {
+        position: relative;
+        padding-bottom: 56.25%;
+    }
+    .aspect-\[16\/9\] > * {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+    }
+}
+
 @media print {
 
   .glass,

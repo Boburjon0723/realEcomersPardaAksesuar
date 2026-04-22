@@ -146,7 +146,7 @@ const AlbumPage = () => {
                                 alt={selectedImage[`title_${language}`] || selectedImage.title_uz || selectedImage.title_ru || selectedImage.title_en || 'Album'}
                                 className="max-w-full max-h-full w-auto h-auto object-contain"
                                 onError={(e) => {
-                                    e.target.src = 'https://via.placeholder.com/400x500?text=No+Image';
+                                    e.target.src = 'https://placehold.co/400x500?text=No+Image';
                                 }}
                             />
                         </div>

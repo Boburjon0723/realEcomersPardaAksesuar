@@ -35,7 +35,7 @@ const ProductQuickView = ({ product, onClose }) => {
                     {/* Image */}
                     <div className="relative w-full md:w-1/2 aspect-square md:aspect-auto md:min-h-[400px] bg-gray-50">
                         <img
-                            src={images[0] || 'https://via.placeholder.com/400x500?text=No+Image'}
+                            src={images[0] || 'https://placehold.co/400x500?text=No+Image'}
                             alt={productName}
                             loading="lazy"
                             className="w-full h-full object-cover"

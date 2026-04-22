@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import Sidebar from '@/components/Sidebar'
+import AIAgent from '@/components/AIAgent'
 import { useLayout } from '@/context/LayoutContext'
 import { withTimeout } from '@/lib/withTimeout'
 import { canAccessCrm, resolveCrmRole } from '@/lib/authRole'
@@ -167,6 +168,7 @@ export default function AuthWrapper({ children }) {
                 <div className="p-4 md:p-6 lg:p-8">
                     {children}
                 </div>
+                <AIAgent />
             </main>
         </div>
     )

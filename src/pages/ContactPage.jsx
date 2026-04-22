@@ -251,7 +251,7 @@ const ContactPage = () => {
                                 type="text"
                                 required
                                 className={`w-full px-4 py-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none ${fieldErrors.name ? 'border-red-400' : 'border-gray-200'}`}
-                                placeholder="Your Name"
+                                placeholder={t('namePlaceholder')}
                                 value={formData.name}
                                 onChange={(e) => { setFormData({ ...formData, name: e.target.value }); setFieldErrors(prev => ({ ...prev, name: '' })); }}
                             />
@@ -264,7 +264,7 @@ const ContactPage = () => {
                                     type="email"
                                     required
                                     className={`w-full px-4 py-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none ${fieldErrors.email ? 'border-red-400' : 'border-gray-200'}`}
-                                    placeholder="email@example.com"
+                                    placeholder={t('emailPlaceholder')}
                                     value={formData.email}
                                     onChange={(e) => { setFormData({ ...formData, email: e.target.value }); setFieldErrors(prev => ({ ...prev, email: '' })); }}
                                 />
@@ -276,7 +276,7 @@ const ContactPage = () => {
                                     type="tel"
                                     required
                                     className={`w-full px-4 py-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none ${fieldErrors.phone ? 'border-red-400' : 'border-gray-200'}`}
-                                    placeholder="+998..."
+                                    placeholder={t('phonePlaceholder')}
                                     value={formData.phone}
                                     onChange={(e) => { setFormData({ ...formData, phone: e.target.value }); setFieldErrors(prev => ({ ...prev, phone: '' })); }}
                                 />
@@ -289,7 +289,7 @@ const ContactPage = () => {
                                 required
                                 rows="4"
                                 className={`w-full px-4 py-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none resize-none ${fieldErrors.message ? 'border-red-400' : 'border-gray-200'}`}
-                                placeholder="How can we help you?"
+                                placeholder={t('messagePlaceholder')}
                                 value={formData.message}
                                 onChange={(e) => { setFormData({ ...formData, message: e.target.value }); setFieldErrors(prev => ({ ...prev, message: '' })); }}
                             />

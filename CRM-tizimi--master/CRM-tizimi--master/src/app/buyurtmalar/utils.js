@@ -3,6 +3,7 @@ import { isDeletedAtMissingError } from '@/lib/orderTrash'
 import { formatUsd } from '@/utils/formatters'
 export { formatUsd }
 import { normalizeModelKey as coreNormalizeModelKey } from '@/utils/validators'
+import * as XLSX from 'xlsx'
 
 export function escapeHtml(s) {
     if (s == null) return ''
@@ -388,6 +389,374 @@ export function exportOrdersToCsv(rows, filename) {
     a.download = filename || `buyurtmalar-${Date.now()}.csv`
     a.click()
     URL.revokeObjectURL(a.href)
+}
+
+export function isOrderCompletedStatus(status) {
+    const s = String(status || '').toLowerCase()
+    return s === 'completed' || s === 'tugallandi' || s === 'tugallangan'
+}
+
+/**
+ * `handleSubmit` ichidagi `makeItemPayloads` bilan bir xil struktura — Excel import va boshqa joylar uchun.
+ */
+export function buildItemPayloadsFromExpandedLines(orderId, expandedRows, productsList) {
+    return expandedRows.map((line, idx) => {
+        const prod = productsList.find((p) => String(p.id) === String(line.product_id))
+        const qtyRaw = parseOrderItemQty(line.quantity)
+        const qty = qtyRaw > 0 ? qtyRaw : 1
+        const rawPrice = Number(line.product_price)
+        const pr = Number.isFinite(rawPrice) ? Math.round(rawPrice * 100) / 100 : 0
+        const subtotal = Math.round(pr * qty * 100) / 100
+        const colorVal = line.color ?? prod?.color
+        const imgVal =
+            line.image_url != null && String(line.image_url).trim() !== ''
+                ? String(line.image_url).trim()
+                : prod?.image_url != null && String(prod.image_url).trim() !== ''
+                  ? String(prod.image_url).trim()
+                  : null
+        const sizeForDb =
+            line.codeInput != null && String(line.codeInput).trim() !== ''
+                ? String(line.codeInput).trim()
+                : prod?.size != null && String(prod.size).trim() !== ''
+                  ? String(prod.size).trim()
+                  : null
+        const lineNoteDb =
+            line.line_note != null && String(line.line_note).trim() !== ''
+                ? String(line.line_note).trim()
+                : null
+        return {
+            order_id: orderId,
+            product_id: line.product_id,
+            product_name: (line.product_name || displayProductName(prod) || '').trim() || 'Mahsulot',
+            quantity: qty,
+            price: pr,
+            subtotal,
+            size: sizeForDb,
+            color: colorVal != null && colorVal !== '' ? String(colorVal) : null,
+            image_url: imgVal != null && imgVal !== '' ? String(imgVal) : null,
+            line_note: lineNoteDb,
+            line_index: idx
+        }
+    })
+}
+
+/**
+ * CRM import/eksport uchun yagona qatorlar (`CRM_qatorlar` varag‘i).
+ * Ustunlar foydalanuvchi shabloniga mos: `Дата, Клиент, Наименование, Фото, Код, Цвет, Кол-во, Цена, Сумма`.
+ * @param {{ onlyCompleted?: boolean }} options — `onlyCompleted: true` faqat tugallangan buyurtmalar.
+ */
+export function buildCrmQatorlarExcelRows(orders, productsList, options = {}) {
+    const { onlyCompleted = false } = options
+    const plist = productsList || []
+    const out = []
+    for (const order of orders || []) {
+        if (onlyCompleted && !isOrderCompletedStatus(order.status)) continue
+        const items = dedupeOrderItemsKeepNewest(order.order_items || [], plist)
+        if (!items.length) continue
+        const customerName = order.customer_name || order.customers?.name || ''
+        const customerPhone = order.customer_phone || order.customers?.phone || ''
+        const dateLabel = order.created_at
+            ? new Date(order.created_at).toLocaleDateString('ru-RU')
+            : ''
+        const itemsSorted = [...items].sort((a, b) => {
+            const la = Number(a.line_index ?? 0)
+            const lb = Number(b.line_index ?? 0)
+            if (la !== lb) return la - lb
+            return String(a.id || '').localeCompare(String(b.id || ''))
+        })
+        const kimniki = [customerName, customerPhone].filter(Boolean).join(' / ')
+        itemsSorted.forEach((oi, idx) => {
+            const pr = parseOrderItemPrice(oi.price)
+            const q = parseOrderItemQty(oi.quantity)
+            const jami = Math.round(pr * q * 100) / 100
+            const kod = resolvedOrderItemSizeRaw(oi, plist) || ''
+            const kategoriya = categoryLabelFromGroupedLine(oi) || '—'
+            const rang = (oi.color || '').trim() || '—'
+            const rasmUrl =
+                oi.image_url != null && String(oi.image_url).trim() !== ''
+                    ? String(oi.image_url).trim()
+                    : oi?.products?.image_url != null && String(oi.products.image_url).trim() !== ''
+                      ? String(oi.products.image_url).trim()
+                      : ''
+            out.push({
+                'Дата': dateLabel,
+                'Клиент': kimniki,
+                'Наименование': kategoriya,
+                'Фото': rasmUrl,
+                'Код': kod,
+                'Цвет': rang,
+                'Кол-во': q,
+                'Цена': pr,
+                'Сумма': jami
+            })
+        })
+    }
+    return out
+}
+
+/** Faqat tugallangan buyurtmalar (filtr/eksport uchun). */
+export function buildCompletedOrdersExcelFlatRows(orders, productsList) {
+    return buildCrmQatorlarExcelRows(orders, productsList, { onlyCompleted: true })
+}
+
+function inferImageExtension(imageUrl, contentType) {
+    const ct = String(contentType || '').toLowerCase()
+    if (ct.includes('png')) return 'png'
+    if (ct.includes('jpeg') || ct.includes('jpg')) return 'jpeg'
+    if (ct.includes('webp')) return 'webp'
+    if (ct.includes('gif')) return 'gif'
+    try {
+        const u = new URL(String(imageUrl || ''))
+        const ext = (u.pathname.split('.').pop() || '').toLowerCase()
+        if (ext === 'jpg' || ext === 'jpeg') return 'jpeg'
+        if (ext === 'png' || ext === 'webp' || ext === 'gif') return ext
+    } catch {
+        /* ignore */
+    }
+    return null
+}
+
+function blobToDataUrl(blob) {
+    return new Promise((resolve, reject) => {
+        const fr = new FileReader()
+        fr.onload = () => resolve(String(fr.result || ''))
+        fr.onerror = () => reject(new Error('image read failed'))
+        fr.readAsDataURL(blob)
+    })
+}
+
+export async function exportOrdersExcelRowsToFile(rows, filename, sheetName = 'CRM_qatorlar') {
+    if (!Array.isArray(rows) || rows.length === 0) return
+    const headers = Object.keys(rows[0] || {})
+    const photoHeader = headers.find((h) => normalizeImportedExcelCellKey(h) === 'фото')
+    const safeSheet = String(sheetName || 'Sheet1').slice(0, 31)
+    const stamp = new Date().toISOString().slice(0, 10)
+    const outName = filename || `buyurtmalar-${stamp}.xlsx`
+
+    const ExcelJSImport = await import('exceljs')
+    const ExcelJS = ExcelJSImport?.default || ExcelJSImport
+    const workbook = new ExcelJS.Workbook()
+    const sheet = workbook.addWorksheet(safeSheet)
+    sheet.columns = headers.map((h) => ({
+        header: h,
+        key: h,
+        width: normalizeImportedExcelCellKey(h) === 'фото' ? 16 : 16,
+    }))
+
+    rows.forEach((r) => {
+        const rowData = {}
+        headers.forEach((h) => {
+            rowData[h] = r?.[h] ?? ''
+        })
+        sheet.addRow(rowData)
+    })
+
+    if (photoHeader) {
+        const photoCol = headers.findIndex((h) => h === photoHeader) + 1
+        for (let i = 0; i < rows.length; i++) {
+            const url = String(rows[i]?.[photoHeader] || '').trim()
+            if (!url) continue
+            try {
+                const resp = await fetch(url)
+                if (!resp.ok) continue
+                const blob = await resp.blob()
+                const ext = inferImageExtension(url, resp.headers.get('content-type'))
+                if (!ext) continue
+                const base64 = await blobToDataUrl(blob)
+                const imageId = workbook.addImage({ base64, extension: ext })
+                const excelRowIdx = i + 2
+                sheet.getRow(excelRowIdx).height = 56
+                sheet.getCell(excelRowIdx, photoCol).value = ''
+                sheet.addImage(imageId, {
+                    tl: { col: photoCol - 1 + 0.1, row: excelRowIdx - 1 + 0.1 },
+                    ext: { width: 64, height: 64 },
+                })
+            } catch {
+                /* Rasm yuklanmasa hujayra bo'sh qoladi */
+            }
+        }
+    }
+
+    const buf = await workbook.xlsx.writeBuffer()
+    const blob = new Blob([buf], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = outName
+    a.click()
+    URL.revokeObjectURL(a.href)
+}
+
+/** To‘liq import shabloni (CRM_qatorlar) — `exportOrdersExcelRowsToFile(rows, f, 'CRM_qatorlar')` bilan bir xil. */
+export function exportCompletedOrdersExcelFlatRowsToFile(rows, filename) {
+    return exportOrdersExcelRowsToFile(rows, filename, 'CRM_qatorlar')
+}
+
+export function normalizeImportedExcelCellKey(key) {
+    return String(key || '')
+        .trim()
+        .replace(/\uFEFF/g, '')
+        .toLowerCase()
+        .replace(/\s+/g, '_')
+}
+
+export function normalizeImportedExcelRow(raw) {
+    const out = {}
+    for (const [k, v] of Object.entries(raw || {})) {
+        out[normalizeImportedExcelCellKey(k)] = v
+    }
+    return out
+}
+
+/** Excelda sarlavhani o‘zgartirilgan bo‘lsa ham import uchun canonical maydonlar. */
+export function canonicalizeExcelImportRow(r) {
+    if (!r || typeof r !== 'object') return r
+    const o = { ...r }
+    const fill = (canonical, ...aliases) => {
+        const cur = o[canonical]
+        if (cur != null && String(cur).trim() !== '') return
+        for (const k of aliases) {
+            const x = o[k]
+            if (x != null && String(x).trim() !== '') {
+                o[canonical] = x
+                return
+            }
+        }
+    }
+    fill('customer_name', 'mijoz', 'buyurtmachi')
+    fill('customer_phone', 'telefon', 'phone')
+    fill('model_code', 'kod')
+    fill('unit_price', 'narx')
+    fill('quantity', 'miqdor')
+    fill('color', 'rang')
+    fill('customer_name', 'клиент')
+    fill('product_name', 'наименование')
+    fill('image_url', 'фото', 'image', 'image_url')
+    fill('model_code', 'код')
+    fill('color', 'цвет')
+    fill('quantity', 'кол-во')
+    fill('unit_price', 'цена')
+    fill('order_created_at', 'дата')
+    fill('line_total', 'сумма')
+    fill('order_number', 'buyurtma', 'buyurtma_raqami')
+    fill('order_note', 'note', 'izoh', 'buyurtma_izohi')
+    fill('order_source', 'source', 'manba')
+    fill('order_status', 'status')
+    fill('order_created_at', 'created_at', 'sana')
+    fill('payment_detail', 'payment_method_detail', 'tolov')
+    fill('model_code', 'mahsulot_kodi', 'size')
+    fill('product_name', 'mahsulot', 'mahsulot_nomi')
+    fill('quantity', 'qator_miqdori')
+    fill('unit_price', 'birlik_narxi')
+    fill('line_note', 'qator_izohi', 'mahsulot_izohi')
+    fill('product_id', 'productid')
+    fill('import_group', 'import_gr', 'guruh')
+    fill('line_index', 'lineindex', 'mahsulot_tartib_raqami', 'tartib_raqami')
+    if (
+        (o.unit_price == null || String(o.unit_price).trim() === '') &&
+        o.line_total != null &&
+        String(o.line_total).trim() !== ''
+    ) {
+        const sum = Number(String(o.line_total).replace(',', '.'))
+        const qty = Number(String(o.quantity ?? '').replace(',', '.'))
+        if (Number.isFinite(sum) && Number.isFinite(qty) && qty > 0) {
+            o.unit_price = Math.round((sum / qty) * 100) / 100
+        }
+    }
+    const kn = o.kimniki_ekanligi
+    if (kn != null && String(kn).trim() !== '') {
+        const hasName = o.customer_name != null && String(o.customer_name).trim() !== ''
+        const hasPhone = o.customer_phone != null && String(o.customer_phone).trim() !== ''
+        if (!hasName || !hasPhone) {
+            const s = String(kn).trim()
+            const m = s.match(/^(.+?)\s*\/\s*(.*)$/)
+            if (m && String(m[2]).trim() !== '') {
+                if (!hasName) o.customer_name = m[1].trim()
+                if (!hasPhone) o.customer_phone = m[2].trim()
+            } else if (!hasName) {
+                o.customer_name = s
+            }
+        }
+    }
+    return o
+}
+
+/**
+ * Eksport faylidan yoki shu ustunlar bilan tuzilgan jadvaldan: bir buyurtmaga tegishli qatorlarni guruhlash.
+ */
+export function groupImportedExcelRowsToOrders(rows) {
+    const normalized = rows
+        .map(normalizeImportedExcelRow)
+        .map(canonicalizeExcelImportRow)
+        .filter((r) =>
+            Object.keys(r).some((k) => {
+                const v = r[k]
+                return v != null && String(v).trim() !== ''
+            })
+        )
+    const hasExplicitGrouping = normalized.some((r) => {
+        const ig = r.import_group ?? r.import_gr
+        if (ig != null && String(ig).trim() !== '') return true
+        if (r.order_id != null && String(r.order_id).trim() !== '') return true
+        if (r.order_number != null && String(r.order_number).trim() !== '') return true
+        return false
+    })
+    if (!hasExplicitGrouping) {
+        /** Shablon rejimi: ketma-ket qatorlarda `Клиент + Дата` almashsa yangi buyurtma boshlanadi. */
+        const groups = []
+        let current = []
+        let prevMarker = ''
+        for (const r of normalized) {
+            const marker = `${String(r.customer_name || '').trim()}|${String(r.order_created_at || '').trim()}`
+            const idxVal = Number(r.line_index)
+            const startsByIndex = Number.isFinite(idxVal) ? idxVal <= 1 : false
+            const startsByMarker = marker !== '' && prevMarker !== '' && marker !== prevMarker
+            if ((startsByMarker || startsByIndex) && current.length) {
+                groups.push(current)
+                current = []
+            }
+            current.push(r)
+            if (marker !== '') prevMarker = marker
+        }
+        if (current.length) groups.push(current)
+        return groups
+    }
+    const map = new Map()
+    for (const r of normalized) {
+        const ig = r.import_group ?? r.import_gr
+        let key
+        if (ig !== undefined && ig !== null && String(ig).trim() !== '') {
+            key = `ig:${String(ig).trim()}`
+        } else if (r.order_id && String(r.order_id).trim()) {
+            key = `oid:${String(r.order_id).trim()}`
+        } else {
+            key = `fb:${String(r.customer_name || '').trim()}|${String(r.customer_phone || '').trim()}|${String(r.order_number || '').trim()}`
+        }
+        if (!map.has(key)) map.set(key, [])
+        map.get(key).push(r)
+    }
+    return Array.from(map.values()).map((lines) => {
+        lines.sort((a, b) => {
+            const ai = Number(a.line_index)
+            const bi = Number(b.line_index)
+            if (Number.isFinite(ai) && Number.isFinite(bi) && ai !== bi) return ai - bi
+            return 0
+        })
+        return lines
+    })
+}
+
+export function readOrdersImportWorkbookRows(arrayBuffer) {
+    const wb = XLSX.read(arrayBuffer, { type: 'array' })
+    const norm = (n) => normalizeImportedExcelCellKey(n)
+    const prefer =
+        wb.SheetNames.find((n) => norm(n) === 'crm_qatorlar') ||
+        wb.SheetNames.find((n) => norm(n) === 'buyurtmalar') ||
+        wb.SheetNames[0]
+    if (!prefer) return []
+    const sheet = wb.Sheets[prefer]
+    return XLSX.utils.sheet_to_json(sheet, { defval: '' })
 }
 
 /**

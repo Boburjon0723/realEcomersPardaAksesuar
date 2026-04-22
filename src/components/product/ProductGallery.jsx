@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 const ProductGallery = ({ images = [], productName }) => {
-    const [mainImage, setMainImage] = useState(images.length > 0 ? images[0] : 'https://via.placeholder.com/600x400?text=No+Image');
+    const [mainImage, setMainImage] = useState(images.length > 0 ? images[0] : 'https://placehold.co/600x400?text=No+Image');
 
     React.useEffect(() => {
         if (images && images.length > 0) {

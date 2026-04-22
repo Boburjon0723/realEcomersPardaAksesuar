@@ -39,7 +39,7 @@ export const LanguageProvider = ({ children }) => {
         });
     }, []);
 
-    const t = (key) => translations[language]?.[key] || key;
+    const t = (key) => translations[language]?.[key] || translations.uz?.[key] || null;
 
     const changeLanguage = (lang) => {
         setLanguage(lang);

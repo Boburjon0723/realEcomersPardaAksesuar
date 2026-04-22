@@ -86,7 +86,7 @@ const ProductCard = ({ product, onQuickView }) => {
                                 className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ease-in-out group-hover:scale-105 ${
                                     idx === currentImageIndex ? 'opacity-100 z-[1]' : 'opacity-0 z-0 pointer-events-none'
                                 }`}
-                                onError={(e) => { e.target.src = 'https://via.placeholder.com/400x500?text=No+Image'; }}
+                                onError={(e) => { e.target.src = 'https://placehold.co/400x500?text=No+Image'; }}
                             />
                         ))}
                     </div>
@@ -96,7 +96,7 @@ const ProductCard = ({ product, onQuickView }) => {
                         alt={productName}
                         loading="lazy"
                         className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                        onError={(e) => { e.target.src = 'https://via.placeholder.com/400x500?text=No+Image'; }}
+                        onError={(e) => { e.target.src = 'https://placehold.co/400x500?text=No+Image'; }}
                     />
                 )}
 
