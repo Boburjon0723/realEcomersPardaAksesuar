@@ -82,7 +82,7 @@ const ProductCard = ({ product, onQuickView }) => {
                                 key={idx}
                                 src={imgSrc || 'https://via.placeholder.com/400x500?text=No+Image'}
                                 alt={`${productName} ${idx + 1}`}
-                                loading={idx === 0 ? 'lazy' : 'eager'}
+                                loading="lazy"
                                 className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ease-in-out group-hover:scale-105 ${
                                     idx === currentImageIndex ? 'opacity-100 z-[1]' : 'opacity-0 z-0 pointer-events-none'
                                 }`}
