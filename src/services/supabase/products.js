@@ -1,4 +1,5 @@
 import { supabase } from '../../supabaseClient';
+import { compressImage } from '../../utils/image';
 
 const PRODUCTS_TABLE = 'products';
 const STORAGE_BUCKET = 'products';
@@ -198,7 +199,15 @@ export const addProduct = async (productData, imageFiles = []) => {
         const imageUrls = [];
 
         if (imageFiles && imageFiles.length > 0) {
-            for (const file of imageFiles) {
+            for (let file of imageFiles) {
+                // Hajmini tekshirish (5MB dan katta bo'lsa xatolik)
+                if (file.size > 5 * 1024 * 1024) {
+                    throw new Error(`Fayl hajmi 5MB dan oshmasligi kerak: ${file.name}`);
+                }
+                
+                // Rasmni siqish
+                file = await compressImage(file, 1200, 0.8);
+
                 const fileName = `${Date.now()}_${file.name}`;
                 const { error: uploadError } = await supabase.storage
                     .from(STORAGE_BUCKET)
@@ -242,7 +251,15 @@ export const updateProduct = async (productId, productData, newImageFiles = []) 
         let imageUrls = [...(productData.images || [])];
 
         if (newImageFiles && newImageFiles.length > 0) {
-            for (const file of newImageFiles) {
+            for (let file of newImageFiles) {
+                // Hajmini tekshirish (5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    throw new Error(`Fayl hajmi 5MB dan oshmasligi kerak: ${file.name}`);
+                }
+
+                // Rasmni siqish
+                file = await compressImage(file, 1200, 0.8);
+
                 const fileName = `${Date.now()}_${file.name}`;
                 const { error: uploadError } = await supabase.storage
                     .from(STORAGE_BUCKET)

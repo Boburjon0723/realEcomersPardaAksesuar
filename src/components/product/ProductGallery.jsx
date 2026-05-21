@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getOptimizedImageUrl } from '../../utils/image';
 
 const ProductGallery = ({ images = [], productName }) => {
     const [mainImage, setMainImage] = useState(images.length > 0 ? images[0] : 'https://placehold.co/600x400?text=No+Image');
@@ -23,8 +24,9 @@ const ProductGallery = ({ images = [], productName }) => {
                 {images.map((img, idx) => (
                     <img
                         key={idx}
-                        src={img}
+                        src={getOptimizedImageUrl(img, 150)}
                         alt={`${productName} ${idx + 1}`}
+                        loading="lazy"
                         onClick={() => setMainImage(img)}
                         className={`w-20 h-20 md:w-full md:h-24 object-cover rounded-lg cursor-pointer border-2 transition-all duration-300 ${mainImage === img
                             ? 'border-primary opacity-100'
@@ -37,7 +39,7 @@ const ProductGallery = ({ images = [], productName }) => {
             {/* Main Image */}
             <div className="flex-1 rounded-xl overflow-hidden bg-gray-50 relative aspect-[4/5] md:aspect-auto md:h-[600px] group/gallery">
                 <img
-                    src={mainImage}
+                    src={getOptimizedImageUrl(mainImage, 800)}
                     alt={productName}
                     loading="lazy"
                     className="w-full h-full object-cover transition-all duration-500"

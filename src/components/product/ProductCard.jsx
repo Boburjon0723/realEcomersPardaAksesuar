@@ -3,6 +3,7 @@ import { Heart, Star, ShoppingBag, Eye, Box } from 'lucide-react';
 import { useApp } from '../../hooks/useApp';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { formatProductPriceDisplay } from '../../utils/price';
+import { getOptimizedImageUrl } from '../../utils/image';
 
 const ProductCard = ({ product, onQuickView }) => {
     const { addToCart, setCurrentPage, toggleFavorite, isFavorite } = useApp();
@@ -13,13 +14,15 @@ const ProductCard = ({ product, onQuickView }) => {
     const images = product.images && product.images.length > 0 ? product.images : (product.image_url ? [product.image_url] : []);
     const hasMultipleImages = images.length > 1;
 
-    // 2+ rasm bo'lsa: almashish intervali (hover da tezroq)
+    // Faqat hover qilinganda rasm almashadi, aks holda 1-rasm turadi
     useEffect(() => {
-        if (!hasMultipleImages) return;
-        const intervalMs = isHovered ? 1500 : 2500;
+        if (!hasMultipleImages || !isHovered) {
+            setCurrentImageIndex(0);
+            return;
+        }
         const interval = setInterval(() => {
             setCurrentImageIndex((prev) => (prev + 1) % images.length);
-        }, intervalMs);
+        }, 1500);
         return () => clearInterval(interval);
     }, [images.length, isHovered, hasMultipleImages]);
 
@@ -77,22 +80,31 @@ const ProductCard = ({ product, onQuickView }) => {
                     </div>
                 ) : hasMultipleImages ? (
                     <div className="relative w-full h-full overflow-hidden">
-                        {images.map((imgSrc, idx) => (
-                            <img
-                                key={idx}
-                                src={imgSrc || 'https://via.placeholder.com/400x500?text=No+Image'}
-                                alt={`${productName} ${idx + 1}`}
-                                loading="lazy"
-                                className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ease-in-out group-hover:scale-105 ${
-                                    idx === currentImageIndex ? 'opacity-100 z-[1]' : 'opacity-0 z-0 pointer-events-none'
-                                }`}
-                                onError={(e) => { e.target.src = 'https://placehold.co/400x500?text=No+Image'; }}
-                            />
-                        ))}
+                        {images.map((imgSrc, idx) => {
+                            // Faqat 1-rasm doim render bo'ladi. Qolganlari faqat hover bo'lganda yuklanadi
+                            if (idx > 0 && !isHovered) return null;
+                            
+                            return (
+                                <img
+                                    key={idx}
+                                    src={getOptimizedImageUrl(imgSrc, 400) || 'https://via.placeholder.com/400x500?text=No+Image'}
+                                    srcSet={`${getOptimizedImageUrl(imgSrc, 400)} 400w, ${getOptimizedImageUrl(imgSrc, 800)} 800w`}
+                                    sizes="(max-width: 640px) 400px, 400px"
+                                    alt={`${productName} ${idx + 1}`}
+                                    loading="lazy"
+                                    className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ease-in-out group-hover:scale-105 ${
+                                        idx === currentImageIndex ? 'opacity-100 z-[1]' : 'opacity-0 z-0 pointer-events-none'
+                                    }`}
+                                    onError={(e) => { e.target.src = 'https://placehold.co/400x500?text=No+Image'; }}
+                                />
+                            );
+                        })}
                     </div>
                 ) : (
                     <img
-                        src={images[0] || 'https://via.placeholder.com/400x500?text=No+Image'}
+                        src={getOptimizedImageUrl(images[0], 400) || 'https://via.placeholder.com/400x500?text=No+Image'}
+                        srcSet={`${getOptimizedImageUrl(images[0], 400)} 400w, ${getOptimizedImageUrl(images[0], 800)} 800w`}
+                        sizes="(max-width: 640px) 400px, 400px"
                         alt={productName}
                         loading="lazy"
                         className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
