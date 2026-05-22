@@ -18,9 +18,9 @@ const ProductGallery = ({ images = [], productName }) => {
         );
     }
     return (
-        <div className="flex flex-col-reverse md:flex-row gap-4">
+        <div className="flex flex-col-reverse md:flex-row gap-4 w-full max-w-full min-w-0">
             {/* Thumbnails (Vertical on desktop) */}
-            <div className="flex md:flex-col gap-4 overflow-x-auto md:overflow-y-auto md:w-24 md:h-[600px] scrollbar-hide">
+            <div className="flex md:flex-col gap-4 overflow-x-auto md:overflow-y-auto md:w-24 md:h-[600px] scrollbar-hide w-full max-w-full min-w-0">
                 {images.map((img, idx) => (
                     <img
                         key={idx}

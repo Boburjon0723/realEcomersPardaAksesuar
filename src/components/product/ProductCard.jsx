@@ -30,7 +30,7 @@ const ProductCard = ({ product, onQuickView }) => {
     const discountPercent = product.oldPrice
         ? Math.round((1 - product.price / product.oldPrice) * 100)
         : 0;
-    const categoryName = product.categories?.[`name_${language}`] || product.categories?.name || product.category || '';
+    const categoryName = product.categories?.[`name_${language}`] || product.categories?.name || (typeof product.category === 'object' ? (product.category?.[`name_${language}`] || product.category?.name) : product.category) || '';
     const productName = product[`name_${language}`] || product.name;
     const displayPrice = formatProductPriceDisplay(product.price, product);
 

@@ -264,8 +264,8 @@ const ProductPage = () => {
     const favorite = isFavorite(selectedProduct.id);
 
     const productName = selectedProduct?.[`name_${language}`] || selectedProduct?.name || t('shop');
-    const categoryDisplayName = selectedProduct?.categories?.[`name_${language}`] || selectedProduct?.categories?.name || selectedProduct?.category;
-    const categoryRawName = selectedProduct?.categories?.name;
+    const categoryDisplayName = selectedProduct?.categories?.[`name_${language}`] || selectedProduct?.categories?.name || (typeof selectedProduct?.category === 'object' ? (selectedProduct.category?.[`name_${language}`] || selectedProduct.category?.name) : selectedProduct?.category);
+    const categoryRawName = typeof selectedProduct?.categories?.name === 'string' ? selectedProduct?.categories?.name : (typeof selectedProduct?.category === 'object' ? selectedProduct.category?.name : selectedProduct?.category);
 
     const breadcrumbItems = [
         { label: t('home'), onClick: () => setCurrentPage('home') },
@@ -315,7 +315,7 @@ const ProductPage = () => {
             <div className="bg-white rounded-2xl p-6 md:p-10 shadow-sm border border-gray-100">
                 <div className="grid lg:grid-cols-2 gap-12 mb-16">
                     {/* Gallery or 3D Viewer */}
-                    <div className="relative group">
+                    <div className="relative group min-w-0 w-full">
                         {viewMode === '3d' && selectedProduct.model_3d_url ? (
                             <div className="w-full h-[400px] md:h-[600px] rounded-2xl bg-gray-50 border border-gray-100 overflow-hidden relative">
                                 <model-viewer
@@ -384,7 +384,7 @@ const ProductPage = () => {
                     </div>
 
                     {/* Product Info */}
-                    <div>
+                    <div className="min-w-0 w-full flex flex-col">
                         {/* Breadcrumb */}
                         <div className="flex items-center text-sm text-gray-500 mb-4 font-medium uppercase tracking-wider">
                             <span>{selectedProduct.categories?.[`name_${language}`] || selectedProduct.categories?.name || ''}</span>
