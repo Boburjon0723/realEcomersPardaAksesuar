@@ -239,8 +239,8 @@ const ProductPage = () => {
 
     if (loadingProduct) {
         return (
-            <div className="container mx-auto px-4 py-16 flex flex-col items-center justify-center min-h-[40vh]">
-                <div className="animate-pulse rounded-2xl bg-gray-200 w-full max-w-4xl h-64 md:h-96 mb-8" />
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-16 flex flex-col items-center justify-center min-h-[40vh]">
+                <div className="animate-pulse rounded-2xl bg-gray-200 w-full max-w-3xl h-64 md:h-96 mb-8" />
                 <p className="text-gray-500 text-sm">{/* t('loading') */}Yuklanmoqda…</p>
             </div>
         );
@@ -248,7 +248,7 @@ const ProductPage = () => {
 
     if (loadError || !selectedProduct) {
         return (
-            <div className="container mx-auto px-4 py-16 text-center">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-16 text-center">
                 <p className="text-gray-600 mb-4">{/* */}Mahsulot topilmadi.</p>
                 <button type="button" onClick={() => setCurrentPage('shop')} className="text-primary font-semibold underline">
                     Do‘konga qaytish
@@ -279,7 +279,7 @@ const ProductPage = () => {
     return (
         <>
             <PageMeta title={productName} description={t('metaDescProduct')} siteName={settings?.site_name} />
-            <div className="container mx-auto px-4 md:px-6 py-6 md:py-8 relative max-w-full overflow-x-hidden">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-6 md:py-8 relative overflow-x-hidden">
             <Breadcrumb items={breadcrumbItems} />
             {/* Notification */}
             {notification.show && (
@@ -312,12 +312,12 @@ const ProductPage = () => {
                 {t('backToShop') || 'Back to Shop'}
             </button>
 
-            <div className="bg-white rounded-2xl p-4 sm:p-6 md:p-10 shadow-sm border border-gray-100 overflow-hidden">
-                <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 mb-12 md:mb-16">
+            <div className="bg-white rounded-2xl p-4 sm:p-6 lg:p-8 xl:p-10 shadow-sm border border-gray-100 overflow-hidden">
+                <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] gap-8 lg:gap-10 xl:gap-14 mb-12 md:mb-16 items-start">
                     {/* Gallery or 3D Viewer */}
-                    <div className="relative group min-w-0 w-full">
+                    <div className="relative group min-w-0 w-full max-w-lg mx-auto lg:max-w-none lg:mx-0">
                         {viewMode === '3d' && selectedProduct.model_3d_url ? (
-                            <div className="w-full h-[400px] md:h-[600px] rounded-2xl bg-gray-50 border border-gray-100 overflow-hidden relative">
+                            <div className="w-full h-[400px] md:h-[520px] max-h-[70vh] rounded-2xl bg-gray-50 border border-gray-100 overflow-hidden relative">
                                 <model-viewer
                                     ref={modelViewerRef}
                                     src={selectedProduct.model_3d_url}
@@ -341,7 +341,7 @@ const ProductPage = () => {
                                 </button>
                             </div>
                         ) : viewMode === '360' && selectedProduct.images?.length >= 5 ? (
-                            <div className="w-full h-[400px] md:h-[600px] rounded-2xl bg-gray-50 border border-gray-100 overflow-hidden relative">
+                            <div className="w-full h-[400px] md:h-[520px] max-h-[70vh] rounded-2xl bg-gray-50 border border-gray-100 overflow-hidden relative">
                                 <ThreeSixtyViewer
                                     images={selectedProduct.images}
                                     productName={selectedProduct[`name_${language}`] || selectedProduct.name || ''}
