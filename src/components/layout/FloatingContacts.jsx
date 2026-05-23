@@ -7,7 +7,10 @@ const FloatingContacts = () => {
     const { settings } = useApp();
 
     return (
-        <div className="fixed bottom-8 right-8 flex flex-col space-y-4 z-40 group">
+        <div
+            className="fixed z-30 flex flex-col gap-3 bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] right-[calc(0.75rem+env(safe-area-inset-right,0px))] sm:bottom-6 sm:right-6 md:bottom-8 md:right-8"
+            aria-label="Contact shortcuts"
+        >
             {settings.telegram_url && (
                 <a
                     href={normalizeTelegramUrl(settings.telegram_url)}

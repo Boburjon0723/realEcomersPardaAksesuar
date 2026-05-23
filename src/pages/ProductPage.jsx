@@ -71,7 +71,7 @@ const ProductPage = () => {
             cancelled = true;
         };
     }, [productId, selectedProduct?.id, setSelectedProduct]);
-    const { language, t, translateColor } = useLanguage();
+    const { language, t, translateColor, swatchColor } = useLanguage();
     const [quantity, setQuantity] = useState(1);
     const [activeTab, setActiveTab] = useState('description');
     const [reviews, setReviews] = useState([]);
@@ -279,11 +279,11 @@ const ProductPage = () => {
     return (
         <>
             <PageMeta title={productName} description={t('metaDescProduct')} siteName={settings?.site_name} />
-            <div className="container mx-auto px-4 md:px-6 py-8 relative">
+            <div className="container mx-auto px-4 md:px-6 py-6 md:py-8 relative max-w-full overflow-x-hidden">
             <Breadcrumb items={breadcrumbItems} />
             {/* Notification */}
             {notification.show && (
-                <div className={`fixed top-24 right-4 z-50 animate-fade-in-up flex items-center p-4 rounded-xl shadow-2xl border ${notification.type === 'success'
+                <div className={`fixed top-20 left-4 right-4 sm:left-auto sm:right-4 sm:max-w-sm z-50 animate-fade-in-up flex items-center p-4 rounded-xl shadow-2xl border ${notification.type === 'success'
                     ? 'bg-white border-green-100 text-green-800'
                     : 'bg-white border-red-100 text-red-800'
                     }`}>
@@ -312,8 +312,8 @@ const ProductPage = () => {
                 {t('backToShop') || 'Back to Shop'}
             </button>
 
-            <div className="bg-white rounded-2xl p-6 md:p-10 shadow-sm border border-gray-100">
-                <div className="grid lg:grid-cols-2 gap-12 mb-16">
+            <div className="bg-white rounded-2xl p-4 sm:p-6 md:p-10 shadow-sm border border-gray-100 overflow-hidden">
+                <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 mb-12 md:mb-16">
                     {/* Gallery or 3D Viewer */}
                     <div className="relative group min-w-0 w-full">
                         {viewMode === '3d' && selectedProduct.model_3d_url ? (
@@ -390,14 +390,13 @@ const ProductPage = () => {
                             <span>{selectedProduct.categories?.[`name_${language}`] || selectedProduct.categories?.name || ''}</span>
                         </div>
 
-                        <h1 className="text-3xl md:text-4xl font-display font-bold mb-4 text-gray-900 leading-tight">
+                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold mb-4 text-gray-900 leading-tight break-words">
                             {selectedProduct[`name_${language}`] || selectedProduct.name || ''}
                         </h1>
 
-                        <div className="flex items-center gap-6 mb-6">
-                            {/* Rating */}
-                            <div className="flex items-center">
-                                <div className="flex items-center">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center mb-6">
+                            <div className="flex items-center flex-wrap gap-2 min-w-0">
+                                <div className="flex items-center shrink-0">
                                     {[...Array(5)].map((_, i) => (
                                         <Star
                                             key={i}
@@ -408,30 +407,26 @@ const ProductPage = () => {
                                         />
                                     ))}
                                 </div>
-                                <span className="ml-2 text-sm text-gray-500 font-medium">
+                                <span className="text-sm text-gray-500 font-medium">
                                     {averageRating} ({reviewsCount} {t('reviews')})
                                 </span>
                             </div>
 
-                            {/* Share Button */}
                             <button
                                 onClick={handleShare}
-                                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-primary transition-colors text-sm font-medium"
+                                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-primary transition-colors text-sm font-medium w-full sm:w-auto"
                                 title={t('share') || 'Ulashish'}
                             >
-                                <Share2 className="w-4 h-4" />
+                                <Share2 className="w-4 h-4 shrink-0" />
                                 {t('share') || 'Ulashish'}
                             </button>
 
-                            {/* Code Display */}
-                            <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-widest text-secondary">
-                                {selectedProduct.size && (
-                                    <div className="flex items-center gap-1">
-                                        <span className="opacity-60">{t('sku') || 'Kod'}:</span>
-                                        <span>{selectedProduct.size}</span>
-                                    </div>
-                                )}
-                            </div>
+                            {selectedProduct.size && (
+                                <div className="text-xs font-bold uppercase tracking-wide text-secondary break-all">
+                                    <span className="opacity-60">{t('sku') || 'Kod'}: </span>
+                                    <span>{selectedProduct.size}</span>
+                                </div>
+                            )}
                         </div>
 
                         {/* Color Selection */}
@@ -440,22 +435,33 @@ const ProductPage = () => {
                                 <label className="block text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">
                                     {t('color') || 'Rang'}: <span className="text-secondary ml-1">{translateColor(selectedColor || selectedProduct.color)}</span>
                                 </label>
-                                <div className="flex flex-wrap gap-3">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                     {selectedProduct.colors?.length > 0 ? (
                                         selectedProduct.colors.map((color, idx) => (
                                             <button
                                                 key={idx}
+                                                type="button"
                                                 onClick={() => setSelectedColor(color)}
-                                                className={`px-4 py-2 rounded-xl border-2 transition-all font-bold text-xs ${selectedColor === color
+                                                className={`flex items-center gap-2 min-h-[44px] px-3 py-2.5 rounded-xl border-2 transition-all text-left text-xs font-semibold leading-snug ${selectedColor === color
                                                     ? 'border-primary bg-primary/5 text-primary shadow-sm'
-                                                    : 'border-gray-100 bg-white text-gray-500 hover:border-primary/50'
+                                                    : 'border-gray-200 bg-white text-gray-600 hover:border-primary/40'
                                                     }`}
                                             >
-                                                {translateColor(color)}
+                                                <span
+                                                    className="w-4 h-4 rounded-full shrink-0 border border-gray-200"
+                                                    style={{ background: swatchColor(color) }}
+                                                    aria-hidden
+                                                />
+                                                <span className="line-clamp-2 break-words">{translateColor(color)}</span>
                                             </button>
                                         ))
                                     ) : (
-                                        <div className="px-4 py-2 rounded-xl border-2 border-primary bg-primary/5 text-primary font-bold text-xs">
+                                        <div className="col-span-full flex items-center gap-2 min-h-[44px] px-3 py-2.5 rounded-xl border-2 border-primary bg-primary/5 text-primary font-semibold text-xs">
+                                            <span
+                                                className="w-4 h-4 rounded-full shrink-0 border border-primary/20"
+                                                style={{ background: swatchColor(selectedProduct.color) }}
+                                                aria-hidden
+                                            />
                                             {translateColor(selectedProduct.color)}
                                         </div>
                                     )}
@@ -464,9 +470,9 @@ const ProductPage = () => {
                         )}
 
                         {/* Price */}
-                        <div className="mb-8 p-6 bg-gray-50 rounded-xl border border-gray-100">
-                            <div className="flex items-end gap-3 mb-2">
-                                <div className="text-4xl font-bold text-gray-900">
+                        <div className="mb-6 md:mb-8 p-4 sm:p-6 bg-gray-50 rounded-xl border border-gray-100">
+                            <div className="flex flex-wrap items-end gap-2 sm:gap-3 mb-2">
+                                <div className="text-3xl sm:text-4xl font-bold text-gray-900">
                                     {formatProductPriceDisplay(priceWithDiscount, selectedProduct)}
                                 </div>
                                 {discount > 0 && (
@@ -599,54 +605,59 @@ const ProductPage = () => {
                                     </button>
                                 </div>
                             ) : (
-                                <div className="flex flex-col gap-4">
-                                    <div className="flex gap-4">
-                                        <div className="flex items-center border border-gray-200 rounded-lg bg-white h-12 overflow-hidden shadow-sm">
-                                            <button
-                                                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                                className="w-12 h-full flex items-center justify-center hover:bg-gray-50 text-gray-600 transition border-r border-gray-100"
-                                            >
-                                                <Minus className="w-4 h-4" />
-                                            </button>
-                                            <input
-                                                type="number"
-                                                min="1"
-                                                value={quantity}
-                                                onChange={(e) => {
-                                                    const val = parseInt(e.target.value);
-                                                    if (!isNaN(val)) {
-                                                        setQuantity(val);
-                                                    } else if (e.target.value === '') {
-                                                        setQuantity('');
-                                                    }
-                                                }}
-                                                onBlur={() => {
-                                                    if (quantity === '' || quantity < 1) {
-                                                        setQuantity(1);
-                                                    }
-                                                }}
-                                                className="w-16 text-center font-bold text-lg outline-none bg-transparent"
-                                            />
-                                            <button
-                                                onClick={() => setQuantity(quantity === '' ? 1 : parseInt(quantity) + 1)}
-                                                className="w-12 h-full flex items-center justify-center hover:bg-gray-50 text-gray-600 transition border-l border-gray-100"
-                                            >
-                                                <Plus className="w-4 h-4" />
-                                            </button>
-                                        </div>
+                                <div className="flex flex-col gap-3 w-full">
+                                    <div className="flex items-center border border-gray-200 rounded-xl bg-white h-12 overflow-hidden shadow-sm w-full max-w-[10rem]">
                                         <button
+                                            type="button"
+                                            onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                                            className="w-11 h-full flex items-center justify-center hover:bg-gray-50 text-gray-600 transition border-r border-gray-100"
+                                        >
+                                            <Minus className="w-4 h-4" />
+                                        </button>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            value={quantity}
+                                            onChange={(e) => {
+                                                const val = parseInt(e.target.value);
+                                                if (!isNaN(val)) {
+                                                    setQuantity(val);
+                                                } else if (e.target.value === '') {
+                                                    setQuantity('');
+                                                }
+                                            }}
+                                            onBlur={() => {
+                                                if (quantity === '' || quantity < 1) {
+                                                    setQuantity(1);
+                                                }
+                                            }}
+                                            className="flex-1 min-w-0 text-center font-bold text-lg outline-none bg-transparent"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setQuantity(quantity === '' ? 1 : parseInt(quantity) + 1)}
+                                            className="w-11 h-full flex items-center justify-center hover:bg-gray-50 text-gray-600 transition border-l border-gray-100"
+                                        >
+                                            <Plus className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                    <div className="flex gap-3 w-full">
+                                        <button
+                                            type="button"
                                             onClick={() => {
                                                 addToCart(selectedProduct, quantity === '' ? 1 : parseInt(quantity), selectedColor);
                                                 showNotification(t('itemAdded') || 'Mahsulot savatga qo\'shildi!');
                                             }}
-                                            className="flex-1 bg-primary hover:bg-primary-dark text-white h-12 rounded-lg font-bold transition-all shadow-lg hover:shadow-primary/30 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2"
+                                            className="flex-1 min-h-[48px] bg-primary hover:bg-primary-dark text-white rounded-xl font-bold transition-all shadow-lg hover:shadow-primary/30 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2 px-4"
                                         >
-                                            <ShoppingCart className="w-5 h-5" />
-                                            {t('addToCart')}
+                                            <ShoppingCart className="w-5 h-5 shrink-0" />
+                                            <span className="truncate">{t('addToCart')}</span>
                                         </button>
                                         <button
+                                            type="button"
                                             onClick={() => toggleFavorite(selectedProduct.id)}
-                                            className={`w-12 h-12 flex items-center justify-center border rounded-lg transition-colors ${favorite ? 'border-red-200 bg-red-50 text-red-500' : 'border-gray-200 hover:border-primary hover:text-primary'}`}
+                                            className={`w-12 h-12 shrink-0 flex items-center justify-center border rounded-xl transition-colors ${favorite ? 'border-red-200 bg-red-50 text-red-500' : 'border-gray-200 hover:border-primary hover:text-primary'}`}
+                                            aria-label={favorite ? 'Remove from favorites' : 'Add to favorites'}
                                         >
                                             <Heart className={`w-5 h-5 ${favorite ? 'fill-current' : ''}`} />
                                         </button>
@@ -667,12 +678,13 @@ const ProductPage = () => {
 
                 {/* Tabs */}
                 <div className="border-t border-gray-100 pt-10">
-                    <div className="flex space-x-8 mb-8 border-b border-gray-100">
+                    <div className="flex gap-4 sm:gap-8 mb-8 border-b border-gray-100 overflow-x-auto scrollbar-hide -mx-1 px-1">
                         {['description', 'features', 'reviews'].map(tab => (
                             <button
                                 key={tab}
+                                type="button"
                                 onClick={() => setActiveTab(tab)}
-                                className={`pb-4 px-2 font-bold text-lg transition-all relative ${activeTab === tab
+                                className={`pb-4 px-2 font-bold text-base sm:text-lg whitespace-nowrap shrink-0 transition-all relative ${activeTab === tab
                                     ? 'text-primary'
                                     : 'text-gray-400 hover:text-gray-600'
                                     }`}

@@ -1,6 +1,5 @@
 {
   "framework": "create-react-app",
-  "cleanUrls": true,
   "rewrites": [
     {
       "source": "/(.*)",

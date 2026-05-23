@@ -52,7 +52,7 @@ function MainLayout() {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen bg-white flex flex-col font-sans text-gray-900">
+    <div className="min-h-screen bg-white flex flex-col font-sans text-gray-900 overflow-x-hidden">
       <Header />
       <main className="flex-1 mt-20">
         <Outlet />
