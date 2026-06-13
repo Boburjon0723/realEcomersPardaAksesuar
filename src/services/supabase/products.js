@@ -1,5 +1,6 @@
 import { supabase } from '../../supabaseClient';
 import { compressImage } from '../../utils/image';
+import { resolveProductPrice } from '../../utils/siteMode';
 
 const PRODUCTS_TABLE = 'products';
 const STORAGE_BUCKET = 'products';
@@ -8,11 +9,7 @@ const STORAGE_BUCKET = 'products';
 const mapProductFromDB = (product) => {
     if (!product) return null;
 
-    // Fallback for price: try sale_price first, then price, then 0. Ensure it's a number.
-    let priceValue = product.sale_price;
-    if (priceValue === undefined || priceValue === null) {
-        priceValue = product.price;
-    }
+    const priceValue = resolveProductPrice(product);
 
     // Handle potential array or object from Supabase join
     const categoryName = Array.isArray(product.categories)

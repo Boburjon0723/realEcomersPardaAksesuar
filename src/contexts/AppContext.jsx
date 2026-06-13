@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect, useCallback, useMemo } from 
 import { getSettings } from '../services/supabase/settings';
 import { supabase, isPasswordRecoveryPending, markPasswordRecoveryPending } from '../supabaseClient';
 import { mapAuthUserToAppUser } from '../utils/mapAuthUser';
+import { isWholesaleSite } from '../utils/siteMode';
 
 export const AppContext = createContext();
 
@@ -160,7 +161,7 @@ export const AppProvider = ({ children }) => {
     }, []);
 
     const calculatePrice = useCallback((product, quantity) => {
-        if (!product || !product.priceRanges) return product?.price || 0;
+        if (!product || !product.priceRanges || !isWholesaleSite()) return product?.price || 0;
         const range = product.priceRanges.find(r => quantity >= r.min && quantity <= r.max);
         const discount = range ? range.discount : 0;
         return product.price * (1 - discount / 100);

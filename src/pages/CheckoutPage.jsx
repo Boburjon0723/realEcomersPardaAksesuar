@@ -9,6 +9,7 @@ import { getSettings } from '../services/supabase/settings';
 import { AUTH_RETURN_PATH_KEY } from '../constants/storageKeys';
 import { OTHER_VALUE, UZBEKISTAN_REGIONS, getCitiesForRegion } from '../data/uzbekistanDelivery';
 import { supabase } from '../supabaseClient';
+import { getOrderSource } from '../utils/siteMode';
 
 const countryCitiesFlat = {
     uzbekistan: ['tashkent', 'samarkand', 'bukhara', 'andijan', 'namangan', 'fergana', 'nukus', 'karshi'],
@@ -216,7 +217,8 @@ const CheckoutPage = () => {
                 paymentMethod: paymentMethod,
                 paymentMethodDetail: settings?.[`${paymentMethod}_card`] || '',
                 language: language,
-                createdAt: new Date()
+                createdAt: new Date(),
+                source: getOrderSource(),
             };
 
             const orderResult = await createOrder(orderData);

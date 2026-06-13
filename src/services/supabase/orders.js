@@ -1,4 +1,5 @@
 import { supabase } from '../../supabaseClient';
+import { getOrderSource } from '../../utils/siteMode';
 
 const ORDERS_TABLE = 'orders';
 const ORDER_ITEMS_TABLE = 'order_items';
@@ -67,7 +68,7 @@ export const createOrder = async (orderData) => {
             payment_status: orderData.payment_status || 'unpaid',
             payment_method_detail: orderData.paymentMethodDetail || null,
             receipt_url: orderData.receiptUrl || null,
-            source: orderData.source || 'website',
+            source: orderData.source || getOrderSource(),
             customer_id: userId,
         };
         if (userId) {

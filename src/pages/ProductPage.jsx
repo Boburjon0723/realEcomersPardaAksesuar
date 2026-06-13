@@ -11,6 +11,7 @@ import { getAllColors, getProductById } from '../services/supabase/products';
 import { supabase } from '../supabaseClient';
 import { getShareableUrl } from '../utils/siteUrl';
 import { formatProductPriceDisplay } from '../utils/price';
+import { isWholesaleSite } from '../utils/siteMode';
 import { Box } from 'lucide-react';
 
 /** Sharhda ko'rinadigan ism — bazaga yoziladi, auth.users ochiq view talab qilmaydi */
@@ -257,10 +258,15 @@ const ProductPage = () => {
         );
     }
 
-    // Calculate price with discount
-    const finalPrice = selectedProduct.priceRanges?.find(r => quantity >= r.min && quantity <= r.max);
+    // Calculate price with discount (faqat optom saytda)
+    const wholesaleMode = isWholesaleSite();
+    const finalPrice = wholesaleMode
+        ? selectedProduct.priceRanges?.find(r => quantity >= r.min && quantity <= r.max)
+        : null;
     const discount = finalPrice ? finalPrice.discount : 0;
-    const priceWithDiscount = selectedProduct.price * (1 - discount / 100);
+    const priceWithDiscount = wholesaleMode
+        ? selectedProduct.price * (1 - discount / 100)
+        : selectedProduct.price;
     const favorite = isFavorite(selectedProduct.id);
 
     const productName = selectedProduct?.[`name_${language}`] || selectedProduct?.name || t('shop');
@@ -489,8 +495,8 @@ const ProductPage = () => {
                         </div>
 
 
-                        {/* Bulk Order Toggle */}
-                        {selectedProduct.colors?.length > 1 && (
+                        {/* Bulk Order Toggle — faqat optom sayt */}
+                        {wholesaleMode && selectedProduct.colors?.length > 1 && (
                             <button
                                 onClick={() => setShowBulkOrder(!showBulkOrder)}
                                 className="mb-8 flex items-center gap-2 text-primary font-bold hover:underline"
@@ -501,7 +507,7 @@ const ProductPage = () => {
 
                         {/* Actions */}
                         <div className="flex flex-col gap-4 mb-8">
-                            {showBulkOrder && selectedProduct.colors?.length > 1 ? (
+                            {wholesaleMode && showBulkOrder && selectedProduct.colors?.length > 1 ? (
                                 <div className="space-y-4 bg-gray-50 p-6 rounded-2xl border border-gray-100 shadow-inner">
                                     <h3 className="font-bold text-gray-900 border-b border-gray-200 pb-2 mb-4">{t('colorQuantity')}</h3>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
