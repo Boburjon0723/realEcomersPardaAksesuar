@@ -33,7 +33,6 @@ import PrivacyPage from './pages/PrivacyPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 // Components
-import AuthModal from './components/auth/AuthModal';
 import ChangePasswordModal from './components/auth/ChangePasswordModal';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import { useLanguage } from './contexts/LanguageContext';
@@ -45,7 +44,7 @@ function ErrorBoundaryWrapper({ children }) {
 
 function MainLayout() {
   const location = useLocation();
-  const { showAuth, showPasswordRecovery, setShowPasswordRecovery } = useApp();
+  const { showPasswordRecovery, setShowPasswordRecovery } = useApp();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -59,7 +58,6 @@ function MainLayout() {
       </main>
       <FloatingContacts />
       <Footer />
-      {showAuth && <AuthModal />}
       {showPasswordRecovery && (
         <ChangePasswordModal
           variant="recovery"

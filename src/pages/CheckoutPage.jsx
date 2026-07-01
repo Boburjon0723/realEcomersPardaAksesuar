@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Check, CreditCard, AlertCircle, X, Upload, ArrowLeft, ArrowRight, ShieldCheck, LogIn } from 'lucide-react';
+import { Check, CreditCard, AlertCircle, X, Upload, ArrowLeft, ArrowRight, ShieldCheck } from 'lucide-react';
 import { useApp } from '../hooks/useApp';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import PageMeta from '../components/common/PageMeta';
 import { createOrder, uploadReceipt } from '../services/supabase/orders';
 import { getSettings } from '../services/supabase/settings';
-import { AUTH_RETURN_PATH_KEY } from '../constants/storageKeys';
 import { OTHER_VALUE, UZBEKISTAN_REGIONS, getCitiesForRegion } from '../data/uzbekistanDelivery';
 import { supabase } from '../supabaseClient';
 import { getOrderSource } from '../utils/siteMode';
@@ -23,7 +22,7 @@ const countryCitiesFlat = {
 };
 
 const CheckoutPage = () => {
-    const { cart, getTotalPrice, clearCart, setCurrentPage, currentUser, setShowAuth, setIsLogin } = useApp();
+    const { cart, getTotalPrice, clearCart, setCurrentPage, currentUser } = useApp();
     const { language, t, translateColor } = useLanguage();
     const { isAdmin } = useAuth();
     const [paymentMethod, setPaymentMethod] = useState('humo');
@@ -259,58 +258,12 @@ const CheckoutPage = () => {
         return settings[`${method}_card`] || t('cardNumberNotSet');
     };
 
-    const openLoginForCheckout = () => {
-        try {
-            sessionStorage.setItem(AUTH_RETURN_PATH_KEY, '/checkout');
-        } catch (_) { /* ignore */ }
-        setIsLogin(true);
-        setShowAuth(true);
-    };
-
     if (currentUser && isAdmin) {
         return (
             <>
                 <PageMeta title={t('cart')} description={t('metaDescCart')} siteName={settings?.site_name} />
                 <div className="min-h-[45vh] flex flex-col items-center justify-center px-4 text-center">
                     <p className="text-gray-600 max-w-md">{t('adminCheckoutRedirectMessage')}</p>
-                </div>
-            </>
-        );
-    }
-
-    if (!currentUser) {
-        return (
-            <>
-                <PageMeta title={t('checkout')} description={t('metaDescCheckout')} siteName={settings?.site_name} />
-                <div className="container mx-auto px-4 md:px-6 py-8 max-w-lg mx-auto">
-                    <button
-                        type="button"
-                        onClick={() => setCurrentPage('cart')}
-                        className="flex items-center text-gray-500 hover:text-primary mb-6 transition-colors font-medium"
-                    >
-                        <ArrowLeft className="w-4 h-4 mr-2" />
-                        {t('backToCart') || 'Back to Cart'}
-                    </button>
-                    <h1 className="text-2xl md:text-3xl font-display font-bold mb-6 text-gray-900">{t('checkout')}</h1>
-                    <div className="rounded-2xl border border-amber-200/80 bg-gradient-to-b from-amber-50 to-amber-50/70 p-6 md:p-8 text-center shadow-sm ring-1 ring-amber-100/80">
-                        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-100/90 text-amber-700 mb-4 shadow-inner">
-                            <LogIn className="w-7 h-7" aria-hidden />
-                        </div>
-                        <p className="text-gray-800 font-semibold mb-2 text-base md:text-lg">
-                            {t('checkoutLoginRequired')}
-                        </p>
-                        <p className="text-sm text-gray-600 mb-6 leading-relaxed">
-                            {t('checkoutLoginReturnHint')}
-                        </p>
-                        <button
-                            type="button"
-                            onClick={openLoginForCheckout}
-                            className="w-full sm:w-auto min-h-[48px] inline-flex items-center justify-center gap-2 px-8 py-3 rounded-xl bg-primary text-white font-bold hover:bg-primary/90 active:scale-[0.98] transition-all shadow-md shadow-primary/20"
-                        >
-                            <LogIn className="w-5 h-5" aria-hidden />
-                            {t('login')}
-                        </button>
-                    </div>
                 </div>
             </>
         );

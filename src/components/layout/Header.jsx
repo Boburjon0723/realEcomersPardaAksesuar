@@ -1,8 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { ShoppingCart, User, Search, Menu, X, Globe, LogOut, Package, ChevronDown } from 'lucide-react';
+import { ShoppingCart, Search, Menu, X, Globe, ChevronDown } from 'lucide-react';
 import { useApp } from '../../hooks/useApp';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { logoutUser } from '../../services/supabase/auth';
 
 const LANGUAGES = [
     { code: 'uz', label: "O'zbekcha", short: "O'z" },
@@ -11,7 +10,7 @@ const LANGUAGES = [
 ];
 
 const Header = () => {
-    const { cart, currentUser, currentPage, searchQuery, setSearchQuery, setShowAuth, setIsLogin, setCurrentPage, setCurrentUser, setSelectedCategory, settings } = useApp();
+    const { cart, currentPage, searchQuery, setSearchQuery, setCurrentPage, setSelectedCategory, settings } = useApp();
     const { language, changeLanguage, t } = useLanguage();
     const [showLangDropdown, setShowLangDropdown] = useState(false);
     const langDropdownRef = useRef(null);
@@ -154,63 +153,6 @@ const Header = () => {
                             )}
                         </button>
 
-                        {/* User - Desktop with Dropdown */}
-                        {currentUser ? (
-                            <div className="hidden md:block relative group">
-                                <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
-                                    <User className="w-4 h-4 text-gray-600" />
-                                    <span className="text-xs font-medium text-gray-700 truncate max-w-[100px]">{currentUser.name || currentUser.email?.split('@')[0]}</span>
-                                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                </button>
-
-                                {/* Dropdown Menu */}
-                                <div className="absolute right-0 mt-2 w-48 origin-top-right bg-white rounded-lg shadow-lg border border-gray-100 opacity-0 invisible scale-95 -translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:scale-100 group-hover:translate-y-0 transition-all duration-200 ease-out">
-                                    <div className="p-3 border-b border-gray-100">
-                                        <p className="text-sm font-bold text-gray-900 truncate">{currentUser.name}</p>
-                                        <p className="text-xs text-secondary font-bold truncate">{currentUser.phone}</p>
-                                    </div>
-                                    <div className="p-2">
-                                        <button
-                                            onClick={() => setCurrentPage('profile')}
-                                            className="w-full flex items-center space-x-2 px-3 py-2 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
-                                        >
-                                            <User className="w-4 h-4" />
-                                            <span className="text-sm font-medium">{t('profile') || 'Profilim'}</span>
-                                        </button>
-                                        <button
-                                            onClick={() => setCurrentPage('orders')}
-                                            className="w-full flex items-center space-x-2 px-3 py-2 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
-                                        >
-                                            <Package className="w-4 h-4" />
-                                            <span className="text-sm font-medium">{t('myOrders') || 'Mening buyurtmalarim'}</span>
-                                        </button>
-                                        <button
-                                            onClick={async () => {
-                                                await logoutUser();
-                                                setCurrentUser(null);
-                                                localStorage.removeItem('user');
-                                                window.location.reload();
-                                            }}
-                                            className="w-full flex items-center space-x-2 px-3 py-2 text-left text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                        >
-                                            <LogOut className="w-4 h-4" />
-                                            <span className="text-sm font-medium">{t('logout') || 'Chiqish'}</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        ) : (
-                            <button
-                                onClick={() => { setIsLogin(false); setShowAuth(true); }}
-                                className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-sm"
-                            >
-                                <User className="w-4 h-4" />
-                                <span className="font-medium">{t('profile') || 'Profilim'}</span>
-                            </button>
-                        )}
-
                         {/* Mobile Menu Toggle */}
                         <button
                             className="md:hidden p-2 text-gray-700 hover:text-primary transition-colors"
@@ -280,55 +222,6 @@ const Header = () => {
                                     </button>
                                 ))}
                             </div>
-
-                            {/* User Section */}
-                            {currentUser ? (
-                                <div className="bg-gray-100 rounded-lg p-4 mb-4">
-                                    <p className="font-bold mb-1">{currentUser.name}</p>
-                                    <p className="text-sm text-secondary font-bold mb-3">{currentUser.phone}</p>
-                                    <button
-                                        onClick={() => {
-                                            setCurrentPage('profile');
-                                            closeMobileMenu();
-                                        }}
-                                        className="w-full py-2 bg-white border border-gray-200 text-gray-800 rounded-lg text-sm mb-2 font-bold"
-                                    >
-                                        {t('profile') || 'Profilim'}
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            setCurrentPage('orders');
-                                            closeMobileMenu();
-                                        }}
-                                        className="w-full py-2 bg-white border border-gray-200 text-gray-800 rounded-lg text-sm mb-2 font-bold"
-                                    >
-                                        {t('myOrders') || 'Mening buyurtmalarim'}
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            logoutUser();
-                                            setCurrentUser(null);
-                                            localStorage.removeItem('user');
-                                            closeMobileMenu();
-                                            window.location.reload();
-                                        }}
-                                        className="w-full py-2 bg-red-500 text-white rounded-lg text-sm"
-                                    >
-                                        Chiqish
-                                    </button>
-                                </div>
-                            ) : (
-                                <button
-                                    onClick={() => {
-                                        setIsLogin(false);
-                                        setShowAuth(true);
-                                        closeMobileMenu();
-                                    }}
-                                    className="w-full py-3 bg-primary text-white rounded-lg font-bold mb-4"
-                                >
-                                    {t('profile') || 'Profilim'}
-                                </button>
-                            )}
 
                             {/* Til tanlash */}
                             <div className="border-t pt-4 mt-4">

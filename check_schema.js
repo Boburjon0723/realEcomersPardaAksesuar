@@ -1,11 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Supabase client
-const supabaseUrl = 'https://daytgnbiijycmljkuyyt.supabase.co';
-const supabaseKey = 'sb_publishable_Mc3DwJx9rnt0JvZ1HZDlBQ_wzad0erY';
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
-    console.error('Please set REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_ANON_KEY environment variables.');
+    console.error('REACT_APP_SUPABASE_URL / REACT_APP_SUPABASE_ANON_KEY (yoki NEXT_PUBLIC_*) o‘rnating.');
     process.exit(1);
 }
 
@@ -14,7 +13,6 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 async function checkSchema() {
     console.log('Checking products table schema...');
 
-    // Try to insert a dummy record to see structure or just select
     const { data, error } = await supabase
         .from('products')
         .select('*')
@@ -30,8 +28,6 @@ async function checkSchema() {
         console.log('Sample data:', data[0]);
     } else {
         console.log('No products found, cannot infer columns from data.');
-        // Try creating a record with potential columns to see if it fails?
-        // Or just assume standard columns.
     }
 }
 
