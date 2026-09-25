@@ -51,9 +51,9 @@ function MainLayout() {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen bg-white flex flex-col font-sans text-gray-900 overflow-x-hidden">
+    <div className="min-h-screen bg-white flex flex-col font-sans text-gray-900 overflow-x-clip">
       <Header />
-      <main className="flex-1 mt-20">
+      <main className="flex-1">
         <Outlet />
       </main>
       <FloatingContacts />

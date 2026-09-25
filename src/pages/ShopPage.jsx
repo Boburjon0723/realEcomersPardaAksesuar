@@ -193,7 +193,7 @@ const ShopPage = () => {
                 )}
 
                 {/* Product Grid */}
-                <div className="flex-1 rounded-2xl bg-gray-50/80 p-4 md:p-6">
+                <div className="flex-1 min-w-0 rounded-2xl bg-gray-50/80 p-2 sm:p-4 md:p-6">
                     {selectedCategory && (
                         <div className="mb-6 flex items-center">
                             <span className="text-gray-600 mr-2">{t('activeFilter') || 'Active Filter'}:</span>
@@ -210,9 +210,9 @@ const ShopPage = () => {
                     )}
 
                     {loading ? (
-                        <ProductGrid products={[]} loading={true} />
+                        <ProductGrid products={[]} loading={true} withSidebar />
                     ) : filteredProducts.length > 0 ? (
-                        <ProductGrid products={sortedProducts} />
+                        <ProductGrid products={sortedProducts} withSidebar />
                     ) : (
                         <div className="text-center py-20 bg-gray-50 rounded-xl">
                             <p className="text-gray-500 text-lg">No products found matching your criteria.</p>

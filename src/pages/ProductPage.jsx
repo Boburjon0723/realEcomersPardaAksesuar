@@ -684,13 +684,13 @@ const ProductPage = () => {
 
                 {/* Tabs */}
                 <div className="border-t border-gray-100 pt-10">
-                    <div className="flex gap-4 sm:gap-8 mb-8 border-b border-gray-100 overflow-x-auto scrollbar-hide -mx-1 px-1">
+                    <div className="flex gap-3 sm:gap-8 mb-6 sm:mb-8 border-b border-gray-100 overflow-x-auto scrollbar-hide -mx-1 px-1">
                         {['description', 'features', 'reviews'].map(tab => (
                             <button
                                 key={tab}
                                 type="button"
                                 onClick={() => setActiveTab(tab)}
-                                className={`pb-4 px-2 font-bold text-base sm:text-lg whitespace-nowrap shrink-0 transition-all relative ${activeTab === tab
+                                className={`pb-3 sm:pb-4 px-1 sm:px-2 font-bold text-sm sm:text-lg whitespace-nowrap shrink-0 transition-all relative ${activeTab === tab
                                     ? 'text-primary'
                                     : 'text-gray-400 hover:text-gray-600'
                                     }`}

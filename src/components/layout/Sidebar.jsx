@@ -35,7 +35,7 @@ const Sidebar = () => {
     }
 
     return (
-        <aside className="bg-gray-50 rounded-xl p-6 border border-gray-100 sticky top-24">
+        <aside className="bg-gray-50 rounded-xl p-6 border border-gray-100 md:sticky md:top-24 md:max-h-[calc(100vh-7rem)] md:overflow-y-auto">
             <h3 className="font-display font-bold text-lg mb-6 pb-2 border-b border-gray-200">
                 {t('categories') || 'Categories'}
             </h3>

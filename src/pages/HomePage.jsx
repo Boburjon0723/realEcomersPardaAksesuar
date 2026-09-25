@@ -190,7 +190,7 @@ const HomePage = () => {
     return (
         <>
             <PageMeta title={t('home')} description={t('metaDescHome')} siteName={settings?.site_name} />
-            <div className="pb-16 font-sans">
+            <div className="pt-4 sm:pt-6 md:pt-8 pb-16 font-sans">
             {/* Premium Notification Popup */}
             {notification.show && (
                 <div className="fixed top-24 right-4 z-[9999] pointer-events-none">
