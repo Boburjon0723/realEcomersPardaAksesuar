@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import PageMeta from '../components/common/PageMeta';
 import { createOrder } from '../services/supabase/orders';
 import { FLASH_ORDER_OK_KEY } from '../constants/storageKeys';
+import { formatKg, formatWeightSpoken, hasKnownMasterPack, linePacking, poolExactBoxes, sharedMasterBoxKg, unitKg } from '../utils/price';
 
 const CartPage = () => {
     const { cart, removeFromCart, updateQuantity, calculatePrice, getTotalPrice, setCurrentPage, settings, currentUser, clearCart } = useApp();
@@ -13,6 +14,9 @@ const CartPage = () => {
     const { isAdmin } = useAuth();
 
     const [adminModalOpen, setAdminModalOpen] = useState(false);
+    const [weightAllowancePct, setWeightAllowancePct] = useState('10');
+    const [manualBoxCount, setManualBoxCount] = useState('');
+    const [manualBoxKg, setManualBoxKg] = useState('');
     const [adminSubmitting, setAdminSubmitting] = useState(false);
     const [adminError, setAdminError] = useState('');
     const [adminLinePrices, setAdminLinePrices] = useState({});
@@ -81,6 +85,40 @@ const CartPage = () => {
     }, 0);
 
     const summaryTotal = isAdmin ? adminCartTotal : getTotalPrice();
+
+    const hasWeightFields = (item) =>
+        unitKg(item?.netto_kg) > 0 || unitKg(item?.brutto_kg) > 0 || unitKg(item?.master_box_kg) > 0;
+    const exactItems = cart.filter((item) => hasKnownMasterPack(item));
+    const uncertainItems = cart.filter((item) => !hasKnownMasterPack(item) && hasWeightFields(item));
+    const plainItems = cart.filter((item) => !hasKnownMasterPack(item) && !hasWeightFields(item));
+    const sumPacking = (items) => items.reduce(
+        (acc, item) => {
+            const pack = linePacking(item, item.quantity);
+            if (pack.any) acc.any = true;
+            acc.netto += pack.netto;
+            acc.smallBrutto += pack.smallBrutto;
+            acc.gross += pack.gross;
+            acc.masters += pack.masters;
+            return acc;
+        },
+        { netto: 0, smallBrutto: 0, gross: 0, masters: 0, any: false }
+    );
+    const exactTotals = sumPacking(exactItems);
+    const pooledExact = poolExactBoxes(exactItems);
+    exactTotals.masters = pooledExact.masters;
+    exactTotals.gross = exactTotals.smallBrutto + pooledExact.tare;
+    const uncertainTotals = sumPacking(uncertainItems);
+    const productBoxKg = sharedMasterBoxKg(uncertainItems);
+    const uncertainBoxCount = uncertainItems.length
+        ? Math.max(0, Math.floor(Number(String(manualBoxCount).replace(',', '.')) || 0))
+        : 0;
+    const typedBoxKg = Number(String(manualBoxKg).replace(',', '.'));
+    const uncertainTareKg = productBoxKg != null
+        ? productBoxKg
+        : (Number.isFinite(typedBoxKg) && typedBoxKg > 0 ? typedBoxKg : 0);
+    const uncertainTare = uncertainBoxCount > 0 && uncertainTareKg > 0 ? uncertainBoxCount * uncertainTareKg : 0;
+    const uncertainGross = uncertainTotals.smallBrutto + uncertainTare;
+    const weightBase = exactTotals.gross + uncertainGross;
 
     const handleAdminQuickOrder = async (e) => {
         e.preventDefault();
@@ -204,8 +242,25 @@ const CartPage = () => {
 
             <div className="grid lg:grid-cols-3 gap-12">
                 {/* Cart Items */}
-                <div className="lg:col-span-2 space-y-6">
-                    {cart.map(item => {
+                <div className="lg:col-span-2 space-y-8">
+                    {[
+                        plainItems.length ? { key: 'plain', title: '', hint: '', items: plainItems } : null,
+                        exactItems.length ? { key: 'exact', title: t('cartExact'), hint: t('cartExactHint'), items: exactItems } : null,
+                        uncertainItems.length ? { key: 'uncertain', title: t('cartUncertain'), hint: t('cartUncertainHint'), items: uncertainItems } : null,
+                    ].filter(Boolean).map((group) => (
+                    <section key={group.key} className="space-y-4">
+                        {group.title ? (
+                        <div>
+                            <h2 className="text-lg font-bold text-gray-900">{group.title}</h2>
+                            <p className="text-sm text-gray-500">{group.hint}</p>
+                            {group.key === 'exact' && uncertainItems.length === 0 ? (
+                                <p className="mt-1 text-sm font-semibold text-emerald-800 tabular-nums">
+                                    {t('cartTotalMaster')}: {exactTotals.masters}
+                                </p>
+                            ) : null}
+                        </div>
+                        ) : null}
+                    {group.items.map(item => {
                         const catalogUnit = calculatePrice(item, item.quantity);
                         const displayUnit = isAdmin
                             ? parseAdminUnitPrice(adminLinePrices[item.cartItemId], item)
@@ -245,6 +300,17 @@ const CartPage = () => {
                                         <div className="flex justify-between items-start">
                                             <h3 className="font-bold text-lg text-gray-900 line-clamp-2">
                                                 {item[`name_${language}`] || item.name || ''}
+                                                {hasWeightFields(item) ? (
+                                                    <span
+                                                        className={`ml-2 align-middle inline-flex rounded px-1.5 py-0.5 text-[10px] font-bold ring-1 ${
+                                                            hasKnownMasterPack(item)
+                                                                ? 'bg-emerald-50 text-emerald-700 ring-emerald-200'
+                                                                : 'bg-amber-50 text-amber-800 ring-amber-200'
+                                                        }`}
+                                                    >
+                                                        {hasKnownMasterPack(item) ? t('cartExact') : t('cartUncertain')}
+                                                    </span>
+                                                ) : null}
                                             </h3>
                                             <button
                                                 onClick={() => removeFromCart(item.cartItemId)}
@@ -264,6 +330,23 @@ const CartPage = () => {
                                                 </span>
                                             )}
                                         </div>
+                                        {(() => {
+                                            const pack = linePacking(item, item.quantity);
+                                            if (!pack.any) return null;
+                                            return (
+                                                <p className="text-xs text-gray-500 font-medium tabular-nums">
+                                                    {t('cartNetto')}: {formatKg(pack.netto)} kg
+                                                    <span className="mx-1.5 text-gray-300">·</span>
+                                                    {t('cartBrutto')}: {formatKg(pack.smallBrutto)} kg
+                                                    {pack.knownPack ? null : (
+                                                        <>
+                                                            <span className="mx-1.5 text-gray-300">·</span>
+                                                            {t('cartUncertain')}
+                                                        </>
+                                                    )}
+                                                </p>
+                                            );
+                                        })()}
                                     </div>
 
                                     {item.is_kg && (
@@ -348,6 +431,55 @@ const CartPage = () => {
                             </div>
                         );
                     })}
+                    {group.key === 'uncertain' ? (
+                        <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 space-y-2">
+                            <div className="flex flex-wrap items-end gap-3">
+                                <label className="text-xs font-semibold text-amber-950">
+                                    {t('cartManualCount')}
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="1"
+                                        value={manualBoxCount}
+                                        onChange={(e) => setManualBoxCount(e.target.value)}
+                                        placeholder="0"
+                                        className="mt-1 block w-24 text-right font-medium tabular-nums bg-white border border-amber-300 rounded px-2 py-1"
+                                    />
+                                </label>
+                                {productBoxKg != null ? (
+                                    <p className="text-sm font-semibold text-amber-950 tabular-nums pb-1">
+                                        {t('cartBoxSelf')}: {formatKg(productBoxKg)} kg
+                                    </p>
+                                ) : (
+                                    <label className="text-xs font-semibold text-amber-950">
+                                        {t('cartManualKg')}
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            step="0.001"
+                                            value={manualBoxKg}
+                                            onChange={(e) => setManualBoxKg(e.target.value)}
+                                            placeholder="1.2"
+                                            className="mt-1 block w-24 text-right font-medium tabular-nums bg-white border border-amber-300 rounded px-2 py-1"
+                                        />
+                                    </label>
+                                )}
+                            </div>
+                            <p className="text-[11px] leading-snug text-amber-800/80">{t('cartManualHint')}</p>
+                            {uncertainTare > 0 ? (
+                                <p className="text-sm font-semibold text-amber-950 tabular-nums">
+                                    {t('cartGross')}: {formatWeightSpoken(uncertainGross, t('weightTon'))}
+                                </p>
+                            ) : null}
+                            {uncertainBoxCount > 0 ? (
+                                <p className="text-sm font-semibold text-emerald-800 tabular-nums">
+                                    {t('cartTotalMaster')}: {exactTotals.masters + uncertainBoxCount}
+                                </p>
+                            ) : null}
+                        </div>
+                    ) : null}
+                    </section>
+                    ))}
 
                     <button
                         onClick={() => setCurrentPage('shop')}
@@ -368,6 +500,89 @@ const CartPage = () => {
                                 <span>{t('subtotal') || 'Jami summa'}</span>
                                 <span className="font-medium">${summaryTotal.toLocaleString()}</span>
                             </div>
+                            {exactTotals.any ? (
+                                <div className="space-y-2">
+                                    <p className="text-sm font-bold text-gray-900">{t('cartExact')}</p>
+                                    <div className="flex justify-between text-gray-600">
+                                        <span>{t('cartNetto')}</span>
+                                        <span className="font-medium tabular-nums">{formatKg(exactTotals.netto)} kg</span>
+                                    </div>
+                                    <div className="flex justify-between text-gray-600">
+                                        <span>{t('cartBrutto')}</span>
+                                        <span className="font-medium tabular-nums">{formatKg(exactTotals.smallBrutto)} kg</span>
+                                    </div>
+                                    <div className="flex justify-between text-gray-600">
+                                        <span>{uncertainItems.length ? t('cartMaster') : t('cartTotalMaster')}</span>
+                                        <span className="font-medium tabular-nums">{exactTotals.masters}</span>
+                                    </div>
+                                    <div className="flex justify-between text-gray-600">
+                                        <span>{t('cartGross')}</span>
+                                        <span className="font-medium tabular-nums">{formatWeightSpoken(exactTotals.gross, t('weightTon'))}</span>
+                                    </div>
+                                </div>
+                            ) : null}
+                            {uncertainItems.length > 0 && (uncertainTotals.any || uncertainTare > 0) ? (
+                                <div className="space-y-2">
+                                    <p className="text-sm font-bold text-gray-900">{t('cartUncertain')}</p>
+                                    <div className="flex justify-between text-gray-600">
+                                        <span>{t('cartNetto')}</span>
+                                        <span className="font-medium tabular-nums">{formatKg(uncertainTotals.netto)} kg</span>
+                                    </div>
+                                    <div className="flex justify-between text-gray-600">
+                                        <span>{t('cartBrutto')}</span>
+                                        <span className="font-medium tabular-nums">{formatKg(uncertainTotals.smallBrutto)} kg</span>
+                                    </div>
+                                    <div className="flex justify-between text-gray-600">
+                                        <span>{t('cartMaster')}</span>
+                                        <span className="font-medium tabular-nums">{uncertainBoxCount}</span>
+                                    </div>
+                                    <div className="flex justify-between text-gray-600">
+                                        <span>{t('cartGross')}</span>
+                                        <span className="font-medium tabular-nums">{formatWeightSpoken(uncertainGross, t('weightTon'))}</span>
+                                    </div>
+                                </div>
+                            ) : null}
+                            {uncertainItems.length > 0 && uncertainBoxCount > 0 ? (
+                                <div className="flex justify-between text-emerald-800 font-semibold">
+                                    <span>{t('cartTotalMaster')}</span>
+                                    <span className="tabular-nums">{exactTotals.masters + uncertainBoxCount}</span>
+                                </div>
+                            ) : null}
+                            {(() => {
+                                const base = weightBase;
+                                const pct = Number(String(weightAllowancePct).replace(',', '.'));
+                                const extra = Number.isFinite(pct) && pct > 0 && base > 0 ? base * (pct / 100) : 0;
+                                return (
+                                    <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-3 space-y-2">
+                                        <label className="flex items-center justify-between gap-2 text-sm font-semibold text-amber-950">
+                                            <span>{t('cartAllowance')}</span>
+                                            <span className="flex items-center gap-1">
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    step="1"
+                                                    value={weightAllowancePct}
+                                                    onChange={(e) => setWeightAllowancePct(e.target.value)}
+                                                    className="w-16 text-right font-medium tabular-nums bg-white border border-amber-300 rounded px-2 py-1"
+                                                />
+                                                <span>%</span>
+                                            </span>
+                                        </label>
+                                        {extra > 0 ? (
+                                            <div className="flex justify-between gap-3 text-sm text-amber-950 font-semibold">
+                                                <span>{t('cartAround')}</span>
+                                                <span className="text-right tabular-nums">
+                                                    {formatWeightSpoken(base, t('weightTon'))}
+                                                    {' – '}
+                                                    {formatWeightSpoken(base + extra, t('weightTon'))}
+                                                </span>
+                                            </div>
+                                        ) : (
+                                            <p className="text-xs text-amber-800/80">{t('cartAllowanceNeedWeight')}</p>
+                                        )}
+                                    </div>
+                                );
+                            })()}
                         </div>
 
                         <div className="border-t border-gray-100 pt-6 mb-8">

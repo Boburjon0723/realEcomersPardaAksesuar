@@ -104,6 +104,46 @@ export const AppProvider = ({ children }) => {
         localStorage.setItem('cart', JSON.stringify(cart));
     }, [cart]);
 
+    const cartProductIds = useMemo(
+        () => [...new Set(cart.map((item) => item.id).filter((id) => id != null && id !== ''))].join(','),
+        [cart]
+    );
+
+    useEffect(() => {
+        if (!cartProductIds) return undefined;
+        let cancelled = false;
+        (async () => {
+            const ids = cartProductIds.split(',');
+            const { data, error } = await supabase
+                .from('products')
+                .select('id, netto_kg, brutto_kg, master_pack_qty, master_box_kg')
+                .in('id', ids);
+            if (cancelled || error || !data) return;
+            const byId = new Map(data.map((row) => [String(row.id), row]));
+            setCart((prev) => {
+                let changed = false;
+                const next = prev.map((item) => {
+                    const fresh = byId.get(String(item.id));
+                    if (!fresh) return item;
+                    const patch = {
+                        netto_kg: fresh.netto_kg,
+                        brutto_kg: fresh.brutto_kg,
+                        master_pack_qty: fresh.master_pack_qty,
+                        master_box_kg: fresh.master_box_kg,
+                    };
+                    const same = Object.keys(patch).every((key) => item[key] === patch[key]);
+                    if (same) return item;
+                    changed = true;
+                    return { ...item, ...patch };
+                });
+                return changed ? next : prev;
+            });
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [cartProductIds]);
+
     useEffect(() => {
         localStorage.setItem('favorites', JSON.stringify(favorites));
     }, [favorites]);
